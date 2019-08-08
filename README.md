@@ -1,24 +1,18 @@
 This tool aims at helping finding a mixed precision solution 
 to reduce execution time while maintaining some notion of correctness.
+We consider that the application to study is using floating point variables,
+all in double precision.
 
-To use this tool, user should instrument the code to analyse:
+First the user should profile the application to find hotspots.
+Then, hotspots corresponding code regions should be instrumented with tool's method.
+Finally, the instrumented program can be run once compiled and linked with our tool.
+Note that the input data should not change between the profiling and use of our tool at runtime.
 
- - Replace #include <math.h> by
-    --> #include "mathPrecisionTuning.h"
+The tool will execute the program several times. 
+In the end, for each of the instrumented code regions,
+ the tool will provide temporal scopes when the instrumented calls can be tuned to reduced precision. 
 
-Inside mathPrecisionTuning.h:
-    - #include<math.h>
-    - #define exp __precisionTuning_exp
-    - ... for every math functions
-    - #include "mathPrecisionTuning.cpp"
-
-Inside mathPrecisionTuning.cpp:
-    - Code for all __precisionTuning_[mathfunction]
-        - call to the actual [mathfunction] with chosen precision
-        - chosen precision depends on the if stmt
-    - if stmt depends on chosen strategy
-
-
+*How does it work?*
 Choosing the strategy to test:
     - Everything is in double precision at first
     - Several static call sites instrumented: A1, A2, A3,...
@@ -51,6 +45,25 @@ Delta Debugging algorithm:
             - keep it
         - ELSE 
             - divide the invalid strategy set into two subsets, and continue recursively
+
+*In practice*:
+
+To use this tool, user should instrument the code to analyse:
+
+ - Replace #include <math.h> by
+    --> #include "mathPrecisionTuning.h"
+
+Inside mathPrecisionTuning.h:
+    - #include<math.h>
+    - #define exp __precisionTuning_exp
+    - ... for every math functions
+    - #include "mathPrecisionTuning.cpp"
+
+Inside mathPrecisionTuning.cpp:
+    - Code for all __precisionTuning_[mathfunction]
+        - call to the actual [mathfunction] with chosen precision
+        - chosen precision depends on the if stmt
+    - if stmt depends on chosen strategy
 
 Choices made and other possibilities: 
     - we have made the choice to do the branching between double and single precision
