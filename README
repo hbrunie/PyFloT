@@ -1,1 +1,63 @@
-This tool aims at helping finding a mixed precision solution to reduce execution time while maintaining some notion of correctness.
+This tool aims at helping finding a mixed precision solution 
+to reduce execution time while maintaining some notion of correctness.
+
+To use this tool, user should instrument the code to analyse:
+
+ - Replace #include <math.h> by
+    --> #include "mathPrecisionTuning.h"
+
+Inside mathPrecisionTuning.h:
+    - #include<math.h>
+    - #define exp __precisionTuning_exp
+    - ... for every math functions
+    - #include "mathPrecisionTuning.cpp"
+
+Inside mathPrecisionTuning.cpp:
+    - Code for all __precisionTuning_[mathfunction]
+        - call to the actual [mathfunction] with chosen precision
+        - chosen precision depends on the if stmt
+    - if stmt depends on chosen strategy
+
+
+Choosing the strategy to test:
+    - Everything is in double precision at first
+    - Several static call sites instrumented: A1, A2, A3,...
+    - Each of these are called certain amount of times (Np) for certain input (i):
+        - N1(i), N2(i), N3(i),... 
+    - what set of all those calls should be reduced to single precision?
+        --> Delta Debugging (see Precimonious strategy + BLAME)
+    - if( boolArrayReducedPrecision [ (current_call_counter % (N(i) / granularity)) ] )
+    - boolArrayReducedPrecision is an array of boolean of size (N(i) / granularity))
+         - *granularity* corresponds to the depth in DeltaDebugging algorithm
+         - *True* means the call should be made in reduced precision
+         - *False* means the call should be made in highest precision
+
+    - choosing a strategy consists in filling the boolean arrays for each call sites
+    - With some config file precising: 
+        - FOREACH i N(i) (obtained with profiling)
+        - granularity
+
+Validating a strategy:
+    - Run the program with the chosen strategy
+    - if the results obtained is similar to the one obtained with everything in single (diff on output)
+    the strategy is validated
+
+Delta Debugging algorithm:
+    - flatten ForEach i:N(i) in one flat set.
+    - divide this set in two
+    - For each half:
+        - try strategy single precision
+        - IF this is a valid strategy
+            - keep it
+        - ELSE 
+            - divide the invalid strategy set into two subsets, and continue recursively
+
+Choices made and other possibilities: 
+    - we have made the choice to do the branching between double and single precision
+    at runtime. It could impact the performance. Could it be move to compile time?
+    How many binary do we want to generate?
+    At runtime it could be move up in the function call graph (to which point?)
+    Compile all different version of this function, choose the function with config file, and function pointer 
+    string built at runtime. (Like MPC)
+    if the function chosen is "high enough", it should not impact performance too much.
+        --> all version of code are compiled, you choose at runtime!
