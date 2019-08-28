@@ -29,13 +29,13 @@ c---------------------------------------------------------------------
 #include <iostream>
 #include "npbparams.hpp"
 #include "npb-CPP.hpp"
-unsigned long lowered_count = 0;
-unsigned long dyncount = 0;
-unsigned long MINBOUND = 0;
-unsigned long MAXBOUND = 0;
-void display(){
-    fprintf(stderr,"\nLOWERED %lu\n", (unsigned long) lowered_count);
-}
+//unsigned long lowered_count = 0;
+//unsigned long dyncount = 0;
+//unsigned long MINBOUND = 0;
+//unsigned long MAXBOUND = 0;
+//void display(){
+//    fprintf(stderr,"\nLOWERED %lu\n", (unsigned long) lowered_count);
+//}
 
 
 #define	NZ	NA*(NONZER+1)*(NONZER+1)+NA*(NONZER+2)
@@ -94,9 +94,9 @@ static void vecset(int n, double v[], int iv[], int *nzv, int i, double val);
 
 int main(int argc, char **argv)
 {
-    atexit(display);
-    MINBOUND = atol(getenv("MINBOUND"));
-    MAXBOUND = atol(getenv("MAXBOUND"));
+    //atexit(display);
+    //MINBOUND = atol(getenv("MINBOUND"));
+    //MAXBOUND = atol(getenv("MAXBOUND"));
 	int	i, j, k, it;
 	double zeta;
 	double rnorm;
@@ -522,16 +522,16 @@ c---------------------------------------------------------------------*/
 		sum = sum + d*d;
 	}
 	
-	//(*rnorm) = sqrt(sum);
-    fprintf(stderr,"%d %d %d\n",MINBOUND, dyncount, MAXBOUND);
-    if(dyncount >= MINBOUND && dyncount < MAXBOUND){
-	    (*rnorm) = sqrtf((float)sum);
-        lowered_count ++;
-        dyncount++;
-    }else{
-        dyncount++;
-	    (*rnorm) = sqrt(sum);
-    }
+	(*rnorm) = sqrt(sum);
+    //fprintf(stderr,"%d %d %d\n",MINBOUND, dyncount, MAXBOUND);
+    //if(dyncount >= MINBOUND && dyncount < MAXBOUND){
+	//    (*rnorm) = sqrtf((float)sum);
+    //    lowered_count ++;
+    //    dyncount++;
+    //}else{
+    //    dyncount++;
+	//    (*rnorm) = sqrt(sum);
+    //}
 }
 
 /*---------------------------------------------------------------------
