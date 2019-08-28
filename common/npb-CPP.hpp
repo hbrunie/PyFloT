@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
+//#include <cmath>
+#include "PT_math.h"
 
 typedef int boolean;
 typedef struct { double real; double imag; } dcomplex;
