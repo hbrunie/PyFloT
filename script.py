@@ -9,22 +9,28 @@ def check_result(checkstring, output):
 
 class Profile:
     maxbound = 0
+    total_dyncount_text = "None"
 
-def get_code_profile(binary):
-    profile = Profile()
-    procenv = os.environ.copy()
-    command = []
-    command.append(binary)
-    out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
-    strout = out.decode("utf-8")
+    def __init__(self, total_dyncount_text):
+        self.total_dyncount_text = total_dyncount_text
+        self.get_code_profile(args.binary)
+        return None
 
-    #get count of lowered from output
-    for l in strout.splitlines():
-        if "TOTALCOUNT" in l:
-            print(l.split())
-            total_count = int(l.split()[-1])
-    profile.maxbound = total_count
-    return profile
+    def __repr__(self):
+        s = "Profile: {} {}".format(self.maxbound, self.total_dyncount_text)
+        return s
+
+    def get_code_profile(self, binary):
+        procenv = os.environ.copy()
+        command = []
+        command.append(binary)
+        out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
+        strout = out.decode("utf-8")
+        #get count of lowered from output
+        for l in strout.splitlines():
+            if self.total_dyncount_text in l:
+                self.maxbound = int(l.split()[-1])
+                break
 
 def execute_once(binary, minb, maxb, verif_text):
     bounds = "{}-{}".format(minb, maxb)
@@ -38,6 +44,7 @@ def execute_once(binary, minb, maxb, verif_text):
     command.append(binary)
     out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
     strout = out.decode("utf-8")
+    print(strout)
 
     #get count of lowered from output
     for l in strout.splitlines():
@@ -63,7 +70,7 @@ def parse():
     """ Parse config file, update with command line arguments
     """
     # defaults arguments
-    defaults = { "min":0, "max":0 , "verif_text":"VERIFICATION SUCCESSFUL"}
+    defaults = { "min":0, "max":0 , "verif_text":"VERIFICATION SUCCESSFUL", "total_dyncount_text":"TOTAL_DYNCOUNT"}
     # Parse any conf_file specification
     conf_parser = argparse.ArgumentParser(
         description=__doc__, # printed with -h/--help
@@ -90,23 +97,27 @@ def parse():
     parser.add_argument("--binary", help="binary file absolute path")
     parser.add_argument("--min", type=int)
     parser.add_argument("--max", type=int)
+    parser.add_argument("--total_dyncount_text", help="Text for total dyncount")
+    parser.add_argument("--backtrace_json_file", help="JSON file containing backtrace, allcall stacks, number\
+            of dynamic calls. Obtain with profiling")
     parser.add_argument("--verif_text", help="Text searched in output to verify the code executed without accuracy error")
     args = parser.parse_args(remaining_argv)
     assert args.binary, "binary absolute path is required"
     return args
 
-def strategy(MAXB):
-    strat = [(0,MAXB),(0,MAXB//2),(MAXB//2,MAXB)]
+def strategy(maxb):
+    strat = [(0,maxb),(0,maxb//2),(maxb//2,maxb), (int(3/4 * maxb), maxb)]
     for s in strat:
         yield s
 
 max_score = -1
 args = parse()
-
+best_strategy = "Not defined"
 if args.min >= args.max:
-    profile = get_code_profile(args.binary)
+    profile = Profile(args.total_dyncount_text)
     for minb,maxb in strategy(profile.maxbound):
         score = execute_once(args.binary, minb, maxb, args.verif_text)
+        print(score)
         if score > max_score:
             max_score = score
             best_strategy = minb, maxb

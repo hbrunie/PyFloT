@@ -35,9 +35,9 @@ int main(int argc, char ** argv){
     fprintf(stderr, "THRESHOLD=%f, reference=%f a=%f\n",
             threshold, refvalue, a);
     if(fabs(a-refvalue)/fabs(a) < threshold)
-        fprintf(stderr, "SUCCESS\n");
+        fprintf(stderr, "SUCCESS(%f)\n",fabs(a-refvalue)/fabs(a));
     else
-        fprintf(stderr, "FAILURE\n");
+        fprintf(stderr, "FAILURE(%f)\n",fabs(a-refvalue)/fabs(a));
 
     
     return 0;
