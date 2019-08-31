@@ -1,1 +1,4 @@
-CXX=g++-mp-9
+CXX=g++-mp-9 -std=c++11
+CXX=clang++ -std=c++11
+INCLUDEDIR=-I /opt/local/include/ 
+LIB=-L/opt/local/lib/ -ljsoncpp

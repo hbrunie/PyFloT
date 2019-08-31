@@ -70,7 +70,8 @@ def parse():
     """ Parse config file, update with command line arguments
     """
     # defaults arguments
-    defaults = { "min":0, "max":0 , "verif_text":"VERIFICATION SUCCESSFUL", "total_dyncount_text":"TOTAL_DYNCOUNT"}
+    defaults = { "min":0, "max":0 , "verif_text":"VERIFICATION SUCCESSFUL", "total_dyncount_text":"TOTAL_DYNCOUNT", 
+            "backtrace_json_file":"data.json"}
     # Parse any conf_file specification
     conf_parser = argparse.ArgumentParser(
         description=__doc__, # printed with -h/--help

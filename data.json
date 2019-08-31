@@ -1,0 +1,229 @@
+{
+	"IndependantCallStacks" : 
+	[
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296fcb",
+				"0x104297385",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 1,
+			"HashKey" : "0x80047b54cc81",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296fcb",
+				"0x104297372",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 1,
+			"HashKey" : "0x80047b54cc6e",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296fcb",
+				"0x104297343",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 1,
+			"HashKey" : "0x80047b54cc3f",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296b8d",
+				"0x104297116",
+				"0x1042971d6",
+				"0x1042972cf",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 1,
+			"HashKey" : "0x800683a7aa79",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296e61",
+				"0x1042971e9",
+				"0x1042972cf",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 3,
+			"HashKey" : "0x80057f7e3c4a",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296fcb",
+				"0x104297330",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 1,
+			"HashKey" : "0x80047b54cc2c",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296fcb",
+				"0x10429720a",
+				"0x1042972a6",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 1,
+			"HashKey" : "0x80057f7e3dac",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296dac",
+				"0x1042971ae",
+				"0x1042972cf",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 2,
+			"HashKey" : "0x80057f7e3b5a",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296e61",
+				"0x1042971e9",
+				"0x1042972a6",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 1,
+			"HashKey" : "0x80057f7e3c21",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296b8d",
+				"0x104297285",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 1,
+			"HashKey" : "0x80047b54c743",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296fcb",
+				"0x10429720a",
+				"0x1042972cf",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 5,
+			"HashKey" : "0x80057f7e3dd5",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296b8d",
+				"0x104297116",
+				"0x1042971d6",
+				"0x1042972a6",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 1,
+			"HashKey" : "0x800683a7aa50",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297c7a",
+				"0x10429708e",
+				"0x104297141",
+				"0x1042971d6",
+				"0x1042972cf",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 2,
+			"HashKey" : "0x800683a7aece",
+			"LowerCount" : 0
+		},
+		{
+			"CallStack" : 
+			[
+				"0x104297a14",
+				"0x104297df6",
+				"0x104297d51",
+				"0x104296c42",
+				"0x104297159",
+				"0x1042971d6",
+				"0x1042972cf",
+				"0x7fff668573d5",
+				"0x1"
+			],
+			"CallsCount" : 2,
+			"HashKey" : "0x800683a7ab71",
+			"LowerCount" : 0
+		}
+	],
+	"TotalCallStacks" : 14
+}
