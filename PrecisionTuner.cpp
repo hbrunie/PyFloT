@@ -16,6 +16,16 @@ const string PrecisionTuner::JSON_CALLSCOUNT_KEY = "CallsCount";
 const string PrecisionTuner::JSON_LOWERCOUNT_KEY = "LowerCount";
 const string PrecisionTuner::JSON_HASHKEY_KEY = "HashKey";
 
+/* CallData functions */
+ostream& operator<<(ostream& os, const struct CallData& cd)
+{
+    os << "CallData: Dyncount("<< cd.dyncount
+        << ") loweredCount("
+        << cd.loweredCount << ") btVec" << endl;
+    return os;
+}
+
+/* PrecisionTuner functions*/
 PrecisionTuner::PrecisionTuner(){
     char * envVarString = getenv("MINBOUND");
     if(envVarString)
@@ -163,24 +173,16 @@ void PrecisionTuner::__dump_stack(uint64_t key) {
         fprintf(stderr, "\t %lx", (unsigned long) stack[i]);
 
 }
-/*
-   {"Anna" : { 
-   "age": 18,
-   "profession": "student"},
-   "Ben" : {
-   "age" : "nineteen",
-   "profession": "mechanic"}
-   }
- */
+
 #include <sstream>
 #include <iostream>
 
 unordered_map<uint64_t, struct CallData> PrecisionTuner::__build_callstacks_map_from_json_file(char * fileAbsPath){
-    /*TODO: Find a different name for callStack the object containing number of calls, 
-      its call stack addresses and lowered count. 
-     Because it is the name as the call stack, which is the list of virtual addresses. 
+    /*TODO: Find a different name for callStack the object
+      containing number of calls, its call stack addresses and lowered count.
+     Because it is the name as the call stack, which is the list of virtual addresses.
      */
-    unordered_map<uint64_t, struct CallData> backtraceMap;
+    //unordered_map<uint64_t, struct CallData> backtraceMap;
     std::ifstream infile(fileAbsPath, std::ifstream::binary);
     Value jsonDictionnary;
     infile >>  jsonDictionnary;
@@ -209,10 +211,7 @@ unordered_map<uint64_t, struct CallData> PrecisionTuner::__build_callstacks_map_
         unsigned long value;
         istringstream iss(s);
         iss >> hex >> value;
-        backtraceMap[value] = data;
-        //TODO: backtraceMap seems not to be filled. 
-        // implement a pretty print for struct CallData
-        ///Does not appear when dumping the JSON
+        __backtraceMap[value] = data;
     }
     return __backtraceMap;
 }

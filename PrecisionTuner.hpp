@@ -4,10 +4,13 @@
 #include <vector>
 
 using namespace std;
-struct CallData{
+class CallData
+{
+    public:
     vector<void*> btVec;
     unsigned long dyncount;
     unsigned long loweredCount;
+    friend ostream& operator<<(ostream& os, const struct CallData& cd);
 };
 
 class PrecisionTuner
