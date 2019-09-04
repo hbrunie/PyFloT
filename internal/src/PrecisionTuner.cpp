@@ -66,11 +66,10 @@ uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered) {
         __backtraceMap[hash].dyncount += 1;
         __backtraceMap[hash].loweredCount += lowered;
     }
-    /* IF the backtraceMap has already been built by reading JSON delivered thanks to profiling
-     * 
-     *
-     */
-    //read_json_file(jsonFile);
+    if(__profiling){
+    }else{
+        __build_callstacks_map_from_json_file(__jsonFileFromProfiling);
+    }
 
     return  hash;
 }
@@ -177,13 +176,27 @@ void PrecisionTuner::__dump_stack(uint64_t key) {
 #include <sstream>
 #include <iostream>
 
+bool stream_check(ifstream& s){
+    if(s.bad() || s.fail()){
+        cerr << "Bad or failed "<< endl;
+    }
+    if(s.good() && s.is_open())
+        return true;
+    return false;
+}
+
 unordered_map<uint64_t, struct CallData> PrecisionTuner::__build_callstacks_map_from_json_file(char * fileAbsPath){
     /*TODO: Find a different name for callStack the object
       containing number of calls, its call stack addresses and lowered count.
      Because it is the name as the call stack, which is the list of virtual addresses.
      */
     //unordered_map<uint64_t, struct CallData> backtraceMap;
+#ifdef DEBUG
+    cerr << "STARTING __build_callstacks_map_from_json_file" << endl;
+#endif
     std::ifstream infile(fileAbsPath, std::ifstream::binary);
+    if(!stream_check(infile))
+        exit(-1);
     Value jsonDictionnary;
     infile >>  jsonDictionnary;
 
@@ -213,6 +226,9 @@ unordered_map<uint64_t, struct CallData> PrecisionTuner::__build_callstacks_map_
         iss >> hex >> value;
         __backtraceMap[value] = data;
     }
+#ifdef DEBUG
+    cerr << "ENDING __build_callstacks_map_from_json_file" << endl;
+#endif
     return __backtraceMap;
 }
 
