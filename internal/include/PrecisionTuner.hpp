@@ -22,6 +22,9 @@ class PrecisionTuner
     unsigned long __minbound = 0;
     unsigned long __maxbound = 0;
     unsigned long __totalCallStacks = 0;
+    /* Profiling */
+    bool __profiling;
+    char * __jsonFileFromProfiling;
 
     void __display();
     void __dump_json();
