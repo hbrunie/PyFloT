@@ -1,29 +1,28 @@
+#include <cassert>
 #include <cstdio>
-#include <execinfo.h>
+#include <cstdlib>
 #include <fstream>
+#include <iostream>
+#include <sstream>
+
+
+#include <execinfo.h>
 #include <json/json.h>
-#include <stdlib.h>
 
 #include "PrecisionTuner.hpp"    
+//#include "DynFuncCall.hpp"    
 using namespace std;
 using namespace Json;
 
-const unsigned int PrecisionTuner::MAXSTACKSIZE = 500;
-const string PrecisionTuner::JSON_TOTALCALLSTACKS_KEY = "TotalCallStacks";
-const string PrecisionTuner::JSON_MAIN_LIST = "IndependantCallStacks";
-const string PrecisionTuner::JSON_CALLSTACK_LIST  = "CallStack";
-const string PrecisionTuner::JSON_CALLSCOUNT_KEY = "CallsCount";
-const string PrecisionTuner::JSON_LOWERCOUNT_KEY = "LowerCount";
-const string PrecisionTuner::JSON_HASHKEY_KEY = "HashKey";
-
-/* CallData functions */
-ostream& operator<<(ostream& os, const struct CallData& cd)
-{
-    os << "CallData: Dyncount("<< cd.dyncount
-        << ") loweredCount("
-        << cd.loweredCount << ") btVec" << endl;
-    return os;
-}
+const unsigned int PrecisionTuner::MAXSTACKSIZE         = 500;
+const string PrecisionTuner::JSON_TOTALCALLSTACKS_KEY   = "TotalCallStacks";
+const string PrecisionTuner::JSON_TOTALDYNCOUNT_KEY     = "CallsCount";
+const string PrecisionTuner::JSON_TOTALLOWEREDCOUNT_KEY = "LowerCount";
+const string PrecisionTuner::JSON_MAIN_LIST             = "IndependantCallStacks";
+const string PrecisionTuner::DUMP_JSON_FILE             = "DUMPJSONFILE";
+const string PrecisionTuner::READ_JSON_FILE             = "READJSONFILE";
+const string PrecisionTuner::DEFAULT_READ_JSON_FILE     = "./data.json";
+const string PrecisionTuner::JSON_HASHKEY_KEY           = "HashKey";
 
 /* PrecisionTuner functions*/
 PrecisionTuner::PrecisionTuner(){
@@ -33,9 +32,16 @@ PrecisionTuner::PrecisionTuner(){
     envVarString = getenv("MAXBOUND");
     if(envVarString)
         __maxbound = atol(envVarString);
-    envVarString = getenv("JSONFILE");
-    if(envVarString)
-        __build_callstacks_map_from_json_file(envVarString);
+    envVarString = getenv(READ_JSON_FILE.c_str());
+    if(envVarString){
+#ifdef DEBUG
+        cerr << envVarString<< endl;
+#endif
+        if (strcmp(envVarString,"DEFAULT")==0)
+            __buildAllDataFromJsonFile(DEFAULT_READ_JSON_FILE.c_str());
+        else
+            __buildAllDataFromJsonFile(envVarString);
+    }
 }
 
 PrecisionTuner::~PrecisionTuner(){
@@ -44,31 +50,37 @@ PrecisionTuner::~PrecisionTuner(){
 }
 
 uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered) {
-    unsigned long lowered = blowered ? 1 : 0;
+#ifdef DEBUG
+    cerr << "uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered)" << blowered <<endl;
+#endif
     uint64_t hash = 0;
     vector<void*> btVec;
     void * buffer[MAXSTACKSIZE];
+    assert(NULL != buffer);
     const int size = backtrace(buffer, MAXSTACKSIZE);
+    assert(size>0);
     for(int i=0;i<size;i++){
         void * ip = (void*) ((char**)buffer)[i];
+        assert(NULL != ip);
+        assert( (hash + (uint64_t) ip) < numeric_limits<uint64_t>::max());
         btVec.push_back(ip);
         hash += (uint64_t) ip;
     }
     // if this hash is never seen before, record it.
-    unordered_map<uint64_t, struct CallData>::iterator hashIte = __backtraceMap.find(hash);
-    if(hashIte == __backtraceMap.end()) {
-        __backtraceMap[hash] = {btVec,1,lowered};
+    unordered_map<uint64_t, DynFuncCall>::iterator hashIte = __backtraceDynamicMap.find(hash);
+    if(hashIte == __backtraceDynamicMap.end()) {
+        DynFuncCall dfc(btVec,blowered);
+        __backtraceDynamicMap[hash] = dfc;
         __totalCallStacks += 1;
 #ifdef DEBUG
-        printf("\n New Key in backtraceMap vec = %lx: %d\n",hash, btVec.size()) ;
+        cerr << "New Key in backtraceMap vec = " << hash << " : " << btVec.size() << endl ;
 #endif
     }else{ // Count the number of calls to this callstack
-        __backtraceMap[hash].dyncount += 1;
-        __backtraceMap[hash].loweredCount += lowered;
+        __backtraceDynamicMap[hash].called(blowered);
     }
     if(__profiling){
     }else{
-        __build_callstacks_map_from_json_file(__jsonFileFromProfiling);
+        __buildAllDataFromJsonFile(__jsonFileFromProfiling);
     }
 
     return  hash;
@@ -76,10 +88,11 @@ uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered) {
 
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, float), double (*func)(double, double), 
         double value, double parameter){
-    float fvalue = (float)value;
-    float fparameter = (float)parameter;
+    float fvalue, fparameter, fres;
     double dres, res;
-    float fres;
+
+    fvalue = (float)value;
+    fparameter = (float)parameter;
 
     fres = (double) sp_func(fvalue, fparameter);
     dres = func(value, parameter);
@@ -87,9 +100,10 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
 }
 
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double), double value){
-    float fvalue = (float)value;
     double dres, res;
-    float fres;
+    float fvalue, fres;
+
+    fvalue = (float)value;
 
     fres = (double) sp_func(fvalue);
     dres = func(value);
@@ -97,14 +111,15 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
 }
 
 double PrecisionTuner::__overloading_function(string s, float fres, double dres, double value){
-    bool singlePrecision = __dyncount >= __minbound && __dyncount < __maxbound;
+    bool singlePrecision;
     double res;
 
+    singlePrecision = __totalDynCount >= __minbound && __totalDynCount < __maxbound;
     get_context_hash_backtrace(singlePrecision);
-    __dyncount++;
+    __totalDynCount++;
     if(singlePrecision){
         res = (double) fres;
-        __loweredCount ++;
+        __totalLoweredCount ++;
     }else{
         res = dres;
     }
@@ -119,62 +134,63 @@ double PrecisionTuner::__overloading_function(string s, float fres, double dres,
 }
 
 void PrecisionTuner::__display(){
-    fprintf(stderr,"LOWERED %lu\n", (unsigned long) __loweredCount);
-    fprintf(stderr,"TOTAL_DYNCOUNT %lu\n", (unsigned long) __dyncount);
+    fprintf(stderr,"TOTAL LOWERED %lu\n", (unsigned long) __totalLoweredCount);
+    fprintf(stderr,"TOTAL_DYNCOUNT %lu\n", (unsigned long) __totalDynCount);
     fprintf(stderr,"MINBOUND %lu MAXBOUND %lu\n", __minbound, __maxbound);
 }
 
 void PrecisionTuner::__dump_json(){
-    const char* jsonFile = getenv("JSONFILE");
-    FILE * fp = NULL;
-    if(NULL == jsonFile){
-        fprintf(stderr, "JSONFILE environment variable not filled --> dumping on stdout\n");
-        fp = stdout;
-    }else{
-        fp = fopen(jsonFile, "w");
-        if(NULL == fp){
+    const char* jsonFile;
+    bool useCout;
+    filebuf fb;
+    Value jsonDictionnary;
+    Value jsonTotalCallStacks;
+    Value jsonDynFuncCallsList;
+    ostream outfile(NULL);
+
+    jsonFile = getenv(DUMP_JSON_FILE.c_str());
+    useCout = true;
+    if(NULL == jsonFile) {
             fprintf(stderr, "Wrong jsonfile abspath: %s\n", jsonFile);
             fprintf(stderr, "Dumping on stdout\n");
-            fp = stdout;
-        }
+            
+    }else{
+        fb.open(jsonFile,ios::out);
+        if(!fb.is_open()){
+            fprintf(stderr, "Wrong jsonfile abspath: %s\n",jsonFile);
+            fprintf(stderr, "Dumping on stdout\n");
+        }else
+            useCout = false;
     }
-    fprintf(fp, "{\n");
-    fprintf(fp, "\t\"TotalCount\": %lu,\n",__totalCallStacks);
-    fprintf(fp, "\t\"IndependantCallStacks\": [\n");
+    if (!useCout)
+        ostream outfile(&fb);
 
-    int callStackCount = 1;
-    for (auto it = __backtraceMap.begin(); it != __backtraceMap.end(); ++it){
+    jsonTotalCallStacks = (UInt)__totalCallStacks;
+    jsonDictionnary[JSON_TOTALCALLSTACKS_KEY] = jsonTotalCallStacks;
+    for (auto it = __backtraceDynamicMap.begin(); it != __backtraceDynamicMap.end(); ++it){
         unsigned long key = it->first;
-        struct CallData value = it->second;
-        vector <void*> stack = value.btVec;
-        fprintf(fp, "\t\t{\"HashKey\": \"0x%lx\", \n\t\t\t\"CallsCount\": %lu, \n\t\t\t\"LowerCount\": %lu,\n\t\t\t\"CallStack\":[",
-                key, value.dyncount, value.loweredCount);
-        for(int i = 0; i < stack.size()-1; i++){
-            void * ip = stack[i];
-            fprintf(fp, "\"0x%lx\", ", (unsigned long)ip);
-        }
-        fprintf(fp, "\"0x%lx\"]\n\t",(unsigned long)stack[stack.size()-1]);
-        const char *end = (callStackCount == __totalCallStacks) ? "}\n" : "},\n";
-        fprintf(fp,"%s",end);
-        callStackCount++;
+        DynFuncCall value = it->second;
+        Value hashkey((UInt)key);
+        Value jsonDynFuncCall = value.getJsonValue();
+        jsonDynFuncCall[JSON_HASHKEY_KEY] = hashkey; 
+        jsonDynFuncCallsList.append(jsonDynFuncCall);
     }
-    fprintf(fp, "\t]\n");
-    fprintf(fp, "}");
-    fclose(fp);
+#ifdef DEBUG
+    cerr <<jsonDynFuncCallsList<< endl;
+#endif
+    jsonDictionnary[JSON_MAIN_LIST] = jsonDynFuncCallsList;
+    if (useCout)
+        cout <<jsonDictionnary; 
+    else
+        outfile << jsonDictionnary; 
+    //TODO: find proper C++ way to do this fopen with defaut == cout
+    // close the file
 }
-#include <cassert>
+
 void PrecisionTuner::__dump_stack(uint64_t key) {
-    assert(__backtraceMap.find(key) != __backtraceMap.end());
-    vector <void*>& stack = __backtraceMap[key].btVec;
-
-    fprintf(stderr, "\n %lu", stack.size());
-    for(int i = 0; i < stack.size(); i++)
-        fprintf(stderr, "\t %lx", (unsigned long) stack[i]);
-
+    assert(__backtraceDynamicMap.find(key) != __backtraceDynamicMap.end());
+    __backtraceDynamicMap[key].dumpStack();
 }
-
-#include <sstream>
-#include <iostream>
 
 bool stream_check(ifstream& s){
     if(s.bad() || s.fail()){
@@ -185,10 +201,18 @@ bool stream_check(ifstream& s){
     return false;
 }
 
-unordered_map<uint64_t, struct CallData> PrecisionTuner::__build_callstacks_map_from_json_file(char * fileAbsPath){
+void PrecisionTuner::__displayBacktraceDynMap(){
+    for (auto it = __backtraceDynamicMap.begin(); it != __backtraceDynamicMap.end(); it++){
+        unsigned long key = it->first;
+        DynFuncCall value = it->second;
+        cerr << value << endl;
+    }
+}
+
+unordered_map<uint64_t, DynFuncCall> PrecisionTuner::__buildAllDataFromJsonFile(string fileAbsPath){
     /*TODO: Find a different name for callStack the object
       containing number of calls, its call stack addresses and lowered count.
-     Because it is the name as the call stack, which is the list of virtual addresses.
+      Because it is the name as the call stack, which is the list of virtual addresses.
      */
     //unordered_map<uint64_t, struct CallData> backtraceMap;
 #ifdef DEBUG
@@ -199,44 +223,35 @@ unordered_map<uint64_t, struct CallData> PrecisionTuner::__build_callstacks_map_
         exit(-1);
     Value jsonDictionnary;
     infile >>  jsonDictionnary;
+#ifdef DEBUG
+    cerr << "READING JSON __build_callstacks_map_from_json_file" << endl;
+    cerr << jsonDictionnary << endl;
+#endif
+
 
     __totalCallStacks = jsonDictionnary[JSON_TOTALCALLSTACKS_KEY].asUInt64();
-    Value allCallStacks = jsonDictionnary[JSON_MAIN_LIST];
+    __totalLoweredCount = jsonDictionnary[JSON_TOTALLOWEREDCOUNT_KEY].asUInt64();
+    __totalDynCount = jsonDictionnary[JSON_TOTALDYNCOUNT_KEY].asUInt64();
+    Value callStacksList = jsonDictionnary[JSON_MAIN_LIST];
     /* Fill the backtraceMap with JSON values */
-    for(unsigned int callStackIndex = 0; callStackIndex < allCallStacks.size(); callStackIndex++){
+    cerr << callStacksList.size() << endl;
+    for(unsigned int callStackIndex = 0; callStackIndex < callStacksList.size(); callStackIndex++){
         // Get the callStack dictionnary
-        Value callStack = allCallStacks[callStackIndex];
-        Value callStackList = callStack[JSON_CALLSTACK_LIST];
+        Value callStack = callStacksList[callStackIndex];
         Value hashKey = callStack[JSON_HASHKEY_KEY];
-        // It is made of CallStack list, CallsCount, HashKey and LowerCount
-        vector<void *> btVector;
-        unsigned long dyncount = callStack[JSON_CALLSCOUNT_KEY].asUInt64();
-        unsigned long loweredCount = callStack[JSON_LOWERCOUNT_KEY].asUInt64();
-        for(unsigned int btVecInd = 0; btVecInd < callStackList.size(); btVecInd++){
-            string s = callStackList[btVecInd].asString();
-            unsigned long value;
-            istringstream iss(s);
-            iss >> hex >> value;
-            btVector.push_back((void*) value);
-        }
-        struct CallData data = {btVector, dyncount, loweredCount};
+        DynFuncCall data(callStack, hashKey);
+        // TODO: factorize this and the same code in DynFuncCall constructor
+        // into JsonUtils.cpp
+        uint64_t UIntHashKey;
         string s = hashKey.asString();
-        unsigned long value;
         istringstream iss(s);
-        iss >> hex >> value;
-        __backtraceMap[value] = data;
+        iss >> hex >> UIntHashKey;
+        __backtraceDynamicMap[UIntHashKey] = data;
     }
 #ifdef DEBUG
+    cerr << "DISPLAY __build_callstacks_map_from_json_file" << endl;
+    __displayBacktraceDynMap();
     cerr << "ENDING __build_callstacks_map_from_json_file" << endl;
 #endif
-    return __backtraceMap;
-}
-
-void PrecisionTuner::testJson(string jsonFile){
-#ifdef DEBUG
-    cerr << jsonFile << endl;
-#endif
-    char cstr[jsonFile.size() + 1];
-	strcpy(cstr, jsonFile.c_str());
-    __build_callstacks_map_from_json_file(cstr);
+    return __backtraceDynamicMap;
 }

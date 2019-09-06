@@ -225,5 +225,7 @@
 			"LowerCount" : 0
 		}
 	],
-	"TotalCallStacks" : 14
+	"TotalCallStacks" : 14,
+	"CallsCount" : 23,
+	"LowerCount" : 0 
 }

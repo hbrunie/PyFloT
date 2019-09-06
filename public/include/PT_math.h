@@ -8,7 +8,14 @@
 #endif
 #include<math.h>
 
-#include "overloading.cpp"
+double __overloaded_exp(double var);
+double __overloaded_log(double var);
+double __overloaded_log10(double var);
+double __overloaded_cos(double var);
+double __overloaded_sin(double var);
+double __overloaded_sqrt(double var);
+double __overloaded_fabs(double var);
+double __overloaded_pow(double var, double p);
 
 // FLOAT exponential function
 #ifdef expf

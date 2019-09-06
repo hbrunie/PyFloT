@@ -1,4 +1,15 @@
+
 CXX=g++-mp-9 -std=c++11
 CXX=clang++ -std=c++11
 INCLUDEDIR=-I /opt/local/include/ 
 LIB=-L/opt/local/lib/ -ljsoncpp
+
+## Compile PrecisionTuning framework
+PTHOME=/Users/hbrunie/Codes/precisiontuning/
+PUBLICLIB=$(PTHOME)/public/lib/
+INCDIR= -I $(PTHOME)/internal/include/ $(INCLUDEDIR) -I.
+DYNLIB=-shared -fPIC
+
+## Use PrecisionTuning framework
+PTLIB=-L $(PUBLICLIB) -lprecisiontuning
+PTINCDIR= -I $(PTHOME)/public/include/
