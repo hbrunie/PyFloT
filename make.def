@@ -7,7 +7,7 @@ LIB=-L/opt/local/lib/ -ljsoncpp
 ## Compile PrecisionTuning framework
 PTHOME=/Users/hbrunie/Codes/precisiontuning/
 PUBLICLIB=$(PTHOME)/public/lib/
-INCDIR= -I $(PTHOME)/internal/include/ $(INCLUDEDIR) -I.
+INCDIR= -I $(PTHOME)/internal/utils/ -I $(PTHOME)/internal/include/ $(INCLUDEDIR) -I. 
 DYNLIB=-shared -fPIC
 
 ## Use PrecisionTuning framework

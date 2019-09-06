@@ -2,10 +2,14 @@ all: libprecisiontuning.so
 
 include ../../make.def
 
-libprecisiontuning.so:
+libprecisiontuning.so: ../utils/Debug.o
+	make -C ../utils/
 	$(CXX) -c PrecisionTuner.cpp DynFuncCall.cpp overloading.cpp -g $(DEBUG) -I. $(INCDIR)
-	$(CXX) -o $@ PrecisionTuner.o DynFuncCall.o overloading.o -g $(LIB) $(DEBUG) $(DYNLIB)
+	$(CXX) -o $@ ../utils/Debug.o PrecisionTuner.o DynFuncCall.o overloading.o -g $(LIB) $(DEBUG) $(DYNLIB)
 	mv $@ $(PUBLICLIB)
+
+../utils/Debug.o:
+	make all -C ../utils/
 
 clean:
 	rm -f *.o
