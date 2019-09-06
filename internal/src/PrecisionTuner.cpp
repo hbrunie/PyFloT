@@ -9,6 +9,7 @@
 #include <execinfo.h>
 #include <json/json.h>
 
+#include "Debug.hpp"
 #include "PrecisionTuner.hpp"    
 //#include "DynFuncCall.hpp"    
 using namespace std;
@@ -26,6 +27,7 @@ const string PrecisionTuner::JSON_HASHKEY_KEY           = "HashKey";
 
 /* PrecisionTuner functions*/
 PrecisionTuner::PrecisionTuner(){
+    debugtypeOption(getenv("DEBUG"));
     char * envVarString = getenv("MINBOUND");
     if(envVarString)
         __minbound = atol(envVarString);
@@ -34,9 +36,7 @@ PrecisionTuner::PrecisionTuner(){
         __maxbound = atol(envVarString);
     envVarString = getenv(READ_JSON_FILE.c_str());
     if(envVarString){
-#ifdef DEBUG
-        cerr << envVarString<< endl;
-#endif
+        DEBUG("info",cerr << envVarString<< endl;);
         if (strcmp(envVarString,"DEFAULT")==0)
             __buildAllDataFromJsonFile(DEFAULT_READ_JSON_FILE.c_str());
         else
@@ -50,9 +50,7 @@ PrecisionTuner::~PrecisionTuner(){
 }
 
 uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered) {
-#ifdef DEBUG
-    cerr << "uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered)" << blowered <<endl;
-#endif
+    DEBUG("info",cerr << "STARTING uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered)" << blowered <<endl;);
     uint64_t hash = 0;
     vector<void*> btVec;
     void * buffer[MAXSTACKSIZE];
@@ -68,21 +66,17 @@ uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered) {
     }
     // if this hash is never seen before, record it.
     unordered_map<uint64_t, DynFuncCall>::iterator hashIte = __backtraceDynamicMap.find(hash);
+    DEBUG("info",cerr << "LOOKING FOR HASH: "<< hash << " uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered)" <<endl;);
     if(hashIte == __backtraceDynamicMap.end()) {
         DynFuncCall dfc(btVec,blowered);
         __backtraceDynamicMap[hash] = dfc;
         __totalCallStacks += 1;
-#ifdef DEBUG
-        cerr << "New Key in backtraceMap vec = " << hash << " : " << btVec.size() << endl ;
-#endif
+        DEBUG("info",cerr << "New Key in backtraceMap vec = " << hash << " : " << btVec.size() << endl ;);
     }else{ // Count the number of calls to this callstack
         __backtraceDynamicMap[hash].called(blowered);
     }
-    if(__profiling){
-    }else{
-        __buildAllDataFromJsonFile(__jsonFileFromProfiling);
-    }
 
+    DEBUG("info",cerr << "ENDING uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered)" << blowered <<endl;);
     return  hash;
 }
 
@@ -123,13 +117,8 @@ double PrecisionTuner::__overloading_function(string s, float fres, double dres,
     }else{
         res = dres;
     }
-#ifdef DEBUG
     double relErr = fabs(fres - dres) / fabs(dres);
-    if(singlePrecision)
-        cerr << s << " dres=" << dres << " fres=" << fres << " RelError: " << relErr << " value=" << value <<endl;
-    else
-        cerr << s << " dres=" << dres<< " value=" << value << endl;
-#endif
+    DEBUG("infoplus",if(singlePrecision)  cerr << s << " dres=" << dres << " fres=" << fres << " RelError: " << relErr << " value=" << value <<endl; else cerr << s << " dres=" << dres<< " value=" << value << endl;);
     return res;
 }
 
@@ -175,9 +164,7 @@ void PrecisionTuner::__dump_json(){
         jsonDynFuncCall[JSON_HASHKEY_KEY] = hashkey; 
         jsonDynFuncCallsList.append(jsonDynFuncCall);
     }
-#ifdef DEBUG
-    cerr <<jsonDynFuncCallsList<< endl;
-#endif
+    DEBUG("infoplus",cerr <<jsonDynFuncCallsList<< endl;);
     jsonDictionnary[JSON_MAIN_LIST] = jsonDynFuncCallsList;
     if (useCout)
         cout <<jsonDictionnary; 
@@ -215,18 +202,14 @@ unordered_map<uint64_t, DynFuncCall> PrecisionTuner::__buildAllDataFromJsonFile(
       Because it is the name as the call stack, which is the list of virtual addresses.
      */
     //unordered_map<uint64_t, struct CallData> backtraceMap;
-#ifdef DEBUG
-    cerr << "STARTING __build_callstacks_map_from_json_file" << endl;
-#endif
+    DEBUG("info",cerr << "STARTING __build_callstacks_map_from_json_file" << endl;);
     std::ifstream infile(fileAbsPath, std::ifstream::binary);
     if(!stream_check(infile))
         exit(-1);
     Value jsonDictionnary;
     infile >>  jsonDictionnary;
-#ifdef DEBUG
-    cerr << "READING JSON __build_callstacks_map_from_json_file" << endl;
-    cerr << jsonDictionnary << endl;
-#endif
+    DEBUG("info",cerr << "READING JSON __build_callstacks_map_from_json_file" << endl;);
+    DEBUG("infoplus",cerr << jsonDictionnary << endl;);
 
 
     __totalCallStacks = jsonDictionnary[JSON_TOTALCALLSTACKS_KEY].asUInt64();
@@ -248,10 +231,8 @@ unordered_map<uint64_t, DynFuncCall> PrecisionTuner::__buildAllDataFromJsonFile(
         iss >> hex >> UIntHashKey;
         __backtraceDynamicMap[UIntHashKey] = data;
     }
-#ifdef DEBUG
-    cerr << "DISPLAY __build_callstacks_map_from_json_file" << endl;
-    __displayBacktraceDynMap();
-    cerr << "ENDING __build_callstacks_map_from_json_file" << endl;
-#endif
+    DEBUG("infoplus",cerr << "DISPLAY __build_callstacks_map_from_json_file" << endl;);
+    DEBUG("infoplus",__displayBacktraceDynMap(););
+    DEBUG("info",cerr << "ENDING __build_callstacks_map_from_json_file" << endl;);
     return __backtraceDynamicMap;
 }
