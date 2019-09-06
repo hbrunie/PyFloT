@@ -1,4 +1,4 @@
-all: unittest lib
+all: lib unittest 
 
 include make.def
 

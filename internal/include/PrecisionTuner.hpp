@@ -4,7 +4,17 @@
 #include <vector>
 
 #include "DynFuncCall.hpp"
+#include "Strategy.hpp"
+#include "Profile.hpp"
 using namespace std;
+
+//#define CHECK_NULL(X) 				\
+//  do {if(NULL == (X)) {cerr << ": NULL" << endl; } \
+//  } while (0)
+#define CHECK_NULL(X, Y, Z) 				\
+  do {if(NULL == (X)) {cerr << Y << ": NULL" << endl; Z = false;} \
+  } while (0)
+
 class PrecisionTuner
 {
     private:
@@ -16,20 +26,26 @@ class PrecisionTuner
         // Does not depend on ASLR
         // Slower to fill: backtrace costs less than backtrace_symbols
         unordered_map<uint64_t, DynFuncCall> __backtraceStaticMap;
+        Strategy __strategy;
         unsigned long __totalLoweredCount = 0;
         unsigned long __totalDynCount = 0;
-        unsigned long __minbound = 0;
-        unsigned long __maxbound = 0;
+        unsigned long __currentDynCallCount = 0;
+        Value __profileJsonDictionary;
         unsigned long __totalCallStacks = 0;
         /* Profiling */
-        bool __profiling;
+        Profile __profile;
         char * __jsonFileFromProfiling;
 
         void __display();
-        void __dump_json();
+        void __dumpJson(ostream&, Value&);
+        void __dumpStratResultsJson(const char *);
+        //TODO: factorize this in our own HashMap object implementing JSon stuff
+        void __dumpHashMapJson(ostream &os, unordered_map<uint64_t, DynFuncCall> &hashMap);
+        //void __dumpProfileJson(const char *);
         double __overloading_function(string s, float fres, double dres, double value);
         void __dump_stack(uint64_t key);
-        unordered_map<uint64_t, DynFuncCall> __buildAllDataFromJsonFile(string fileAbsPath);
+        void __buildProfiledDataFromJsonFile(string fileAbsPath);
+        void __buildStrategyFromJsonFile(string fileAbsPath);
         void __buildCallStacksMap();
         void __displayBacktraceDynMap();
         //ostream *__check();
@@ -47,9 +63,10 @@ class PrecisionTuner
         static const string JSON_TOTALLOWEREDCOUNT_KEY;
         static const string JSON_HASHKEY_KEY;
         // JSON FILE ENV VARS
-        static const string DUMP_JSON_FILE;
-        static const string READ_JSON_FILE;
-        static const string DEFAULT_READ_JSON_FILE;
+        static const string DUMP_JSON_PROFILING_FILE;
+        static const string DUMP_JSON_STRATSRESULTS_FILE;
+        static const string READ_JSON_PROFILING_FILE;
+        static const string READ_JSON_STRAT_FILE;
 
     public:
         PrecisionTuner();

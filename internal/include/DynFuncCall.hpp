@@ -1,3 +1,5 @@
+#ifndef DynFuncCall_H
+#define DynFuncCall_H
 #include <unordered_map>
 #include <string>
 #include <iostream>
@@ -32,4 +34,4 @@ class DynFuncCall
         void dumpStack();
         friend ostream& operator<<(ostream& os, const DynFuncCall& cd);
 };
-
+#endif // DynFuncCall_H

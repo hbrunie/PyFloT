@@ -5,13 +5,14 @@
 #include <iostream>
 #include <sstream>
 
-
 #include <execinfo.h>
 #include <json/json.h>
 
 #include "Debug.hpp"
+#include "Profile.hpp"    
+#include "Strategy.hpp"    
 #include "PrecisionTuner.hpp"    
-//#include "DynFuncCall.hpp"    
+
 using namespace std;
 using namespace Json;
 
@@ -20,33 +21,48 @@ const string PrecisionTuner::JSON_TOTALCALLSTACKS_KEY   = "TotalCallStacks";
 const string PrecisionTuner::JSON_TOTALDYNCOUNT_KEY     = "CallsCount";
 const string PrecisionTuner::JSON_TOTALLOWEREDCOUNT_KEY = "LowerCount";
 const string PrecisionTuner::JSON_MAIN_LIST             = "IndependantCallStacks";
-const string PrecisionTuner::DUMP_JSON_FILE             = "DUMPJSONFILE";
-const string PrecisionTuner::READ_JSON_FILE             = "READJSONFILE";
-const string PrecisionTuner::DEFAULT_READ_JSON_FILE     = "./data.json";
 const string PrecisionTuner::JSON_HASHKEY_KEY           = "HashKey";
+
+// JSON FILE ENV VARS
+// Profiling mode
+const string PrecisionTuner::DUMP_JSON_PROFILING_FILE     = "DUMPJSONPROFILINGFILE";
+// Applying strategy mode
+const string PrecisionTuner::DUMP_JSON_STRATSRESULTS_FILE = "DUMPJSONSTRATSRESULTSFILE";
+const string PrecisionTuner::READ_JSON_PROFILING_FILE     = "READJSONPROFILINGFILE";
+const string PrecisionTuner::READ_JSON_STRAT_FILE         = "READJSONSTRATFILE";
 
 /* PrecisionTuner functions*/
 PrecisionTuner::PrecisionTuner(){
+    /* 2 modes: Profiling, Applying Strategy (AS)
+     * if  DUMP_JSON_PROFILING_FILE is set: Profiling mode
+     * otherwise AS mode
+     */
     debugtypeOption(getenv("DEBUG"));
-    char * envVarString = getenv("MINBOUND");
-    if(envVarString)
-        __minbound = atol(envVarString);
-    envVarString = getenv("MAXBOUND");
-    if(envVarString)
-        __maxbound = atol(envVarString);
-    envVarString = getenv(READ_JSON_FILE.c_str());
-    if(envVarString){
-        DEBUG("info",cerr << envVarString<< endl;);
-        if (strcmp(envVarString,"DEFAULT")==0)
-            __buildAllDataFromJsonFile(DEFAULT_READ_JSON_FILE.c_str());
-        else
-            __buildAllDataFromJsonFile(envVarString);
+    char * envVarString = getenv(DUMP_JSON_PROFILING_FILE.c_str());
+    if(envVarString){// Profiling mode
+        std::ifstream infile(envVarString, std::ifstream::binary);
+        infile >> __profileJsonDictionary;
+    }else{// Applying strategy mode
+        bool checkOk = true;
+        CHECK_NULL(envVarString = getenv(DUMP_JSON_STRATSRESULTS_FILE.c_str()), DUMP_JSON_STRATSRESULTS_FILE, checkOk);
+        string dumpStratResults(envVarString);
+        CHECK_NULL(envVarString = getenv(READ_JSON_PROFILING_FILE.c_str()),READ_JSON_PROFILING_FILE,checkOk);
+        string profileData(envVarString);
+        CHECK_NULL(envVarString = getenv(READ_JSON_STRAT_FILE.c_str()), READ_JSON_STRAT_FILE, checkOk);
+        string readStratFromJsonFile(envVarString);
+
+        //__buildProfiledDataFromJsonFile(envVarString);
+        __profile  = Profile(profileData);
+        //__buildStrategyFromJsonFile(envVarString);
+        __strategy = Strategy(readStratFromJsonFile, dumpStratResults);
     }
 }
 
 PrecisionTuner::~PrecisionTuner(){
-    __display();
-    __dump_json();
+    char * envVar = getenv(DUMP_JSON_STRATSRESULTS_FILE.c_str());
+    __dumpStratResultsJson(envVar);
+    envVar = getenv(DUMP_JSON_PROFILING_FILE.c_str());
+    //__dumpProfileJson(envVar);
 }
 
 uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered) {
@@ -108,7 +124,7 @@ double PrecisionTuner::__overloading_function(string s, float fres, double dres,
     bool singlePrecision;
     double res;
 
-    singlePrecision = __totalDynCount >= __minbound && __totalDynCount < __maxbound;
+    singlePrecision = __strategy.singlePrecision(__currentDynCallCount);
     get_context_hash_backtrace(singlePrecision);
     __totalDynCount++;
     if(singlePrecision){
@@ -122,13 +138,7 @@ double PrecisionTuner::__overloading_function(string s, float fres, double dres,
     return res;
 }
 
-void PrecisionTuner::__display(){
-    fprintf(stderr,"TOTAL LOWERED %lu\n", (unsigned long) __totalLoweredCount);
-    fprintf(stderr,"TOTAL_DYNCOUNT %lu\n", (unsigned long) __totalDynCount);
-    fprintf(stderr,"MINBOUND %lu MAXBOUND %lu\n", __minbound, __maxbound);
-}
-
-void PrecisionTuner::__dump_json(){
+void PrecisionTuner::__dumpStratResultsJson(const char * jsonFileEnvVar){
     const char* jsonFile;
     bool useCout;
     filebuf fb;
@@ -137,7 +147,7 @@ void PrecisionTuner::__dump_json(){
     Value jsonDynFuncCallsList;
     ostream outfile(NULL);
 
-    jsonFile = getenv(DUMP_JSON_FILE.c_str());
+    jsonFile = getenv(jsonFile);
     useCout = true;
     if(NULL == jsonFile) {
             fprintf(stderr, "Wrong jsonfile abspath: %s\n", jsonFile);
@@ -153,10 +163,40 @@ void PrecisionTuner::__dump_json(){
     }
     if (!useCout)
         ostream outfile(&fb);
+    __strategy.dumpJson(outfile);
+}
 
-    jsonTotalCallStacks = (UInt)__totalCallStacks;
-    jsonDictionnary[JSON_TOTALCALLSTACKS_KEY] = jsonTotalCallStacks;
-    for (auto it = __backtraceDynamicMap.begin(); it != __backtraceDynamicMap.end(); ++it){
+//void PrecisionTuner::__dumpProfileJson(const char * jsonFileEnvVar){
+//    const char* jsonFile;
+//    bool useCout;
+//    filebuf fb;
+//    Value jsonDictionnary;
+//    Value jsonTotalCallStacks;
+//    Value jsonDynFuncCallsList;
+//    ostream outfile(NULL);
+//
+//    jsonFile = getenv(jsonFile);
+//    useCout = true;
+//    if(NULL == jsonFile) {
+//            fprintf(stderr, "Wrong jsonfile abspath: %s\n", jsonFile);
+//            fprintf(stderr, "Dumping on stdout\n");
+//            
+//    }else{
+//        fb.open(jsonFile,ios::out);
+//        if(!fb.is_open()){
+//            fprintf(stderr, "Wrong jsonfile abspath: %s\n",jsonFile);
+//            fprintf(stderr, "Dumping on stdout\n");
+//        }else
+//            useCout = false;
+//    }
+//    if (!useCout)
+//        ostream outfile(&fb);
+//}
+
+void PrecisionTuner::__dumpHashMapJson(ostream &os, unordered_map<uint64_t, DynFuncCall> &hashMap){
+    Value jsonDictionnary;
+    Value jsonDynFuncCallsList;
+    for (auto it = hashMap.begin(); it != hashMap.end(); ++it){
         unsigned long key = it->first;
         DynFuncCall value = it->second;
         Value hashkey((UInt)key);
@@ -166,10 +206,11 @@ void PrecisionTuner::__dump_json(){
     }
     DEBUG("infoplus",cerr <<jsonDynFuncCallsList<< endl;);
     jsonDictionnary[JSON_MAIN_LIST] = jsonDynFuncCallsList;
-    if (useCout)
-        cout <<jsonDictionnary; 
-    else
-        outfile << jsonDictionnary; 
+    os << jsonDictionnary << endl;
+    //if (useCout)
+    //    cout <<jsonDictionnary; 
+    //else
+    //    outfile << jsonDictionnary; 
     //TODO: find proper C++ way to do this fopen with defaut == cout
     // close the file
 }
@@ -196,7 +237,10 @@ void PrecisionTuner::__displayBacktraceDynMap(){
     }
 }
 
-unordered_map<uint64_t, DynFuncCall> PrecisionTuner::__buildAllDataFromJsonFile(string fileAbsPath){
+void PrecisionTuner::__buildStrategyFromJsonFile(string fileAbsPath){
+}
+
+void PrecisionTuner::__buildProfiledDataFromJsonFile(string fileAbsPath){
     /*TODO: Find a different name for callStack the object
       containing number of calls, its call stack addresses and lowered count.
       Because it is the name as the call stack, which is the list of virtual addresses.
@@ -234,5 +278,4 @@ unordered_map<uint64_t, DynFuncCall> PrecisionTuner::__buildAllDataFromJsonFile(
     DEBUG("infoplus",cerr << "DISPLAY __build_callstacks_map_from_json_file" << endl;);
     DEBUG("infoplus",__displayBacktraceDynMap(););
     DEBUG("info",cerr << "ENDING __build_callstacks_map_from_json_file" << endl;);
-    return __backtraceDynamicMap;
 }
