@@ -1,5 +1,0 @@
-class Profiling{
-    private:
-    public:
-
-};
