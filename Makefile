@@ -1,24 +1,17 @@
-all: unittest execinfo
+all: unittest lib
 
 include make.def
 
-execinfo:
-	$(CXX) -c PrecisionTuner.cpp -g $(DEBUG) -I. $(INCLUDEDIR)
-	$(CXX) -c main.cpp -DUSE_EXECINFO -g $(DEBUG) -I.
-	$(CXX) -o nounwind main.o PrecisionTuner.o -g $(LIB) -lm $(DEBUG)
+lib:
+	make -C internal/src/
 
 unittest:
-	$(CXX) -c PrecisionTuner.cpp -g $(DEBUG) -I. $(INCLUDEDIR)
-	$(CXX) -c testJson.cpp -g $(DEBUG) -I.
-	$(CXX) -o $@ testJson.o PrecisionTuner.o -g $(DEBUG) $(LIB)
-
-test:
-	$(CXX) main.cpp -lm $(DEBUG) 
+	make -C ./tests
 
 clean:
-	rm -f *.o
+	make clean -C ./tests
+	make clean -C ./internal/src
 
 cleanall: clean
-	rm -f test unittest execinfo
-
-.PHONY: unittest
+	rm -f ./public/lib/libprecisiontuning.so
+	make cleanall -C ./tests
