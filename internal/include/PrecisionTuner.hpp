@@ -12,8 +12,10 @@ using namespace std;
 //  do {if(NULL == (X)) {cerr << ": NULL" << endl; } \
 //  } while (0)
 #define CHECK_NULL(X, Y, Z) 				\
-  do {if(NULL == (X)) {cerr << Y << ": NULL" << endl; Z = false;} \
+  do {if(NULL == (X)) {cerr << "Error: " << Y << " == NULL" << endl; Z = false;} \
   } while (0)
+
+enum MODE{PROFILING, APPLYING_STRAT};
 
 class PrecisionTuner
 {
@@ -27,6 +29,7 @@ class PrecisionTuner
         // Slower to fill: backtrace costs less than backtrace_symbols
         unordered_map<uint64_t, DynFuncCall> __backtraceStaticMap;
         Strategy __strategy;
+        enum MODE __mode;
         unsigned long __totalLoweredCount = 0;
         unsigned long __totalDynCount = 0;
         unsigned long __currentDynCallCount = 0;

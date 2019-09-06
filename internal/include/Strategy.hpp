@@ -21,7 +21,7 @@ class Strategy
         Strategy();
         Strategy(string, string);
         bool singlePrecision(unsigned long);
-        void dumpJson(ostream&);
+        void dumpJson();
         friend ostream& operator<<(ostream& os, const Strategy& strat);
 };
 #endif // Strategy_H

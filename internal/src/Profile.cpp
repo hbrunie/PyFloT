@@ -26,12 +26,38 @@ Profile::Profile(string fname){
 }
 
 void Profile::__buildProfiledDataFromJsonFile(string fname){
-
+    Value jsonDictionnary;
+    std::ifstream infile(fname, std::ifstream::binary);
+    infile >> jsonDictionnary;
 }
 
 void Profile::dumpJson(){
+    //TODO: factorize this code
+    const char* jsonFile;
+    bool useCout;
+    filebuf fb;
     Value jsonDictionnary;
-    Value jsonTotalCallStacks = (UInt)__totalCallStacks;
+    Value jsonTotalCallStacks;
+    Value jsonDynFuncCallsList;
+    ostream outfile(NULL);
+
+    jsonFile = getenv(jsonFile);
+    useCout = true;
+    if(NULL == jsonFile) {
+            fprintf(stderr, "Wrong jsonfile abspath: %s\n", jsonFile);
+            fprintf(stderr, "Dumping on stdout\n");
+            
+    }else{
+        fb.open(jsonFile,ios::out);
+        if(!fb.is_open()){
+            fprintf(stderr, "Wrong jsonfile abspath: %s\n",jsonFile);
+            fprintf(stderr, "Dumping on stdout\n");
+        }else
+            useCout = false;
+    }
+    if (!useCout)
+        ostream outfile(&fb);
+    jsonTotalCallStacks = (UInt)__totalCallStacks;
     jsonDictionnary[JSON_TOTALCALLSTACKS_KEY] = jsonTotalCallStacks;
 
 }

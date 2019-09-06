@@ -32,7 +32,7 @@ bool Strategy::singlePrecision(unsigned long){
 void Strategy::__buildStrategyFromJsonFile(string){
 }
 
-void Strategy::dumpJson(ostream& out){
+void Strategy::dumpJson(){
 
 }
 

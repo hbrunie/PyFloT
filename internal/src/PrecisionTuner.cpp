@@ -38,31 +38,46 @@ PrecisionTuner::PrecisionTuner(){
      * otherwise AS mode
      */
     debugtypeOption(getenv("DEBUG"));
+    DEBUG("info", cerr << "STARTING PrecisionTuner constructor" << endl;);
     char * envVarString = getenv(DUMP_JSON_PROFILING_FILE.c_str());
     if(envVarString){// Profiling mode
-        std::ifstream infile(envVarString, std::ifstream::binary);
-        infile >> __profileJsonDictionary;
+        DEBUG("info", cerr << "PROFILING mode PrecisionTuner constructor" << endl;);
+        __mode = PROFILING;
+        // TODO:NO READING JSON --> execute, generate Json and dump it.
     }else{// Applying strategy mode
+        DEBUG("info", cerr << "APPLYING strategy mode PrecisionTuner constructor" << endl;);
+        __mode = APPLYING_STRAT;
         bool checkOk = true;
-        CHECK_NULL(envVarString = getenv(DUMP_JSON_STRATSRESULTS_FILE.c_str()), DUMP_JSON_STRATSRESULTS_FILE, checkOk);
-        string dumpStratResults(envVarString);
         CHECK_NULL(envVarString = getenv(READ_JSON_PROFILING_FILE.c_str()),READ_JSON_PROFILING_FILE,checkOk);
-        string profileData(envVarString);
+        if(checkOk){
+            string profileData(envVarString);
+            __profile  = Profile(profileData);
+        }
+        CHECK_NULL(envVarString = getenv(DUMP_JSON_STRATSRESULTS_FILE.c_str()), DUMP_JSON_STRATSRESULTS_FILE, checkOk);
         CHECK_NULL(envVarString = getenv(READ_JSON_STRAT_FILE.c_str()), READ_JSON_STRAT_FILE, checkOk);
-        string readStratFromJsonFile(envVarString);
+        if(checkOk){
+            string dumpStratResults(envVarString);
+            string readStratFromJsonFile(envVarString);
+            __strategy = Strategy(readStratFromJsonFile, dumpStratResults);
+        }
 
         //__buildProfiledDataFromJsonFile(envVarString);
-        __profile  = Profile(profileData);
         //__buildStrategyFromJsonFile(envVarString);
-        __strategy = Strategy(readStratFromJsonFile, dumpStratResults);
     }
+    DEBUG("info", cerr << "ENDING PrecisionTuner constructor" << endl;);
 }
 
 PrecisionTuner::~PrecisionTuner(){
-    char * envVar = getenv(DUMP_JSON_STRATSRESULTS_FILE.c_str());
-    __dumpStratResultsJson(envVar);
-    envVar = getenv(DUMP_JSON_PROFILING_FILE.c_str());
-    //__dumpProfileJson(envVar);
+    switch(__mode){ 
+        case APPLYING_STRAT:
+            __strategy.dumpJson();
+            break;
+        case PROFILING:
+            __profile.dumpJson();
+            break;
+        default:
+            cerr << "PrecisionTuner ERROR: no __mode chosen" << endl;
+    }
 }
 
 uint64_t PrecisionTuner::get_context_hash_backtrace(bool blowered) {
@@ -136,34 +151,6 @@ double PrecisionTuner::__overloading_function(string s, float fres, double dres,
     double relErr = fabs(fres - dres) / fabs(dres);
     DEBUG("infoplus",if(singlePrecision)  cerr << s << " dres=" << dres << " fres=" << fres << " RelError: " << relErr << " value=" << value <<endl; else cerr << s << " dres=" << dres<< " value=" << value << endl;);
     return res;
-}
-
-void PrecisionTuner::__dumpStratResultsJson(const char * jsonFileEnvVar){
-    const char* jsonFile;
-    bool useCout;
-    filebuf fb;
-    Value jsonDictionnary;
-    Value jsonTotalCallStacks;
-    Value jsonDynFuncCallsList;
-    ostream outfile(NULL);
-
-    jsonFile = getenv(jsonFile);
-    useCout = true;
-    if(NULL == jsonFile) {
-            fprintf(stderr, "Wrong jsonfile abspath: %s\n", jsonFile);
-            fprintf(stderr, "Dumping on stdout\n");
-            
-    }else{
-        fb.open(jsonFile,ios::out);
-        if(!fb.is_open()){
-            fprintf(stderr, "Wrong jsonfile abspath: %s\n",jsonFile);
-            fprintf(stderr, "Dumping on stdout\n");
-        }else
-            useCout = false;
-    }
-    if (!useCout)
-        ostream outfile(&fb);
-    __strategy.dumpJson(outfile);
 }
 
 //void PrecisionTuner::__dumpProfileJson(const char * jsonFileEnvVar){
