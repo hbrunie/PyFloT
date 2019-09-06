@@ -22,6 +22,6 @@ clean:
 	rm -f *.o
 
 cleanall: clean
-	rm -f testConstructor testHeader testMathFunctions
+	rm -f testConstructor testHeader testMathFunctions testExp
 
 .PHONY: unittest
