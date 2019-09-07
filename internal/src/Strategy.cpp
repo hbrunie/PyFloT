@@ -25,7 +25,8 @@ Strategy::Strategy(){
     __dyncount = 0;
     __loweredCount = 0;
 }
-bool Strategy::singlePrecision(unsigned long){
+bool Strategy::singlePrecision(Profile& profile){
+    profile.getCurrentDynCount();
     return true;
 }
 

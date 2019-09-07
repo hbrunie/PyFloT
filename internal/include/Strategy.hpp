@@ -1,12 +1,7 @@
 #ifndef Strategy_H
 #define Strategy_H
 
-#include <unordered_map>
-#include <string>
-#include <iostream>
-#include <vector>
-
-#include <json/json.h>
+#include "Profile.hpp"    
 
 using namespace std;
 using namespace Json;
@@ -20,7 +15,7 @@ class Strategy
     public:
         Strategy();
         Strategy(string, string);
-        bool singlePrecision(unsigned long);
+        bool singlePrecision(Profile&);
         void dumpJson();
         friend ostream& operator<<(ostream& os, const Strategy& strat);
 };

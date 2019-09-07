@@ -1,8 +1,9 @@
 #ifndef DynFuncCall_H
 #define DynFuncCall_H
-#include <unordered_map>
-#include <string>
+
 #include <iostream>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <json/json.h>
@@ -25,12 +26,14 @@ class DynFuncCall
         uint64_t __hashKey;
     public:
         DynFuncCall();
-        DynFuncCall(Value, Value);
         DynFuncCall(const DynFuncCall &);
-        DynFuncCall(vector<void*>, bool);
+        DynFuncCall(Value, Value);
+        DynFuncCall(vector<void*> btVec, bool lowered);
         DynFuncCall(vector<void*> btVec, unsigned long dyncount, unsigned long loweredCount);
-        void called(bool);
+        void called(DynFuncCall &);
         Value getJsonValue();
+        uint64_t getHashKey()const;
+        unsigned long getLoweredCount()const;
         void dumpStack();
         friend ostream& operator<<(ostream& os, const DynFuncCall& cd);
 };
