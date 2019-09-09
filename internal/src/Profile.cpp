@@ -16,19 +16,19 @@ using namespace Json;
 
 const string Profile::JSON_TOTALCALLSTACKS_KEY   = "TotalCallStacks";
 const string Profile::JSON_TOTALDYNCOUNT_KEY     = "CallsCount";
-const string Profile::JSON_TOTALLOWEREDCOUNT_KEY = "LowerCount";
+//TODO: Factorize with Strategy
 const string Profile::JSON_MAIN_LIST             = "IndependantCallStacks";
 const string Profile::JSON_HASHKEY_KEY           = "HashKey";
 
 Profile::Profile(){
 }
 
-Profile::Profile(bool profiling, string fname){
+Profile::Profile(bool profiling, string ReadOrDumpProfileName){
     __profiling = profiling;
     if(profiling)
-        __dumpJsonProfilingFile = fname;
+        __dumpJsonProfilingFile = ReadOrDumpProfileName;
     else{
-        __buildProfiledDataFromJsonFile(fname);
+        __buildProfiledDataFromJsonFile(ReadOrDumpProfileName);
     }
 }
 
@@ -44,9 +44,16 @@ void Profile::updateHashMap(DynFuncCall& dfc){
     }else{ // Count the number of calls to this callstack
         __backtraceDynamicMap[hashKey].called(dfc);
     }
-    __totalLoweredCount = dfc.getLoweredCount();
 
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ <<endl;);
+}
+
+unsigned long Profile::getCurrentDynCount() const{
+    return __currentDynCount;
+}
+
+void Profile::dumpJson(){
+    __dumpJson(__backtraceDynamicMap);
 }
 
 void Profile::__displayBacktraceDynMap(){
@@ -55,13 +62,6 @@ void Profile::__displayBacktraceDynMap(){
         DynFuncCall value = it->second;
         cerr << value << endl;
     }
-}
-
-unsigned long Profile::getCurrentDynCount() const{
-    return __currentDynCount;
-}
-void Profile::dumpJson(){
-    __dumpJson(__backtraceDynamicMap);
 }
 
 void Profile::__dumpJson(unordered_map<uint64_t, DynFuncCall> &hashMap){
@@ -101,7 +101,7 @@ void Profile::__dumpJson(unordered_map<uint64_t, DynFuncCall> &hashMap){
     // close the file
 }
 
-bool stream_check(ifstream& s){
+static bool stream_check(ifstream& s){
     if(s.bad() || s.fail()){
         cerr << "Bad or failed "<< endl;
     }
@@ -114,6 +114,8 @@ void Profile::__buildProfiledDataFromJsonFile(string fileAbsPath){
     /*TODO: Find a different name for callStack the object
       containing number of calls, its call stack addresses and lowered count.
       Because it is the name as the call stack, which is the list of virtual addresses.
+      Can not be Dynamic Function call. It is in between DynFuncCall and Static function call site.
+      Maybe Dynamic Function Call Site? Containing ASVR dependent and ASVR independent.
      */
     //unordered_map<uint64_t, struct CallData> backtraceMap;
     DEBUG("info",cerr << "STARTING __build_callstacks_map_from_json_file" << endl;);
@@ -127,7 +129,6 @@ void Profile::__buildProfiledDataFromJsonFile(string fileAbsPath){
 
 
     __totalCallStacks = jsonDictionary[JSON_TOTALCALLSTACKS_KEY].asUInt64();
-    __totalLoweredCount = jsonDictionary[JSON_TOTALLOWEREDCOUNT_KEY].asUInt64();
     __totalDynCount = jsonDictionary[JSON_TOTALDYNCOUNT_KEY].asUInt64();
     Value callStacksList = jsonDictionary[JSON_MAIN_LIST];
     /* Fill the backtraceMap with JSON values */

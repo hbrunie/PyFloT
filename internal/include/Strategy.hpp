@@ -9,13 +9,21 @@ class Strategy
 {
     private:
         unsigned long __dyncount;
-        unsigned long __loweredCount;
-        string __dumpStratResultsJson;
+        unsigned long __totalLoweredCount;
+        string __dumpJsonStratResultsFile;
+        // List of all the call stack dictionnaries
+        static const string JSON_MAIN_LIST;
+        static const string JSON_HASHKEY_KEY;
+        static const string JSON_TOLOWER_LIST_KEY;
+        static const string JSON_TOTALLOWEREDCOUNT_KEY;
+        unordered_map<uint64_t, unordered_set<unsigned long>> __toLower;
+        // private functions
         void __buildStrategyFromJsonFile(string);
     public:
         Strategy();
         Strategy(string, string);
-        bool singlePrecision(Profile&);
+        bool singlePrecision(DynFuncCall &);
+        void updateResults(DynFuncCall&);
         void dumpJson();
         friend ostream& operator<<(ostream& os, const Strategy& strat);
 };

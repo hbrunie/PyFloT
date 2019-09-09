@@ -28,6 +28,7 @@ class DynFuncCall
         DynFuncCall();
         DynFuncCall(const DynFuncCall &);
         DynFuncCall(Value, Value);
+        DynFuncCall(vector<void*> btVec);
         DynFuncCall(vector<void*> btVec, bool lowered);
         DynFuncCall(vector<void*> btVec, unsigned long dyncount, unsigned long loweredCount);
         void called(DynFuncCall &);

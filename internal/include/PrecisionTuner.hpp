@@ -17,8 +17,8 @@ class PrecisionTuner
         /* Profiling */
         Profile __profile;
         char * __jsonFileFromProfiling;
-        //void __dumpProfileJson(const char *);
-        double __overloading_function(string s, float fres, double dres, double value);
+        double __overloading_function(vector<void*> btVec, string s, float fres, double dres, double value);
+        vector<void*> __getContextHashBacktrace();
 
         static const unsigned int MAXSTACKSIZE;
         /* JSON values and sections keys */
@@ -33,7 +33,6 @@ class PrecisionTuner
     public:
         PrecisionTuner();
         ~PrecisionTuner();
-        vector<void*> getContextHashBacktrace();
         double overloading_function(string s, float (*sp_func) (float, float), double (*func)(double, double), 
                 double value, double parameter);
         double overloading_function(string s, float (*sp_func) (float), double (*func)(double), double value);

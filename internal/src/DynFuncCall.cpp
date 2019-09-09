@@ -33,16 +33,9 @@ DynFuncCall::DynFuncCall(vector<void*> btVec, bool lowered){
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
 }
 
+DynFuncCall::DynFuncCall(vector<void*> btVec) : DynFuncCall(btVec, false) {}
+
 unsigned long DynFuncCall::getLoweredCount()const{
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    return __loweredCount;
-}
-
-uint64_t DynFuncCall::getHashKey()const{
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    return __hashKey;
-}
-
 DynFuncCall::DynFuncCall(Value dynFuncCall, Value hashKey){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     Value dynFuncCallAddrList = dynFuncCall[JSON_CALLSTACK_ADDR_LIST_KEY];
@@ -62,6 +55,21 @@ DynFuncCall::DynFuncCall(Value dynFuncCall, Value hashKey){
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
 }
 
+    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    return __loweredCount;
+}
+
+void DynFuncCall::called(DynFuncCall & dfc){
+    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    __dyncount     += dfc.__dyncount;
+    __loweredCount += dfc.__loweredCount;
+}
+
+uint64_t DynFuncCall::getHashKey()const{
+    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    return __hashKey;
+}
+
 DynFuncCall::DynFuncCall(const DynFuncCall & dfc){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     __btVec = dfc.__btVec;
@@ -74,12 +82,6 @@ DynFuncCall::DynFuncCall(vector<void*> btVec, unsigned long dyncount, unsigned l
     __btVec = btVec;
     __dyncount = dyncount;
     __loweredCount = loweredCount;
-}
-
-void DynFuncCall::called(DynFuncCall & dfc){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    __dyncount     += dfc.__dyncount;
-    __loweredCount += dfc.__loweredCount;
 }
 
 ostream& operator<<(ostream& os, const DynFuncCall& dfc){
