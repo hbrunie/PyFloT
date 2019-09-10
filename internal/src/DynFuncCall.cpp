@@ -18,30 +18,36 @@ DynFuncCall::DynFuncCall(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
 }
 
-DynFuncCall::DynFuncCall(vector<void*> btVec, bool lowered){
+DynFuncCall::DynFuncCall(vector<void*>  btVec, uint64_t hashKey, bool lowered){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    __hashKey = 0; 
+    __hashKey = hashKey; 
     __btVec = btVec;
     __dyncount = 1;
     __loweredCount = lowered ? 1 : 0;
-    for(auto it = btVec.begin(); it != btVec.end(); it++){
-        void *ip = *it;
-        assert(NULL != ip);
-        __hashKey += (uint64_t) ip;
-        assert( (__hashKey+ (uint64_t) ip) < numeric_limits<uint64_t>::max());
-    }
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
 }
 
-DynFuncCall::DynFuncCall(vector<void*> btVec) : DynFuncCall(btVec, false) {}
+DynFuncCall::DynFuncCall(vector<void*>  btVec, uint64_t hashKey) : DynFuncCall(btVec, hashKey, false) {}
 
-unsigned long DynFuncCall::getLoweredCount()const{
-DynFuncCall::DynFuncCall(Value dynFuncCall, Value hashKey){
+DynFuncCall::DynFuncCall(Value dynFuncCall, uint64_t hashKey){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    Value dynFuncCallAddrList = dynFuncCall[JSON_CALLSTACK_ADDR_LIST_KEY];
-    // It is made of CallStack list, CallsCount, HashKey and LowerCount
     __dyncount = dynFuncCall[JSON_CALLSCOUNT_KEY].asUInt64();
     __loweredCount = dynFuncCall[JSON_LOWERCOUNT_KEY].asUInt64();
+    Value stratSet = dynFuncCall["Strategy"];
+    for(unsigned int multiSetInd = 0; multiSetInd < stratSet.size(); multiSetInd++){
+        Value s = stratSet[multiSetInd];
+        struct FloatSet fset;
+        for(unsigned int i = 0; i < 2; i++){
+            Value ss = s[i];
+            if(i==0)
+                fset.low = atof((ss.asString()).c_str());
+            else
+                fset.high = atof((ss.asString()).c_str());
+        }
+        __stratMultiSet.push_back(fset);
+    }
+    // It is made of CallStack list, CallsCount, HashKey and LowerCount
+    Value dynFuncCallAddrList = dynFuncCall[JSON_CALLSTACK_ADDR_LIST_KEY];
     for(unsigned int btVecInd = 0; btVecInd < dynFuncCallAddrList.size(); btVecInd++){
         string s = dynFuncCallAddrList[btVecInd].asString();
         unsigned long value;
@@ -49,12 +55,11 @@ DynFuncCall::DynFuncCall(Value dynFuncCall, Value hashKey){
         iss >> hex >> value;
         __btVec.push_back((void*) value);
     }
-    string s = hashKey.asString();
-    istringstream iss(s);
-    iss >> hex >> __hashKey;
+    __hashKey = hashKey;
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
 }
 
+unsigned long DynFuncCall::getLoweredCount(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     return __loweredCount;
 }
@@ -65,7 +70,7 @@ void DynFuncCall::called(DynFuncCall & dfc){
     __loweredCount += dfc.__loweredCount;
 }
 
-uint64_t DynFuncCall::getHashKey()const{
+uint64_t DynFuncCall::getHashKey(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     return __hashKey;
 }
@@ -94,6 +99,23 @@ ostream& operator<<(ostream& os, const DynFuncCall& dfc){
     }
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
     return os;
+}
+
+vector<void*> DynFuncCall::getBtVector(){return __btVec;}
+
+void DynFuncCall::updateLowerCount(bool lower){
+    __loweredCount += lower ? 1 : 0;
+}
+
+bool DynFuncCall::applyStrategy(){
+    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    for(auto it = __stratMultiSet.begin() ; it != __stratMultiSet.end(); it++){
+        struct FloatSet fs = *it;
+        DEBUG("info",cerr << "Comparison: " << __dyncount*fs.low << " < " << __dyncount << " < " << __dyncount*fs.high << endl;);
+        if(__dyncount > __dyncount*fs.low && __dyncount < __dyncount*fs.high)
+            return true;
+    }
+    return false;
 }
 
 Value DynFuncCall::getJsonValue(){

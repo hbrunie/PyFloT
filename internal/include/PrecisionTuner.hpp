@@ -1,6 +1,6 @@
 #ifndef PrecisionTuner_H
 #define PrecisionTuner_H
-#include "Strategy.hpp"
+#include "Profile.hpp"
 using namespace std;
 
 #define CHECK_NULL(X, Y, Z) 				\
@@ -12,12 +12,11 @@ enum MODE{PROFILING, APPLYING_STRAT};
 class PrecisionTuner
 {
     private:
-        Strategy __strategy;
         enum MODE __mode;
         /* Profiling */
         Profile __profile;
         char * __jsonFileFromProfiling;
-        double __overloading_function(vector<void*> btVec, string s, float fres, double dres, double value);
+        double __overloading_function(vector<void*> &btVec, string s, float fres, double dres, double value);
         vector<void*> __getContextHashBacktrace();
 
         static const unsigned int MAXSTACKSIZE;
@@ -27,7 +26,7 @@ class PrecisionTuner
         // JSON FILE ENV VARS
         static const string DUMP_JSON_PROFILING_FILE;
         static const string DUMP_JSON_STRATSRESULTS_FILE;
-        static const string READ_JSON_PROFILING_FILE;
+        static const string READ_JSON_PROFILE_STRAT_FILE;
         static const string READ_JSON_STRAT_FILE;
 
     public:

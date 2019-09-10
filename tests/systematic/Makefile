@@ -27,4 +27,5 @@ clean:
 	rm -f *.o
 
 cleanall: clean
-	rm -f test1Call_v1 test1Call_v2
+	rm -f test1Call_v1 test1Call_v2 test1Call_v1.dSYM test1Call_v1.dSYM
+

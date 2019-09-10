@@ -16,7 +16,6 @@ class Strategy
         static const string JSON_HASHKEY_KEY;
         static const string JSON_TOLOWER_LIST_KEY;
         static const string JSON_TOTALLOWEREDCOUNT_KEY;
-        unordered_map<uint64_t, unordered_set<unsigned long>> __toLower;
         // private functions
         void __buildStrategyFromJsonFile(string);
     public:

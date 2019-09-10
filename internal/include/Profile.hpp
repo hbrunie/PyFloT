@@ -17,16 +17,20 @@ class Profile{
         unordered_map<uint64_t, DynFuncCall> __backtraceStaticMap;
         unsigned long __totalDynCount = 0;
         unsigned long __currentDynCount = 0;
-        string __dumpJsonProfilingFile;
-        bool __profiling;
+        string __dumpFile;
         Value __profileJsonDictionary;
         unsigned long __totalCallStacks = 0;
 
         /// PRIVATE Functions
         //TODO: factorize this in our own HashMap object implementing JSon stuff
-        void __dumpJson(unordered_map<uint64_t, DynFuncCall> &hashMap);
         void __buildProfiledDataFromJsonFile(string fileAbsPath);
+        void __dumpJsonPermanentHashMap();
         void __displayBacktraceDynMap();
+        void __displayBacktraceStaticMap();
+        uint64_t __hashKey(vector<void*> btVec);
+        uint64_t __staticHashKey(vector<void*> btVec);
+        void __updateHashMap(DynFuncCall& dfc, uint64_t hashKey);
+        void    __buildStaticBacktraceMap();
 
         /// JSON Keys
         // List of all the call stack dictionnaries
@@ -37,12 +41,14 @@ class Profile{
         // LOWERED Dynamic calls count
         static const string JSON_TOTALCALLSTACKS_KEY;
         static const string JSON_HASHKEY_KEY;
+        bool singlePrecision(vector<void*> & btVec);
+        void updateHashMap(DynFuncCall &);
 
     public:
         Profile();
-        Profile(bool, string);
-        void updateHashMap(DynFuncCall &);
-        unsigned long getCurrentDynCount()const;
+        Profile(bool, string, string);
+        bool applyStrategy(vector<void*> & btVec);
+        void applyProfiling(vector<void*> & btVec);
         void dumpJson();
 };
 #endif //Profile_H

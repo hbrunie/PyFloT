@@ -1,6 +1,6 @@
 all: testExp testMathFunctions testConstructor testHeader
 
-include ../make.def
+include ../../make.def
 
 testMathFunctions:
 	$(CXX) -c testMathFunctions.cpp -g $(DEBUG) $(PTINCDIR)

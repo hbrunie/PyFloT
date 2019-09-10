@@ -12,38 +12,40 @@ const unsigned int PrecisionTuner::MAXSTACKSIZE         = 500;
 // Profiling mode
 const string PrecisionTuner::DUMP_JSON_PROFILING_FILE     = "DUMPJSONPROFILINGFILE";
 // Applying strategy mode
-const string PrecisionTuner::DUMP_JSON_STRATSRESULTS_FILE = "DUMPJSONSTRATSRESULTSFILE";
-const string PrecisionTuner::READ_JSON_PROFILING_FILE     = "READJSONPROFILINGFILE";
-const string PrecisionTuner::READ_JSON_STRAT_FILE         = "READJSONSTRATFILE";
+const string PrecisionTuner::DUMP_JSON_STRATSRESULTS_FILE     = "DUMPJSONSTRATSRESULTSFILE";
+const string PrecisionTuner::READ_JSON_PROFILE_STRAT_FILE     = "READJSONPROFILESTRATFILE";
 
 PrecisionTuner::PrecisionTuner(){
     /* 2 modes: Profiling, Applying Strategy (AS)
      * if  DUMP_JSON_PROFILING_FILE is set: Profiling mode
      * otherwise AS mode
      */
+    char *envVarString=NULL, * envVarString1 = NULL, * envVarString2=NULL;
     debugtypeOption(getenv("DEBUG"));
-    DEBUG("info", cerr << "STARTING PrecisionTuner constructor" << endl;);
-    char * envVarString = getenv(DUMP_JSON_PROFILING_FILE.c_str());
-    if(envVarString){// Profiling mode
-        DEBUG("info", cerr << "PROFILING mode PrecisionTuner constructor" << endl;);
+    envVarString = getenv(DUMP_JSON_PROFILING_FILE.c_str());
+    DEBUG("info", cerr << __FUNCTION__ << ": "<< DUMP_JSON_PROFILING_FILE
+            << " " << envVarString << endl;);
+    fprintf(stderr, "%p\n",envVarString);
+    if(NULL != envVarString && strlen(envVarString) > 1){
+        DEBUG("info", cerr << __FUNCTION__ << ": MODE PROFILING " << endl;);
         __mode = PROFILING;
-        __profile = Profile(true, envVarString);
-        // TODO:NO READING JSON --> execute, generate Json and dump it.
+        string dumpFile(envVarString);
+        __profile = Profile(true, "None", dumpFile);
     }else{// Applying strategy mode
-        DEBUG("info", cerr << "APPLYING strategy mode PrecisionTuner constructor" << endl;);
+        DEBUG("info", cerr << __FUNCTION__ << ": MODE APPLYING_STRAT " << endl;);
         __mode = APPLYING_STRAT;
         bool checkOk = true;
-        CHECK_NULL(envVarString = getenv(READ_JSON_PROFILING_FILE.c_str()),READ_JSON_PROFILING_FILE,checkOk);
-        if(checkOk){
-            string profileData(envVarString);
-            __profile  = Profile(false, profileData);
-        }
-        CHECK_NULL(envVarString = getenv(DUMP_JSON_STRATSRESULTS_FILE.c_str()), DUMP_JSON_STRATSRESULTS_FILE, checkOk);
-        CHECK_NULL(envVarString = getenv(READ_JSON_STRAT_FILE.c_str()), READ_JSON_STRAT_FILE, checkOk);
-        if(checkOk){
-            string dumpStratResults(envVarString);
-            string readStratFromJsonFile(envVarString);
-            __strategy = Strategy(readStratFromJsonFile, dumpStratResults);
+        CHECK_NULL(envVarString1 = getenv(READ_JSON_PROFILE_STRAT_FILE.c_str()),READ_JSON_PROFILE_STRAT_FILE,checkOk);
+        CHECK_NULL(envVarString2 = getenv(DUMP_JSON_STRATSRESULTS_FILE.c_str()), DUMP_JSON_STRATSRESULTS_FILE, checkOk);
+        DEBUG("info", cerr << __FUNCTION__ << ": "<< DUMP_JSON_STRATSRESULTS_FILE
+                << " " << string(envVarString1) << endl;);
+        DEBUG("info", cerr << __FUNCTION__ << ": "<< READ_JSON_PROFILE_STRAT_FILE
+                << " " << string(envVarString2) << endl;);
+        if(checkOk && strlen(envVarString1) > 1 && strlen(envVarString2) > 1){
+            string profileData(envVarString1);
+            string dumpStratResults(envVarString2);
+            DEBUG("apply", cerr << __FUNCTION__ << "profileData: " << profileData << " dumpStratResults: " << dumpStratResults << endl;);
+            __profile  = Profile(false, profileData, dumpStratResults);
         }
     }
     DEBUG("info", cerr << "ENDING " << __FUNCTION__<< endl;);
@@ -52,16 +54,7 @@ PrecisionTuner::PrecisionTuner(){
 PrecisionTuner::~PrecisionTuner(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << __FUNCTION__ << __mode << endl;);
-    switch(__mode){ 
-        case APPLYING_STRAT:
-            __strategy.dumpJson();
-            break;
-        case PROFILING:
-            __profile.dumpJson();
-            break;
-        default:
-            cerr << "PrecisionTuner ERROR: no __mode chosen" << endl;
-    }
+    __profile.dumpJson();
 }
 
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, float), double (*func)(double, double), 
@@ -114,22 +107,19 @@ double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, fl
     double res;
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
 
+    singlePrecision = false;
     switch(__mode){ 
         case APPLYING_STRAT:
-            singlePrecision = __strategy.singlePrecision(__profile);
-            DynFuncCall dfc(btVec, singlePrecision);
-            __strategy.updateResults(dfc);
+            singlePrecision = __profile.applyStrategy(btVec);
             break;
         case PROFILING:
-            singlePrecision = false;
-            DynFuncCall dfc(btVec);
-            __profile.updateHashMap(dfc);
+            __profile.applyProfiling(btVec);
             break;
         default:
             cerr << "PrecisionTuner ERROR: no __mode chosen" << endl;
     }
     res = singlePrecision ? (double) fres : dres; 
-    
+
     DEBUG("infoplus",double relErr = fabs(fres - dres) / fabs(dres); if(singlePrecision)  cerr << s << " dres=" << dres << " fres=" << fres << " RelError: " << relErr << " value=" << value <<endl; else cerr << s << " dres=" << dres<< " value=" << value << endl;);
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
     return res;
