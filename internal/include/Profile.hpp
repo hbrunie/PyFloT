@@ -14,7 +14,7 @@ class Profile{
         // Obtain with **backtrace_symbols**, link to static addresses in binary
         // Does not depend on ASLR
         // Slower to fill: backtrace costs less than backtrace_symbols
-        unordered_map<uint64_t, DynFuncCall> __backtraceStaticMap;
+        map<string, DynFuncCall> __backtraceStaticMap;
         unsigned long __totalDynCount = 0;
         unsigned long __currentDynCount = 0;
         string __dumpFile;
@@ -27,10 +27,10 @@ class Profile{
         void __dumpJsonPermanentHashMap();
         void __displayBacktraceDynMap();
         void __displayBacktraceStaticMap();
-        uint64_t __hashKey(vector<void*> btVec);
-        uint64_t __staticHashKey(vector<void*> btVec);
+        uint64_t __dynHashKey(vector<void*> btVec);
+        string __staticHashKey(vector<void*> btVec);
         void __updateHashMap(DynFuncCall& dfc, uint64_t hashKey);
-        void    __buildStaticBacktraceMap();
+        void    __buildStaticBacktraceMapFromDynamicOne();
 
         /// JSON Keys
         // List of all the call stack dictionnaries

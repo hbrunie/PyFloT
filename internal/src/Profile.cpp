@@ -14,10 +14,10 @@
 using namespace std;
 using namespace Json;
 
-const string Profile::JSON_TOTALCALLSTACKS_KEY   = "TotalCallStacks";
-const string Profile::JSON_TOTALDYNCOUNT_KEY     = "CallsCount";
-const string Profile::JSON_MAIN_LIST             = "IndependantCallStacks";
-const string Profile::JSON_HASHKEY_KEY           = "HashKey";
+const string Profile::JSON_TOTALCALLSTACKS_KEY  = "TotalCallStacks";
+const string Profile::JSON_TOTALDYNCOUNT_KEY    = "CallsCount";
+const string Profile::JSON_MAIN_LIST            = "IndependantCallStacks";
+const string Profile::JSON_HASHKEY_KEY          = "HashKey";
 
 Profile::Profile(){
 }
@@ -34,52 +34,74 @@ Profile::Profile(bool profiling, string readFile,
     }
 }
 
-uint64_t Profile::__staticHashKey(vector<void*> btVec){
-    uint64_t hashKey;
+string Profile::__staticHashKey(vector<void*> btVec){
+    string statHashKey;
+    string tmpHash;
     uint64_t size = btVec.size();
     void ** btpointer = &btVec[0];
     char ** symbols = backtrace_symbols(btpointer, size);
     unsigned int cnt = 0;
     char * tmp = symbols[cnt];
     while(NULL != tmp && cnt < size){
-        DEBUG("key",cerr << tmp << endl;);
+        string stmp(tmp);
+        std::vector<std::string> result;
+        std::istringstream iss(stmp);
+        for(std::string s; iss >> s; ){
+            DEBUG("key",cerr <<s << endl;);
+            result.push_back(s);
+        }
+        DEBUG("keyplus",cerr << __FUNCTION__ << ":" << __LINE__
+            << "size: "<< result.size() << endl;);
+        DEBUG("key",cerr <<endl << result[3] << result[5] << endl;);
+        statHashKey += result[3];
+        statHashKey += result[5];
         cnt++;
         tmp = symbols[cnt];
     }
-    //TODO: construct the permanent key with all symbols
-    //assert( (hashKey + (uint64_t) ip) < numeric_limits<uint64_t>::max());
-    return hashKey;
+    DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__ 
+            << " staticHashKey: " << statHashKey << endl;);
+    return statHashKey;
 }
 
-uint64_t Profile::__hashKey(vector<void*> btVec){
-    uint64_t hashKey;
+uint64_t Profile::__dynHashKey(vector<void*> btVec){
+    uint64_t dynHashKey;
     for(auto it = btVec.begin(); it != btVec.end(); it++){
         void *ip = *it;
         assert(NULL != ip);
-        hashKey += (uint64_t) ip;
-        assert( (hashKey+ (uint64_t) ip) < numeric_limits<uint64_t>::max());
+        dynHashKey += (uint64_t) ip;
+        assert( (dynHashKey+ (uint64_t) ip) < numeric_limits<uint64_t>::max());
     }
-    return hashKey;
+    return dynHashKey;
 }
 
 bool Profile::applyStrategy(vector<void*> & btVec){
     //compute hash
-    uint64_t hashKey = __hashKey(btVec);
+    uint64_t dynHashKey = __dynHashKey(btVec);
     DynFuncCall dfc;
+    DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__ << " " << dfc << endl);
+    DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__<<  " Static map " << endl;
+                __displayBacktraceStaticMap(););
     // if exist or not go on perm HashMap
-    unordered_map<uint64_t, DynFuncCall>::iterator hashKeyIte = __backtraceDynamicMap.find(hashKey);
+    auto hashKeyIte = __backtraceDynamicMap.find(dynHashKey);
     if(hashKeyIte == __backtraceDynamicMap.end()){
-        uint64_t staticHashKey = __staticHashKey(btVec);
-        dfc = __backtraceStaticMap[hashKey];
-        __backtraceDynamicMap[hashKey] = dfc;
+        string staticHashKey = __staticHashKey(btVec);
+        DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " staticHashKey:" << 
+               staticHashKey << endl);
+        dfc = __backtraceStaticMap[staticHashKey];
+        DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " " << dfc << endl);
+        __backtraceDynamicMap[dynHashKey] = dfc;
     }else{
-        dfc = __backtraceDynamicMap[hashKey];
+        dfc = __backtraceDynamicMap[dynHashKey];
+        DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " " << dfc << endl);
     }
     // Then compare currentDyncount with set
     bool res = dfc.applyStrategy();
     // then update dfc in ASLRDynamicHashMap
     //TODO: remove this buy using pointer to the object in the HashMap
-    __backtraceDynamicMap[hashKey].updateLowerCount(res);
+    __backtraceDynamicMap[dynHashKey].updateLowerCount(res);
+    __backtraceDynamicMap[dynHashKey].called();
+    DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " " << dfc << endl);
+    DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__<< " Dynamic map " << endl;__displayBacktraceDynMap(););
 
     return res;
 }
@@ -87,35 +109,35 @@ bool Profile::applyStrategy(vector<void*> & btVec){
 void Profile::applyProfiling(vector<void*> & btVec){
     //compute hash
     // add or update DynamicHashMap
-    uint64_t hashKey = __hashKey(btVec);
-    DynFuncCall dfc(btVec, hashKey);
-    __updateHashMap(dfc, hashKey);
+    uint64_t dynHashKey = __dynHashKey(btVec);
+    DynFuncCall dfc(btVec, dynHashKey);
+    dfc.called();
+    __updateHashMap(dfc, dynHashKey);
 
 }
 
-void Profile::__updateHashMap(DynFuncCall& dfc, uint64_t hashKey){
-    // if this hashKey is never seen before, record it.
-    DEBUG("info",cerr << "LOOKING FOR HASH: "<< hashKey << __FUNCTION__ <<endl;);
+void Profile::__updateHashMap(DynFuncCall& dfc, uint64_t dynHashKey){
+    // if this dynHashKey is never seen before, record it.
+    DEBUG("info",cerr << "LOOKING FOR HASH: "<< dynHashKey << __FUNCTION__ <<endl;);
     __totalDynCount++;
-    unordered_map<uint64_t, DynFuncCall>::iterator hashKeyIte = __backtraceDynamicMap.find(hashKey);
-    if(hashKeyIte == __backtraceDynamicMap.end()) {
-        __backtraceDynamicMap[hashKey] = dfc;
+    unordered_map<uint64_t, DynFuncCall>::iterator dynHashKeyIte = __backtraceDynamicMap.find(dynHashKey);
+    if(dynHashKeyIte == __backtraceDynamicMap.end()) {
+        __backtraceDynamicMap[dynHashKey] = dfc;
         __totalCallStacks += 1;
-    }else{ // Count the number of calls to this callstack
-        __backtraceDynamicMap[hashKey].called(dfc);
     }
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ <<endl;);
 }
 
-void Profile::__buildStaticBacktraceMap(){
-    __displayBacktraceStaticMap();
+void Profile::__buildStaticBacktraceMapFromDynamicOne(){
+    DEBUG("key",cerr << __FUNCTION__ <<endl << " Dynamic map " << endl;__displayBacktraceDynMap(););
+    DEBUG("key",cerr << __FUNCTION__ <<endl <<" static map " << endl;__displayBacktraceStaticMap(););
     for (auto it = __backtraceDynamicMap.begin(); it != __backtraceDynamicMap.end(); it++){
         uint64_t key = it->first;
         DynFuncCall value = it->second;
-        uint64_t staticHashKey = __staticHashKey(value.getBtVector());
-        unordered_map<uint64_t, DynFuncCall>::iterator hashKeyIte = __backtraceStaticMap.find(key);
+        string staticHashKey = __staticHashKey(value.getBtVector());
+        auto hashKeyIte = __backtraceStaticMap.find(staticHashKey);
         if(hashKeyIte == __backtraceStaticMap.end()) {
-            __backtraceStaticMap[key] = value;
+            __backtraceStaticMap[staticHashKey] = value;
         }else{
             cerr << "ERROR: " << __FUNCTION__ << endl;
         }
@@ -123,13 +145,14 @@ void Profile::__buildStaticBacktraceMap(){
 }
 
 void Profile::dumpJson(){
-    __buildStaticBacktraceMap();
+    __buildStaticBacktraceMapFromDynamicOne();
     __dumpJsonPermanentHashMap();
 }
 
 void Profile::__displayBacktraceStaticMap(){
+    cerr << __FUNCTION__ << ":" << __LINE__<< endl;
     for (auto it = __backtraceStaticMap.begin(); it != __backtraceStaticMap.end(); it++){
-        unsigned long key = it->first;
+        string key = it->first;
         DynFuncCall value = it->second;
         cerr << value << endl;
     }
@@ -160,11 +183,11 @@ void Profile::__dumpJsonPermanentHashMap(){
     Value jsonTotalCallStacks = (UInt)__totalCallStacks;
     jsonDictionary[JSON_TOTALCALLSTACKS_KEY] = jsonTotalCallStacks;
     for (auto it = __backtraceStaticMap.begin(); it != __backtraceStaticMap.end(); ++it){
-        unsigned long key = it->first;
+        string key = it->first;
         DynFuncCall value = it->second;
-        Value hashkey((UInt)key);
+        Value statHashKey(key);
         Value jsonDynFuncCall = value.getJsonValue();
-        jsonDynFuncCall[JSON_HASHKEY_KEY] = hashkey; 
+        jsonDynFuncCall[JSON_HASHKEY_KEY] = statHashKey; 
         jsonDynFuncCallsList.append(jsonDynFuncCall);
     }
     jsonDictionary[JSON_MAIN_LIST] = jsonDynFuncCallsList;
@@ -197,34 +220,29 @@ void Profile::__buildProfiledDataFromJsonFile(string fileAbsPath){
       Maybe Dynamic Function Call Site? Containing ASVR dependent and ASVR independent.
      */
     //unordered_map<uint64_t, struct CallData> backtraceMap;
-    DEBUG("info",cerr << "STARTING __build_callstacks_map_from_json_file" << endl;);
+    DEBUG("info",cerr << "STARTING "<< __FUNCTION__ << endl;);
     std::ifstream infile(fileAbsPath, std::ifstream::binary);
     if(!stream_check(infile))
         exit(-1);
     Value jsonDictionary;
     infile >>  jsonDictionary;
-    DEBUG("info",cerr << "READING JSON __build_callstacks_map_from_json_file" << endl;);
+    DEBUG("info",cerr << "READING JSON "<< __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << jsonDictionary << endl;);
 
     __totalCallStacks = jsonDictionary[JSON_TOTALCALLSTACKS_KEY].asUInt64();
     __totalDynCount = jsonDictionary[JSON_TOTALDYNCOUNT_KEY].asUInt64();
     Value callStacksList = jsonDictionary[JSON_MAIN_LIST];
     /* Fill the backtraceMap with JSON values */
-    cerr << callStacksList.size() << endl;
     for(unsigned int callStackIndex = 0; callStackIndex < callStacksList.size(); callStackIndex++){
         // Get the callStack dictionary
         Value callStack = callStacksList[callStackIndex];
-        Value hashKey = callStack[JSON_HASHKEY_KEY];
+        Value statHashKey = callStack[JSON_HASHKEY_KEY];
         // TODO: factorize this and the same code in DynFuncCall constructor
         // into JsonUtils.cpp
-        uint64_t UIntHashKey;
-        string s = hashKey.asString();
-        istringstream iss(s);
-        iss >> hex >> UIntHashKey;
-        DynFuncCall data(callStack, UIntHashKey);
-        __backtraceStaticMap[UIntHashKey] = data;
+        string sstaticHashKey = statHashKey.asString();
+        DynFuncCall data(callStack, sstaticHashKey);
+        DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__ << data << endl;);
+        __backtraceStaticMap[sstaticHashKey] = data;
     }
-    DEBUG("infoplus",cerr << "DISPLAY __build_callstacks_map_from_json_file" << endl;);
-    DEBUG("infoplus",__displayBacktraceStaticMap(););
-    DEBUG("info",cerr << "ENDING __build_callstacks_map_from_json_file" << endl;);
+    DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__ << endl;__displayBacktraceStaticMap(););
 }

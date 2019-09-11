@@ -27,24 +27,29 @@ class DynFuncCall
         // LOWERED Dynamic calls count
         static const string JSON_LOWERCOUNT_KEY;
         vector<void*> __btVec;
-        vector<void*> __btSymbolsVec;
+        vector<void*> __staticBtVec;
         unsigned long __loweredCount;
         unsigned long __dyncount;
-        uint64_t __hashKey;
+        unsigned long __profiledDyncount;
+        uint64_t __dynHashKey;
+        string __statHashKey;
         list<struct FloatSet> __stratMultiSet;
     public:
         DynFuncCall();
-        DynFuncCall(const DynFuncCall &);
-        DynFuncCall(Value, Value);
-        DynFuncCall(Value,uint64_t);
-        DynFuncCall(vector<void*> btVec);
-        DynFuncCall(vector<void*> btVec, uint64_t key);
-        DynFuncCall(vector<void*> btVec, bool lowered);
-        DynFuncCall(vector<void*> btVec, uint64_t key, bool lowered);
-        DynFuncCall(vector<void*> btVec, unsigned long dyncount, unsigned long loweredCount);
-        void called(DynFuncCall &);
+        // static
+        DynFuncCall(Value, string);
+        DynFuncCall(vector<void*>);
+        // dynamic
+        DynFuncCall(vector<void*>, uint64_t);
+        // static
+        DynFuncCall(vector<void*>, string);
+        // static
+        DynFuncCall(vector<void*>, string, bool);
+        DynFuncCall(vector<void*>, unsigned long); 
+        DynFuncCall(vector<void*>, unsigned long, bool);
+        DynFuncCall& operator =(DynFuncCall & dfc);
+        void called();
         Value getJsonValue();
-        uint64_t getHashKey();
         vector<void*> getBtVector();
         unsigned long getLoweredCount();
         bool applyStrategy();

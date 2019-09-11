@@ -16,22 +16,18 @@ const string DynFuncCall::JSON_LOWERCOUNT_KEY      = "LowerCount";
 
 DynFuncCall::DynFuncCall(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    __dynHashKey = 0;
+    __statHashKey = ""; 
+    __dyncount = 0;
+    __profiledDyncount = 0;
+    __loweredCount = 0;
 }
 
-DynFuncCall::DynFuncCall(vector<void*>  btVec, uint64_t hashKey, bool lowered){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    __hashKey = hashKey; 
-    __btVec = btVec;
-    __dyncount = 1;
-    __loweredCount = lowered ? 1 : 0;
-    DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
-}
-
-DynFuncCall::DynFuncCall(vector<void*>  btVec, uint64_t hashKey) : DynFuncCall(btVec, hashKey, false) {}
-
-DynFuncCall::DynFuncCall(Value dynFuncCall, uint64_t hashKey){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    __dyncount = dynFuncCall[JSON_CALLSCOUNT_KEY].asUInt64();
+DynFuncCall::DynFuncCall(Value dynFuncCall, string statHashKey) : DynFuncCall(){
+    DEBUG("info",cerr << __FUNCTION__<< ":" << __LINE__ << endl;);
+    __profiledDyncount = dynFuncCall[JSON_CALLSCOUNT_KEY].asUInt64();
+    DEBUG("dfc",cerr << __FUNCTION__<< ":" << __LINE__ <<
+           "call count:" << __profiledDyncount<< endl;);
     __loweredCount = dynFuncCall[JSON_LOWERCOUNT_KEY].asUInt64();
     Value stratSet = dynFuncCall["Strategy"];
     for(unsigned int multiSetInd = 0; multiSetInd < stratSet.size(); multiSetInd++){
@@ -47,16 +43,43 @@ DynFuncCall::DynFuncCall(Value dynFuncCall, uint64_t hashKey){
         __stratMultiSet.push_back(fset);
     }
     // It is made of CallStack list, CallsCount, HashKey and LowerCount
+    // TODO: STATIC hashKey, create __staticBtVec
     Value dynFuncCallAddrList = dynFuncCall[JSON_CALLSTACK_ADDR_LIST_KEY];
     for(unsigned int btVecInd = 0; btVecInd < dynFuncCallAddrList.size(); btVecInd++){
         string s = dynFuncCallAddrList[btVecInd].asString();
         unsigned long value;
         istringstream iss(s);
         iss >> hex >> value;
-        __btVec.push_back((void*) value);
+        __staticBtVec.push_back((void*) value);
     }
-    __hashKey = hashKey;
+    __statHashKey = statHashKey;
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
+}
+
+DynFuncCall::DynFuncCall(vector<void*> btVec) : DynFuncCall(){
+    __btVec = btVec;
+}
+
+DynFuncCall::DynFuncCall(vector<void*>  btVec, string statHashKey) : DynFuncCall(btVec){
+    __statHashKey = statHashKey; 
+}
+
+DynFuncCall::DynFuncCall(vector<void*>  btVec, uint64_t dynHashKey) : DynFuncCall(btVec){
+    __dynHashKey = dynHashKey; 
+}
+
+DynFuncCall::DynFuncCall(vector<void*> btVec, unsigned long profiledDyncount) : DynFuncCall(btVec){
+    __profiledDyncount = profiledDyncount;
+}
+
+DynFuncCall::DynFuncCall(vector<void*> btVec, string statHashKey, bool lowered) : 
+    DynFuncCall(btVec, statHashKey){
+    __loweredCount = lowered ? 1 : 0;
+}
+
+DynFuncCall::DynFuncCall(vector<void*> btVec, unsigned long profiledDyncount, bool lowered) :
+    DynFuncCall(btVec, profiledDyncount){
+    __loweredCount = lowered ? 1 : 0;
 }
 
 unsigned long DynFuncCall::getLoweredCount(){
@@ -64,36 +87,26 @@ unsigned long DynFuncCall::getLoweredCount(){
     return __loweredCount;
 }
 
-void DynFuncCall::called(DynFuncCall & dfc){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    __dyncount     += dfc.__dyncount;
-    __loweredCount += dfc.__loweredCount;
-}
+DynFuncCall &DynFuncCall::operator =(DynFuncCall & dfc){
+    this->__btVec            = dfc.__btVec;
+    this->__staticBtVec      = dfc.__staticBtVec;
+    this->__loweredCount     = dfc.__loweredCount;
+    this->__dyncount         = dfc.__dyncount;
+    this->__profiledDyncount = dfc.__profiledDyncount;
+    this->__dynHashKey       = dfc.__dynHashKey;
+    this->__statHashKey      = dfc.__statHashKey;
 
-uint64_t DynFuncCall::getHashKey(){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    return __hashKey;
-}
-
-DynFuncCall::DynFuncCall(const DynFuncCall & dfc){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    __btVec = dfc.__btVec;
-    __dyncount = dfc.__dyncount;
-    __loweredCount = dfc.__loweredCount;
-}
-
-DynFuncCall::DynFuncCall(vector<void*> btVec, unsigned long dyncount, unsigned long loweredCount){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    __btVec = btVec;
-    __dyncount = dyncount;
-    __loweredCount = loweredCount;
+    return *this;
 }
 
 ostream& operator<<(ostream& os, const DynFuncCall& dfc){
-    DEBUG("infoplus",cerr << "STARTING " << __FUNCTION__ << endl;);
+    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     os << "CallData: Dyncount("<< dfc.__dyncount
+        << ") __profiledDyncount(" << dfc.__profiledDyncount
         << ") loweredCount("
-        << dfc.__loweredCount << ") btVec (size="<< dfc.__btVec.size()<< ")" << endl;
+        << dfc.__loweredCount << ") btVec (size="<< dfc.__btVec.size()<< ")" 
+        " dynHashKey: " << dfc.__dynHashKey <<
+        " statHashKey: " << dfc.__statHashKey << endl;
     for(auto it = dfc.__btVec.begin() ; it != dfc.__btVec.end() ; it++){
         os << *it << endl;
     }
@@ -103,6 +116,11 @@ ostream& operator<<(ostream& os, const DynFuncCall& dfc){
 
 vector<void*> DynFuncCall::getBtVector(){return __btVec;}
 
+void DynFuncCall::called(){
+    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    __dyncount ++;
+}
+
 void DynFuncCall::updateLowerCount(bool lower){
     __loweredCount += lower ? 1 : 0;
 }
@@ -111,8 +129,9 @@ bool DynFuncCall::applyStrategy(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     for(auto it = __stratMultiSet.begin() ; it != __stratMultiSet.end(); it++){
         struct FloatSet fs = *it;
-        DEBUG("info",cerr << "Comparison: " << __dyncount*fs.low << " < " << __dyncount << " < " << __dyncount*fs.high << endl;);
-        if(__dyncount > __dyncount*fs.low && __dyncount < __dyncount*fs.high)
+        DEBUG("info",cerr << "Comparison: " << __profiledDyncount*fs.low << " < " << __dyncount 
+                << " < " <<  __profiledDyncount*fs.high << endl;);
+        if(__dyncount >= __profiledDyncount*fs.low && __dyncount <= __profiledDyncount*fs.high)
             return true;
     }
     return false;
