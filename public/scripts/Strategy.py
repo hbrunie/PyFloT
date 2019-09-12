@@ -32,17 +32,20 @@ class Strategy:
         ## by the PrecisionTuner library
         procenv["READJSONPROFILESTRATFILE"]     = self.__readJsonStratFile
         procenv["DUMPJSONSTRATSRESULTSFILE"]   = self.__dumpJsonStratResultFile
-        procenv["DEBUG"] = "info"
-        print("PYTHON: ", procenv["DUMPJSONPROFILINGFILE"])
+        procenv["DEBUG"] = "fperror"
+        #print("PYTHON: ", procenv["READJSONPROFILESTRATFILE"])
+        #print("PYTHON: ", procenv["DUMPJSONSTRATSRESULTSFILE"])
  
         command = []
         command.append(self.__binary)
+        print(command)
         out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
         strout = out.decode("utf-8")
         print(strout)
         #get count of lowered from output
         if checkString in strout:
-            ## Stop when valid strategy found
+            print("Valid strategy found: ", self.__readJsonStratFile)
+            print("Results in: ", self.__dumpJsonStratResultFile)
             return True
         else:
             return False
