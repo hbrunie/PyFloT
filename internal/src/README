@@ -1,0 +1,8 @@
+Tool use plan:
+Python script:
+  Execute once for profiling: DUMPJSONPROFILINGFILE=/path/to/profile.json
+  Analyse the trace: develop strategies
+    python analysis of profile.json, creation of N strategies: strategy_1.json,..., strategy_N.json
+  For each strategy X:
+     Execute program READJSONPROFILINGFILE=/path/to/profile.json READJSONSTRATFILE=/path/to/strategy_X.json
+         dump results in STRATRESULTJSONFILE=/path/to/strategy_X_results.json

@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdlib>
+#include <iomanip>
 #include <execinfo.h>
 
 #include "Debug.hpp"
@@ -30,7 +31,7 @@ PrecisionTuner::PrecisionTuner(){
         DEBUG("info", cerr << __FUNCTION__ << ": MODE PROFILING " << endl;);
         __mode = PROFILING;
         string dumpFile(envVarString);
-        __profile = Profile(true, "None", dumpFile);
+        __profile = new Profile(true, "None", dumpFile);
     }else{// Applying strategy mode
         DEBUG("info", cerr << __FUNCTION__ << ": MODE APPLYING_STRAT " << endl;);
         __mode = APPLYING_STRAT;
@@ -45,7 +46,7 @@ PrecisionTuner::PrecisionTuner(){
             string profileData(envVarString1);
             string dumpStratResults(envVarString2);
             DEBUG("apply", cerr << __FUNCTION__ << "profileData: " << profileData << " dumpStratResults: " << dumpStratResults << endl;);
-            __profile  = Profile(false, profileData, dumpStratResults);
+            __profile  = new Profile(false, profileData, dumpStratResults);
         }
     }
     DEBUG("info", cerr << "ENDING " << __FUNCTION__<< endl;);
@@ -54,7 +55,8 @@ PrecisionTuner::PrecisionTuner(){
 PrecisionTuner::~PrecisionTuner(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << __FUNCTION__ << __mode << endl;);
-    __profile.dumpJson();
+    __profile->dumpJson();
+    delete(__profile);
 }
 
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, float), double (*func)(double, double), 
@@ -110,17 +112,17 @@ double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, fl
     singlePrecision = false;
     switch(__mode){ 
         case APPLYING_STRAT:
-            singlePrecision = __profile.applyStrategy(btVec);
+            singlePrecision = __profile->applyStrategy(btVec);
             break;
         case PROFILING:
-            __profile.applyProfiling(btVec);
+            __profile->applyProfiling(btVec);
             break;
         default:
             cerr << "PrecisionTuner ERROR: no __mode chosen" << endl;
     }
     res = singlePrecision ? (double) fres : dres; 
 
-    DEBUG("infoplus",double relErr = fabs(fres - dres) / fabs(dres); if(singlePrecision)  cerr << s << " dres=" << dres << " fres=" << fres << " RelError: " << relErr << " value=" << value <<endl; else cerr << s << " dres=" << dres<< " value=" << value << endl;);
+    DEBUG("fperror", cerr << std::setprecision(16) ; double relErr = fabs(fres - dres) / fabs(dres); if(singlePrecision)  cerr << s << " dres=" << dres << " fres=" << fres << " AbsError: " << fabs(fres - dres)<<" RelError: " << relErr << " value=" << value <<endl; else cerr << s << " dres=" << dres<< " value=" << value << endl;);
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
     return res;
 }

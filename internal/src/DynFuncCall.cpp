@@ -82,23 +82,6 @@ DynFuncCall::DynFuncCall(vector<void*> btVec, unsigned long profiledDyncount, bo
     __loweredCount = lowered ? 1 : 0;
 }
 
-unsigned long DynFuncCall::getLoweredCount(){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    return __loweredCount;
-}
-
-DynFuncCall &DynFuncCall::operator =(DynFuncCall & dfc){
-    this->__btVec            = dfc.__btVec;
-    this->__staticBtVec      = dfc.__staticBtVec;
-    this->__loweredCount     = dfc.__loweredCount;
-    this->__dyncount         = dfc.__dyncount;
-    this->__profiledDyncount = dfc.__profiledDyncount;
-    this->__dynHashKey       = dfc.__dynHashKey;
-    this->__statHashKey      = dfc.__statHashKey;
-
-    return *this;
-}
-
 ostream& operator<<(ostream& os, const DynFuncCall& dfc){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     os << "CallData: Dyncount("<< dfc.__dyncount
@@ -116,25 +99,25 @@ ostream& operator<<(ostream& os, const DynFuncCall& dfc){
 
 vector<void*> DynFuncCall::getBtVector(){return __btVec;}
 
-void DynFuncCall::called(){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+void DynFuncCall::applyProfiling(){
     __dyncount ++;
-}
-
-void DynFuncCall::updateLowerCount(bool lower){
-    __loweredCount += lower ? 1 : 0;
 }
 
 bool DynFuncCall::applyStrategy(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    bool lower = false;
     for(auto it = __stratMultiSet.begin() ; it != __stratMultiSet.end(); it++){
         struct FloatSet fs = *it;
         DEBUG("info",cerr << "Comparison: " << __profiledDyncount*fs.low << " < " << __dyncount 
                 << " < " <<  __profiledDyncount*fs.high << endl;);
-        if(__dyncount >= __profiledDyncount*fs.low && __dyncount <= __profiledDyncount*fs.high)
-            return true;
+        if(__dyncount >= __profiledDyncount*fs.low && __dyncount < __profiledDyncount*fs.high){
+            lower = true;
+            break;
+        }
     }
-    return false;
+    __dyncount ++;
+    __loweredCount += lower ? 1 : 0;
+    return lower;
 }
 
 Value DynFuncCall::getJsonValue(){

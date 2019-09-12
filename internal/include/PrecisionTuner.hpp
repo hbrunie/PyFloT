@@ -14,7 +14,7 @@ class PrecisionTuner
     private:
         enum MODE __mode;
         /* Profiling */
-        Profile __profile;
+        Profile * __profile;
         char * __jsonFileFromProfiling;
         double __overloading_function(vector<void*> &btVec, string s, float fres, double dres, double value);
         vector<void*> __getContextHashBacktrace();

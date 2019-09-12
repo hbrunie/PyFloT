@@ -36,10 +36,11 @@ class DynFuncCall
         list<struct FloatSet> __stratMultiSet;
     public:
         DynFuncCall();
-        // static
+        // static: called in __buildProfiledDataFromJsonFile
         DynFuncCall(Value, string);
+        //
         DynFuncCall(vector<void*>);
-        // dynamic
+        // dynamic HashKey, used in applyProfiling
         DynFuncCall(vector<void*>, uint64_t);
         // static
         DynFuncCall(vector<void*>, string);
@@ -47,13 +48,10 @@ class DynFuncCall
         DynFuncCall(vector<void*>, string, bool);
         DynFuncCall(vector<void*>, unsigned long); 
         DynFuncCall(vector<void*>, unsigned long, bool);
-        DynFuncCall& operator =(DynFuncCall & dfc);
-        void called();
         Value getJsonValue();
         vector<void*> getBtVector();
-        unsigned long getLoweredCount();
         bool applyStrategy();
-        void updateLowerCount(bool lower);
+        void applyProfiling();
         void dumpStack();
         friend ostream& operator<<(ostream& os, const DynFuncCall& cd);
 };

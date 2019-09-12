@@ -10,11 +10,11 @@ class Profile{
         // Function return addresses, sensible to
         // LINUX Address space layout randomization (ASLR)
         // Obtained with **backtrace** function from execinfo.h (or unwind)
-        unordered_map<uint64_t, DynFuncCall> __backtraceDynamicMap;
+        unordered_map<uint64_t, shared_ptr<DynFuncCall>> __backtraceDynamicMap;
         // Obtain with **backtrace_symbols**, link to static addresses in binary
         // Does not depend on ASLR
         // Slower to fill: backtrace costs less than backtrace_symbols
-        map<string, DynFuncCall> __backtraceStaticMap;
+        map<string, shared_ptr<DynFuncCall>> __backtraceStaticMap;
         unsigned long __totalDynCount = 0;
         unsigned long __currentDynCount = 0;
         string __dumpFile;
@@ -29,9 +29,6 @@ class Profile{
         void __displayBacktraceStaticMap();
         uint64_t __dynHashKey(vector<void*> btVec);
         string __staticHashKey(vector<void*> btVec);
-        void __updateHashMap(DynFuncCall& dfc, uint64_t hashKey);
-        void    __buildStaticBacktraceMapFromDynamicOne();
-
         /// JSON Keys
         // List of all the call stack dictionnaries
         static const string JSON_MAIN_LIST;
@@ -45,7 +42,8 @@ class Profile{
         void updateHashMap(DynFuncCall &);
 
     public:
-        Profile();
+        //Profile();
+        ~Profile();
         Profile(bool, string, string);
         bool applyStrategy(vector<void*> & btVec);
         void applyProfiling(vector<void*> & btVec);
