@@ -1,4 +1,4 @@
-all: test1Call test2Calls
+all: test1CallSiteMultipleDynCalls #test1Call test2Calls
 
 include ../../make.def
 
@@ -11,6 +11,14 @@ test2Calls:
 	$(CXX) -o $@_v2 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV2
 	$(CXX) -o $@_v3 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV3
 	$(CXX) -o $@_v4 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR)
+
+test1CallSiteMultipleDynCalls:
+	$(CXX) -o $@_v1 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV1
+	$(CXX) -o $@_v2 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV2
+	$(CXX) -o $@_v3 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV3
+	$(CXX) -o $@_v4 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV4 
+	$(CXX) -o $@_v5 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV5
+	$(CXX) -o $@_v6 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR)
 
 test2StaticCalls:
 	$(CXX) -c $@.cpp -g $(DEBUG) $(PTINCDIR)
@@ -28,4 +36,4 @@ clean:
 	rm -f *.o
 
 cleanall: clean
-	rm -rf test1Call_* test2Calls_*
+	rm -rf test1Call_* test2Calls_* test1CallSiteMultipleDynCalls_*
