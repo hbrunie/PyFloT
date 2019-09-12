@@ -37,7 +37,7 @@ class Profiling:
         stop = False
         count = 0
         while (not stop):
-            strat = Strategy(self.__binary,self.__directory,self.__dumpJsonProfileFile)
+            strat = Strategy(self.__binary,self.__directory,self.__dumpJsonProfileFile, count)
             yield strat
             stop = strat.isLast()
             count += 1

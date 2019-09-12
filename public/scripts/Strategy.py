@@ -2,26 +2,23 @@ import os
 import json
 import subprocess
 class Strategy:
-    __count = 0
     __readJsonProfileFile = "None"
     __readJsonStratFile = "None"
     __dumpJsonStratResultFile = "None"
     __binary = "None"
     __JSON_MAIN_LIST = "IndependantCallStacks"
     __JSON_DYNCALL_STRATEGY_KEY = "Strategy"
-    strategies = [[[0.4,0.6], [0,0.3]],[[0,1]]]
-    def __init__(self, binary, directory, readJsonProfileFile):
-        count = self.__count
+    strategies = [[[0,1]],[[0,1]],[[0,1]],[[0,0]],[[0,0]],[[0,1]],[[0,0]],[[0,0]]]
+    def __init__(self, binary, directory, readJsonProfileFile, count):
         self.__readJsonStratFile = directory + "readJsonStrat_{}.json".format(count)
         self.__dumpJsonStratResultFile = directory + "dumpJsonStratResults_{}.json".format(count)
         self.__binary = binary
-        self.__count += 1
         ## Dev strategy
         with open(readJsonProfileFile, 'r') as json_file:
             profile = json.load(json_file)
         for dynCall in profile[self.__JSON_MAIN_LIST]:
-            dynCall[self.__JSON_DYNCALL_STRATEGY_KEY] = Strategy.strategies.pop(0)
-            #dynCall[self.__JSON_DYNCALL_STRATEGY_KEY] = [[0,0.2], [0.4,1]]
+            strategy = Strategy.strategies.pop(0)
+            dynCall[self.__JSON_DYNCALL_STRATEGY_KEY] = strategy
         with open(self.__readJsonStratFile, 'w') as json_file:
             json.dump(profile, json_file, indent=2)
         return None
