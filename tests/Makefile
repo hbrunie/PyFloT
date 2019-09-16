@@ -1,27 +1,20 @@
-all: testExp testMathFunctions testConstructor testHeader
+all: NBPBenchmarks systematic trivial
 
-include ../make.def
+NBPBenchmarks:
+	make -C NBPBenchmarks
 
-testMathFunctions:
-	$(CXX) -c testMathFunctions.cpp -g $(DEBUG) $(PTINCDIR)
-	$(CXX) -o $@  testMathFunctions.o -g $(PTLIB) $(DEBUG)
-
-testExp:
-	$(CXX) -c testExp.cpp -g $(DEBUG) $(PTINCDIR)
-	$(CXX) -o $@ testExp.o -g $(PTLIB) $(DEBUG)
-
-testHeader:
-	$(CXX) -c testHeader.cpp -g $(DEBUG) $(PTINCDIR)
-	$(CXX) -o $@ testHeader.o -g $(PTLIB) $(DEBUG)
-
-testConstructor:
-	$(CXX) -c testConstructor.cpp -g $(DEBUG) $(INCDIR)
-	$(CXX) -o $@ testConstructor.o -g $(PTLIB) $(DEBUG)
+systematic:
+	make -C systematic
+	
+trivial:
+	make -C trivial
 
 clean:
-	rm -f *.o
+	make clean -C systematic
+	make clean -C trivial
 
 cleanall: clean
-	rm -f testConstructor testHeader testMathFunctions testExp
+	make cleanall -C systematic
+	make cleanall -C trivial
 
 .PHONY: unittest
