@@ -10,6 +10,8 @@
 
 #include "Debug.hpp"
 #include "Profile.hpp"
+// ONE == 4 because of Ptuning internal calls below __overloaded_mathFunction
+#define ONE 4
 using namespace std;
 using namespace Json;
 
@@ -18,8 +20,6 @@ const string Profile::JSON_TOTALDYNCOUNT_KEY    = "CallsCount";
 const string Profile::JSON_MAIN_LIST            = "IndependantCallStacks";
 const string Profile::JSON_HASHKEY_KEY          = "HashKey";
 
-//Profile::Profile(){
-//}
 Profile::~Profile(){
     // delete all DynCallFunc objects: automatic with shared pointers
 }
@@ -36,10 +36,16 @@ Profile::Profile(bool profiling, string readFile,
     }
 }
 
+/* the Static Hash Key corresponds to a non ASLR dependent HashKey
+ * User can define the level of callstack he wants to use for
+ * defining the DynamicCallSite.
+ * By default the level is 1: only the __overloaded_mathFunction call is taken into account. 
+ */
 string Profile::__staticHashKey(vector<void*> btVec){
     string statHashKey;
     string tmpHash;
-    uint64_t size = btVec.size();
+    // Choosing level: ONE <= size <= btVec.size();
+    uint64_t size = ONE;
     void ** btpointer = &btVec[0];
     char ** symbols = backtrace_symbols(btpointer, size);
     unsigned int cnt = 0;
@@ -58,7 +64,7 @@ string Profile::__staticHashKey(vector<void*> btVec){
         DEBUG("statickey",cerr << " Elts chosen for static key: " <<endl << result[3]<< " " << result[5] << endl;);
         statHashKey += result[3];
         statHashKey += result[5];
-        //TODO: find a better way to avoid 0x01 as end of key on some execution and not others ...
+        //If main function call is reached, stop the callstack unstacking.
         if(result[3].compare("main")==0)
             cnt=size;
         cnt++;

@@ -42,8 +42,7 @@ DynFuncCall::DynFuncCall(Value dynFuncCall, string statHashKey) : DynFuncCall(){
         }
         __stratMultiSet.push_back(fset);
     }
-    // It is made of CallStack list, CallsCount, HashKey and LowerCount
-    // TODO: STATIC hashKey, create __staticBtVec
+    // TODO: STATIC hashKey, create __staticBtVec. Do we really need staticBtVec?
     Value dynFuncCallAddrList = dynFuncCall[JSON_CALLSTACK_ADDR_LIST_KEY];
     for(unsigned int btVecInd = 0; btVecInd < dynFuncCallAddrList.size(); btVecInd++){
         string s = dynFuncCallAddrList[btVecInd].asString();
