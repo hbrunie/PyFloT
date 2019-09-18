@@ -10,7 +10,7 @@ class Profile{
         // Function return addresses, sensible to
         // LINUX Address space layout randomization (ASLR)
         // Obtained with **backtrace** function from execinfo.h (or unwind)
-        unordered_map<uint64_t, shared_ptr<DynFuncCall>> __backtraceDynamicMap;
+        unordered_map<uintptr_t, shared_ptr<DynFuncCall>> __backtraceDynamicMap;
         // Obtain with **backtrace_symbols**, link to static addresses in binary
         // Does not depend on ASLR
         // Slower to fill: backtrace costs less than backtrace_symbols

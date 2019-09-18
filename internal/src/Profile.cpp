@@ -76,19 +76,23 @@ string Profile::__staticHashKey(vector<void*> btVec){
 }
 
 uint64_t Profile::__dynHashKey(vector<void*> btVec){
-    uint64_t dynHashKey;
-    for(auto it = btVec.begin(); it != btVec.end(); it++){
+    uintptr_t dynHashKey;
+    uint64_t cnt = 0;
+    for(auto it = btVec.begin(); it != btVec.end() && cnt < ONE; it++){
         void *ip = *it;
         assert(NULL != ip);
-        dynHashKey += (uint64_t) ip;
-        assert( (dynHashKey+ (uint64_t) ip) < numeric_limits<uint64_t>::max());
+        assert( (dynHashKey+ (uintptr_t) ip) < numeric_limits<uintptr_t>::max());
+        DEBUG("dynHashKey",cerr << __FUNCTION__ << ":" << __LINE__ << dynHashKey
+                << " " << cnt << "/" << size << " " << (uintptr_t) ip << endl;);
+        dynHashKey += (uintptr_t) ip;
+        cnt++;
     }
     return dynHashKey;
 }
 
 bool Profile::applyStrategy(vector<void*> & btVec){
     //compute hash
-    uint64_t dynHashKey = __dynHashKey(btVec);
+    uintptr_t dynHashKey = __dynHashKey(btVec);
     shared_ptr<DynFuncCall> dfc;
     DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__ << " " << dfc << endl);
     DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__<<  " Static map " << endl;
@@ -118,23 +122,28 @@ bool Profile::applyStrategy(vector<void*> & btVec){
     return res;
 }
 
+/* Compute hash and add or update DynamicHashMap
+ */
 void Profile::applyProfiling(vector<void*> & btVec){
-    //compute hash
-    // add or update DynamicHashMap
-    uint64_t dynHashKey = __dynHashKey(btVec);
+    uintptr_t dynHashKey = __dynHashKey(btVec);
     shared_ptr<DynFuncCall> dfc(nullptr);
     auto dynHashKeyIte = __backtraceDynamicMap.find(dynHashKey);
+    /* Can not find the element in Dynamic Hash Map */
     if(dynHashKeyIte == __backtraceDynamicMap.end()) {
         dfc = make_shared<DynFuncCall>(btVec, dynHashKey);
         __backtraceDynamicMap[dynHashKey] = dfc;
-        //Update Static HashMap
+        /* Update Static HashMap */
         string staticHashKey = __staticHashKey(btVec);
-        // The element is necessarily not in StaticHashMap either,
-        // Because static and dynamic HashMap are "identical"
+        /* The element is necessarily not in StaticHashMap either,
+         * Because static and dynamic HashMap are "identical" */
         __backtraceStaticMap[staticHashKey] = dfc;
         __totalCallStacks += 1;
-    }else
+        DEBUG("total",cerr << __FUNCTION__ << ":" << __LINE__<< " Total Call Stack " << __totalCallStacks <<endl;);
+    }else{
+        // The element is in Dynamic Hash Map
+        DEBUG("total",cerr << __FUNCTION__ << ":" << __LINE__<< " Elt already in Dynamic Hash Map " << __totalCallStacks <<endl;);
         dfc = __backtraceDynamicMap[dynHashKey];
+    }
     dfc->applyProfiling();
     __totalDynCount++;
 }
