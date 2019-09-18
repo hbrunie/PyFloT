@@ -1,4 +1,4 @@
-CXX=clang++ -std=c++11
+CXX=clang++ -std=c++11 -Wall -Wextra
 INCLUDEDIR=-I /opt/local/include/ 
 LIB=-L/opt/local/lib/ -ljsoncpp
 
