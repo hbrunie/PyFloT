@@ -8,6 +8,8 @@ class Strategy:
     __binary = "None"
     __JSON_MAIN_LIST = "IndependantCallStacks"
     __JSON_DYNCALL_STRATEGY_KEY = "Strategy"
+    __JSON_DYNCALL_STRATEGY_DETAILED_KEY = "DetailedStrategy"
+    __JSON_CALLSCOUNT = "CallsCount"
     __strategy = []
     ## 2 call sites
     #strategies = [[[0,1]],[[0,1]],[[0,1]],[[0,0]],[[0,0]],[[0,1]],[[0,0]],[[0,0]]]
@@ -33,8 +35,12 @@ class Strategy:
             #print(Strategy.strategiesForAllCall)
             print(Strategy.strategiesForAllCall[i])
             strategy = Strategy.strategiesForAllCall[i].pop(0)
+            callsCount = dynCall[self.__JSON_CALLSCOUNT]
+            detailedStrategy = [[int(callsCount*x[0]), int(callsCount*x[1])] for x in strategy]
             self.__strategy = strategy
             dynCall[self.__JSON_DYNCALL_STRATEGY_KEY] = strategy
+            #print(strategy,detailedStrategy,callsCount)
+            dynCall[self.__JSON_DYNCALL_STRATEGY_DETAILED_KEY] = detailedStrategy #[strategy[0]*callsCount, strategy[1]*callsCount]
             i += 1
         print(Strategy.strategiesForAllCall)
         with open(self.__readJsonStratFile, 'w') as json_file:
