@@ -18,4 +18,5 @@ while not stopSearch:
     except StopIteration:
         print("No more strategy to test")
         sys.exit()
-    stopSearch = strat.applyStrategy(args.verif_text)
+    if not args.onlyProfile:
+        stopSearch = strat.applyStrategy(args.verif_text)
