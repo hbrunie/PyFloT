@@ -13,7 +13,10 @@ class Strategy:
     #strategies = [[[0,1]],[[0,1]],[[0,1]],[[0,0]],[[0,0]],[[0,1]],[[0,0]],[[0,0]]]
     ## 1 call sites
     strategies = [[[0,1]],[[0,0.5]],[[0.5,1]],[[0,0.4]],[[0,0.3]],[[0,0.2]],[[0,0.1]],[[0,0]]]
-    strategies = [[[0,1]],[[0,0.5]],[[0.5,1]],[[0.6,1]],[[0.7,1]],[[0.8,1]],[[0.9,1]],[[0,0]]]
+    strategiesPerCall = [[[0,1]],[[0,0.5]]]#,[[0.5,1]],[[0,0.4]],[[0,0.3]],[[0,0.2]],[[0,0.1]],[[0.6,1]],[[0.7,1]],[[0.8,1]],[[0.9,1]],[[0,0]]]
+    strategiesForAllCall = []
+    __firstCall = True
+
     def __init__(self, binary, directory, readJsonProfileFile, count):
         self.__readJsonStratFile = directory + "readJsonStrat_{}.json".format(count)
         self.__dumpJsonStratResultFile = directory + "dumpJsonStratResults_{}.json".format(count)
@@ -21,13 +24,27 @@ class Strategy:
         ## Dev strategy
         with open(readJsonProfileFile, 'r') as json_file:
             profile = json.load(json_file)
+        if Strategy.__firstCall:
+            self.updateStrategies(len(profile[self.__JSON_MAIN_LIST]))
+            Strategy.__firstCall = False
+        i=0
+        #print(len(profile[self.__JSON_MAIN_LIST]))
         for dynCall in profile[self.__JSON_MAIN_LIST]:
-            strategy = Strategy.strategies.pop(0)
+            #print(Strategy.strategiesForAllCall)
+            print(Strategy.strategiesForAllCall[i])
+            strategy = Strategy.strategiesForAllCall[i].pop(0)
             self.__strategy = strategy
             dynCall[self.__JSON_DYNCALL_STRATEGY_KEY] = strategy
+            i += 1
+        print(Strategy.strategiesForAllCall)
         with open(self.__readJsonStratFile, 'w') as json_file:
             json.dump(profile, json_file, indent=2)
         return None
+
+    def updateStrategies(self, l):
+        for i in range(l):
+            Strategy.strategiesForAllCall.append(list(Strategy.strategiesPerCall))
+
 
     def applyStrategy(self, checkString):
         procenv = os.environ.copy()
@@ -55,4 +72,4 @@ class Strategy:
             return False
     
     def isLast(self):
-        return len(Strategy.strategies) == 0
+        return len(Strategy.strategiesForAllCall[0]) == 0
