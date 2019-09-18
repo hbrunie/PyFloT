@@ -1,5 +1,6 @@
-#include<stdio.h>
-#include<stdlib.h>
+#include <cstdlib>
+#include <iostream>
+using namespace std;
 
 #include<PT_math.h>
 
@@ -24,6 +25,7 @@ double refvalue = 1911391536333.537109;
 int main(int argc, char ** argv){
     char * th = getenv("THRESHOLD");
     double threshold = 0.1;
+    bool success = true;
     if(th)
         threshold = atof(th);
 
@@ -34,10 +36,14 @@ int main(int argc, char ** argv){
         a = f(a,i);
     fprintf(stderr, "THRESHOLD=%f, reference=%f a=%f\n",
             threshold, refvalue, a);
-    if(fabs(a-refvalue)/fabs(a) < threshold)
-        fprintf(stderr, "SUCCESS(%f)\n",fabs(a-refvalue)/fabs(a));
+    double err = refvalue - a;
+    double absErr = err > 0 ? err : -err;
+    if(absErr > threshold)
+        success = false;
+    if(success)
+        cout << "SUCCESS" << endl;
     else
-        fprintf(stderr, "FAILURE(%f)\n",fabs(a-refvalue)/fabs(a));
+        cout << "FAILURE" << endl;
 
     
     return 0;
