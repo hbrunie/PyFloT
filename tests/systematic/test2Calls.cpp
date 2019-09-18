@@ -10,36 +10,26 @@ int main(int argc, char * argv[]){
     double refA =23.1406775082637;
     double refB =1.00000140000098;
     bool success = true;
+    double erra = refA - a;
+    double errb = refB - b;
+    double absErr = 0.;
+    double absErra = erra > 0 ? erra : -erra;
+    double absErrb = errb > 0 ? errb : -errb;
 #ifdef V1 // Can lower precision 
-    // can lower both
     cerr << "Can lower precision of all calls " << endl;
+    absErr = 0.;
 #elif V2
-    // can not lower any
     cerr << "Can not lower any calls " << endl;
-    double err = refA - a;
-    double absErr = err > 0 ? err : -err;
-    if(absErr > EPSILON)
-        success = false;
-    // can not lower second
-    err = refB - b;
-    absErr = err > 0 ? err : -err;
-    if(absErr > EPSILON)
-        success = false;
+    absErr = absErra + absErrb;
 #elif V3
-    // can not lower first
     cerr << "Can not lower first call " << endl;
-    double err = refA - a;
-    double absErr = err > 0 ? err : -err;
-    if(absErr > EPSILON)
-        success = false;
+    absErr = absErra;
 #else
-    // can not lower second
     cerr << "Can not lower second call " << endl;
-    double err = refB - b;
-    double absErr = err > 0 ? err : -err;
+    absErr = absErrb;
+#endif
     if(absErr > EPSILON)
         success = false;
-#endif
     if(success)
         cout << "SUCCESS" << endl;
     else
