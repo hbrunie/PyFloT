@@ -107,8 +107,11 @@ bool DynFuncCall::applyStrategy(){
     bool lower = false;
     for(auto it = __stratMultiSet.begin() ; it != __stratMultiSet.end(); it++){
         struct FloatSet fs = *it;
-        DEBUG("info",cerr << "Comparison: " << __profiledDyncount*fs.low << " < " << __dyncount 
+        DEBUG("comparison",cerr << "Comparison: " << __profiledDyncount*fs.low << " < " << __dyncount
                 << " < " <<  __profiledDyncount*fs.high << endl;);
+        //TODO: with python script, display the non normalized interval
+        //TODO: with only one call (number 0) it belongs to any [0,x], but to no [x,1], is this wanted?
+        // it should appear in some documentation
         if(__dyncount >= __profiledDyncount*fs.low && __dyncount < __profiledDyncount*fs.high){
             lower = true;
             break;
