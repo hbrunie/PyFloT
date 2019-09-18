@@ -28,7 +28,6 @@ PrecisionTuner::PrecisionTuner(){
     envVarString = getenv(DUMP_JSON_PROFILING_FILE.c_str());
     DEBUG("info", cerr << __FUNCTION__ << ": "<< DUMP_JSON_PROFILING_FILE
             << " " << envVarString << endl;);
-    fprintf(stderr, "%p\n",envVarString);
     if(NULL != envVarString && strlen(envVarString) > 1){
         DEBUG("info", cerr << __FUNCTION__ << ": MODE PROFILING " << endl;);
         __mode = PROFILING;
@@ -64,7 +63,7 @@ PrecisionTuner::~PrecisionTuner(){
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, float), double (*func)(double, double), 
         double value, double parameter){
     float fvalue, fparameter, fres;
-    double dres, res;
+    double dres;
 
     fvalue = (float)value;
     fparameter = (float)parameter;
@@ -76,7 +75,7 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
 }
 
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double), double value){
-    double dres, res;
+    double dres;
     float fvalue, fres;
 
     fvalue = (float)value;

@@ -76,7 +76,7 @@ string Profile::__staticHashKey(vector<void*> btVec){
 }
 
 uint64_t Profile::__dynHashKey(vector<void*> btVec){
-    uintptr_t dynHashKey;
+    uintptr_t dynHashKey = 0;
     uint64_t cnt = 0;
     for(auto it = btVec.begin(); it != btVec.end() && cnt < ONE; it++){
         void *ip = *it;
@@ -164,7 +164,6 @@ void Profile::__displayBacktraceStaticMap(){
 void Profile::__displayBacktraceDynMap(){
     DEBUG("info",cerr << __FUNCTION__ << ":" << __LINE__<< endl;);
     for (auto it = __backtraceDynamicMap.begin(); it != __backtraceDynamicMap.end(); it++){
-        unsigned long key = it->first;
         shared_ptr<DynFuncCall>value = it->second;
         DEBUG("info",cerr << *value << endl;);
     }

@@ -24,7 +24,6 @@ static string JSONFILE = "Users/hbrunie/Codes/output.json";
 
 /******** Globals variables **********/
 
-static unsigned long int TOTAL_CALL_STACKS = 0;
 static PrecisionTuner ptuner;
 
 /******** Function definitions **********/
