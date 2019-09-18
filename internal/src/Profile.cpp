@@ -83,7 +83,7 @@ uint64_t Profile::__dynHashKey(vector<void*> btVec){
         assert(NULL != ip);
         assert( (dynHashKey+ (uintptr_t) ip) < numeric_limits<uintptr_t>::max());
         DEBUG("dynHashKey",cerr << __FUNCTION__ << ":" << __LINE__ << dynHashKey
-                << " " << cnt << "/" << size << " " << (uintptr_t) ip << endl;);
+                << " " << cnt << "/" << ONE << " " << (uintptr_t) ip << endl;);
         dynHashKey += (uintptr_t) ip;
         cnt++;
     }
