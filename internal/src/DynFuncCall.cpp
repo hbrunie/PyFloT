@@ -104,22 +104,23 @@ void DynFuncCall::applyProfiling(){
 
 bool DynFuncCall::applyStrategy(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    bool lower = false;
+    this->__dyncount ++;
     for(auto it = __stratMultiSet.begin() ; it != __stratMultiSet.end(); it++){
         struct FloatSet fs = *it;
-        DEBUG("comparison",cerr << "Comparison: " << __profiledDyncount*fs.low << " < " << __dyncount
-                << " < " <<  __profiledDyncount*fs.high << endl;);
+        unsigned int lowerBound = round(__profiledDyncount*fs.low);
+        unsigned int upperBound = round(__profiledDyncount*fs.high);
+        bool comparison = this->__dyncount >= lowerBound && this->__dyncount < upperBound;
+        DEBUG("comparison",cerr << "Comparison: " << lowerBound << " < " << __dyncount
+                << " < " <<  upperBound << " "<< (comparison ? "TRUE" : "FALSE") << endl;);
         //TODO: with python script, display the non normalized interval
         //TODO: with only one call (number 0) it belongs to any [0,x], but to no [x,1], is this wanted?
         // it should appear in some documentation
-        if(__dyncount >= __profiledDyncount*fs.low && __dyncount < __profiledDyncount*fs.high){
-            lower = true;
-            break;
+        if(comparison){
+            this->__loweredCount++;
+            return true;
         }
     }
-    __dyncount ++;
-    __loweredCount += lower ? 1 : 0;
-    return lower;
+    return false;
 }
 
 Value DynFuncCall::getJsonValue(){
