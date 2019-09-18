@@ -22,7 +22,9 @@ PrecisionTuner::PrecisionTuner(){
      * otherwise AS mode
      */
     char *envVarString=NULL, * envVarString1 = NULL, * envVarString2=NULL;
+#ifndef NDEBUG
     debugtypeOption(getenv("DEBUG"));
+#endif
     envVarString = getenv(DUMP_JSON_PROFILING_FILE.c_str());
     DEBUG("info", cerr << __FUNCTION__ << ": "<< DUMP_JSON_PROFILING_FILE
             << " " << envVarString << endl;);
