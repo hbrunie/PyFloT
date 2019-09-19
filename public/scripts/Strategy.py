@@ -1,6 +1,8 @@
 import os
 import json
 import subprocess
+import decimal
+
 class Strategy:
     __readJsonProfileFile = "None"
     __readJsonStratFile = "None"
@@ -15,40 +17,52 @@ class Strategy:
     #strategies = [[[0,1]],[[0,1]],[[0,1]],[[0,0]],[[0,0]],[[0,1]],[[0,0]],[[0,0]]]
     ## 1 call sites
     strategies = [[[0,1]],[[0,0.5]],[[0.5,1]],[[0,0.4]],[[0,0.3]],[[0,0.2]],[[0,0.1]],[[0,0]]]
-    strategiesPerCall = [[[0,1]],[[0,0.5]]]#,[[0.5,1]],[[0,0.4]],[[0,0.3]],[[0,0.2]],[[0,0.1]],[[0.6,1]],[[0.7,1]],[[0.8,1]],[[0.9,1]],[[0,0]]]
+    strategiesPerCall = [[[0,1]],[[0,0.5]],[[0.5,1]],[[0,0.4]],[[0,0.3]],[[0,0.2]],[[0,0.1]],[[0.6,1]],[[0.7,1]],[[0.8,1]],[[0.9,1]],[[0,0]]]
     strategiesForAllCall = []
     __firstCall = True
 
+    def updateStrategies(self, l):
+        strat = [0,0.5]
+        for i in range(l):
+            local = []#list(Strategy.strategiesPerCall)
+            isIn = float(i) / float(l)
+            if strat[0] < isIn and isIn <= strat[1]:
+                local.append([[0,1]])
+            else:
+                local.append([[0,0]])
+
+            Strategy.strategiesForAllCall.append(list(local))
+
+
     def __init__(self, binary, directory, readJsonProfileFile, count):
+        def roundUp(x):
+            return int(decimal.Decimal(x).quantize(decimal.Decimal('1'),
+        rounding=decimal.ROUND_HALF_UP))
+
         self.__readJsonStratFile = directory + "readJsonStrat_{}.json".format(count)
         self.__dumpJsonStratResultFile = directory + "dumpJsonStratResults_{}.json".format(count)
         self.__binary = binary
-        ## Dev strategy
+        ## Dev strategy: Only done by first instanciation
         with open(readJsonProfileFile, 'r') as json_file:
             profile = json.load(json_file)
         if Strategy.__firstCall:
             self.updateStrategies(len(profile[self.__JSON_MAIN_LIST]))
             Strategy.__firstCall = False
-        i=0
-        #print(len(profile[self.__JSON_MAIN_LIST]))
-        for dynCall in profile[self.__JSON_MAIN_LIST]:
-            #print(Strategy.strategiesForAllCall)
+
+        ## For each instanciation: fill strategy json file
+        allSitesStrategy = []
+        for i,dynCall in enumerate(profile[self.__JSON_MAIN_LIST]):
             strategy = Strategy.strategiesForAllCall[i].pop(0)
             callsCount = dynCall[self.__JSON_CALLSCOUNT]
-            detailedStrategy = [[int(callsCount*x[0]), int(callsCount*x[1])] for x in strategy]
-            self.__strategy = strategy
+            detailedStrategy = [[roundUp(callsCount*x[0]), roundUp(callsCount*x[1])] for x in strategy]
+            allSitesStrategy.append(list(detailedStrategy))
             dynCall[self.__JSON_DYNCALL_STRATEGY_KEY] = strategy
-            #print(strategy,detailedStrategy,callsCount)
+            print(strategy,detailedStrategy,callsCount)
             dynCall[self.__JSON_DYNCALL_STRATEGY_DETAILED_KEY] = detailedStrategy #[strategy[0]*callsCount, strategy[1]*callsCount]
-            i += 1
+        self.__strategy = allSitesStrategy
         with open(self.__readJsonStratFile, 'w') as json_file:
             json.dump(profile, json_file, indent=2)
         return None
-
-    def updateStrategies(self, l):
-        for i in range(l):
-            Strategy.strategiesForAllCall.append(list(Strategy.strategiesPerCall))
-
 
     def applyStrategy(self, checkString):
         procenv = os.environ.copy()
