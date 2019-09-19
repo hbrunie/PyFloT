@@ -36,7 +36,7 @@ const double EPSILON = 1E-4;
 const double EPSILON = 1E-5;
 #endif
 
-int main(int argc, char ** argv){
+int main(){
     double a = 0.00001;
     a = a * exp(a+0.0005);
     a = f(a,0);

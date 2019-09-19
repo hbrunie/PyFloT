@@ -3,7 +3,7 @@
 #include "PT_math.h"
 #define LOOP 10
 using namespace std;
-int main(int argc, char * argv[]){
+int main(){
     double a=0.0;
     for (int i = 0; i<LOOP;i++) {
         a += exp(3.141592);

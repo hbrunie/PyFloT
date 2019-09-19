@@ -17,7 +17,7 @@ test2Calls:
 	$(CXX) -o $@_v1 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV1
 	$(CXX) -o $@_v2 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV2
 	$(CXX) -o $@_v3 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV3
-	$(CXX) -o $@_v4 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR)
+	$(CXX) -o $@_v4 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV4
 
 test1CallSiteMultipleDynCalls:
 	$(CXX) -o $@_v1 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV1

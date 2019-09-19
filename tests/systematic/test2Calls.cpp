@@ -2,33 +2,41 @@
 #include <iostream>
 #include <iomanip>
 #include "PT_math.h"
-#define EPSILON 0.0000000001
 using namespace std;
-int main(int argc, char * argv[]){
-    double a = exp(3.141592);
-    double b = exp(0.0000014);
-    double refA =23.1406775082637;
-    double refB =1.00000140000098;
+int main(){
     bool success = true;
-    double erra = refA - a;
+    double relErr = 0.;
+    double b = exp(0.0000014);
+    double refB =1.00000140000098;
     double errb = refB - b;
-    double absErr = 0.;
-    double absErra = erra > 0 ? erra : -erra;
     double absErrb = errb > 0 ? errb : -errb;
+    double relErrorB = absErrb / refB;
+    double a = exp(3.141592);
+    double refA =23.1406775082637;
+    double erra = refA - a;
+    double absErra = erra > 0 ? erra : -erra;
+    double relErrorA = absErra / refA;
+
 #ifdef V1 // Can lower precision 
     cerr << "Can lower precision of all calls " << endl;
-    absErr = 0.;
+    relErr = relErrorA + relErrorB;
+    const double EPSILON = 1.;
 #elif V2
     cerr << "Can not lower any calls " << endl;
-    absErr = absErra + absErrb;
+    relErr = relErrorA + relErrorB;
+    const double EPSILON = 0.0000000001;
 #elif V3
     cerr << "Can not lower first call " << endl;
-    absErr = absErra;
-#else
+    relErr = relErrorA;
+    const double EPSILON = 0.000000001;
+#elif V4
     cerr << "Can not lower second call " << endl;
-    absErr = absErrb;
+    relErr = relErrorB;
+    const double EPSILON = 0.0000000001;
 #endif
-    if(absErr > EPSILON)
+    cerr << "RelError: " << relErr  << endl;
+    cerr << "EPSILON: " << EPSILON << endl;
+    if(relErr > EPSILON)
         success = false;
     if(success)
         cout << "SUCCESS" << endl;
