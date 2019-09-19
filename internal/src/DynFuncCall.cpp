@@ -109,9 +109,9 @@ bool DynFuncCall::applyStrategy(){
         struct FloatSet fs = *it;
         unsigned int lowerBound = round(__profiledDyncount*fs.low);
         unsigned int upperBound = round(__profiledDyncount*fs.high);
-        bool comparison = this->__dyncount >= lowerBound && this->__dyncount < upperBound;
+        bool comparison = lowerBound < this->__dyncount && this->__dyncount <= upperBound;
         DEBUG("comparison",cerr << "Comparison: " << lowerBound << " < " << __dyncount
-                << " < " <<  upperBound << " "<< (comparison ? "TRUE" : "FALSE") << endl;);
+                << " <= " <<  upperBound << " "<< (comparison ? "TRUE" : "FALSE") << endl;);
         //TODO: with python script, display the non normalized interval
         //TODO: with only one call (number 0) it belongs to any [0,x], but to no [x,1], is this wanted?
         // it should appear in some documentation

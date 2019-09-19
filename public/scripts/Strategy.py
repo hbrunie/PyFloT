@@ -33,7 +33,6 @@ class Strategy:
         #print(len(profile[self.__JSON_MAIN_LIST]))
         for dynCall in profile[self.__JSON_MAIN_LIST]:
             #print(Strategy.strategiesForAllCall)
-            print(Strategy.strategiesForAllCall[i])
             strategy = Strategy.strategiesForAllCall[i].pop(0)
             callsCount = dynCall[self.__JSON_CALLSCOUNT]
             detailedStrategy = [[int(callsCount*x[0]), int(callsCount*x[1])] for x in strategy]
@@ -42,7 +41,6 @@ class Strategy:
             #print(strategy,detailedStrategy,callsCount)
             dynCall[self.__JSON_DYNCALL_STRATEGY_DETAILED_KEY] = detailedStrategy #[strategy[0]*callsCount, strategy[1]*callsCount]
             i += 1
-        print(Strategy.strategiesForAllCall)
         with open(self.__readJsonStratFile, 'w') as json_file:
             json.dump(profile, json_file, indent=2)
         return None
@@ -58,7 +56,7 @@ class Strategy:
         ## by the PrecisionTuner library
         procenv["READJSONPROFILESTRATFILE"]     = self.__readJsonStratFile
         procenv["DUMPJSONSTRATSRESULTSFILE"]   = self.__dumpJsonStratResultFile
-        procenv["DEBUG"] = "fperror"
+        procenv["DEBUG"] = "fperrorplus"
         #print("PYTHON: ", procenv["READJSONPROFILESTRATFILE"])
         #print("PYTHON: ", procenv["DUMPJSONSTRATSRESULTSFILE"])
  
