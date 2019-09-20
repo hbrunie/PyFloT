@@ -1,13 +1,1 @@
-CXX=clang++ -std=c++11 -Wall -Wextra
-INCLUDEDIR=-I /opt/local/include/ 
-LIB=-L/opt/local/lib/ -ljsoncpp
-
-## Compile PrecisionTuning framework
-PTHOME=/Users/hbrunie/Codes/tools/precisiontuning/
-PUBLICLIB=$(PTHOME)/public/lib/
-INCDIR= -I $(PTHOME)/internal/utils/ -I $(PTHOME)/internal/include/ $(INCLUDEDIR) -I. 
-DYNLIB=-shared -fPIC
-
-## Use PrecisionTuning framework
-PTLIB=-L $(PUBLICLIB) -lprecisiontuning
-PTINCDIR= -I $(PTHOME)/public/include/
+## replace by make.Cori.def or make.MACOS.def

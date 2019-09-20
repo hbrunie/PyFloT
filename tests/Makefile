@@ -17,4 +17,4 @@ cleanall: clean
 	make cleanall -C systematic
 	make cleanall -C trivial
 
-.PHONY: unittest
+.PHONY: trivial
