@@ -2,8 +2,12 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <iterator>
 #include <iostream>
+#include <limits>
+#include <regex>
 #include <sstream>
+#include <string>
 
 #include <execinfo.h>
 #include <json/json.h>
@@ -26,7 +30,7 @@ Profile::~Profile(){
 
 Profile::Profile(bool profiling, string readFile,
         string dumpFile){
-        DEBUG("apply",cerr << __FUNCTION__ << " --> dumpFile: " << dumpFile << " profiling: " << profiling << endl;);
+    DEBUG("apply",cerr << __FUNCTION__ << " --> dumpFile: " << dumpFile << " profiling: " << profiling << endl;);
     if(profiling){
         __dumpFile = dumpFile;
     }
@@ -51,22 +55,35 @@ string Profile::__staticHashKey(vector<void*> btVec){
     unsigned int cnt = 0;
     char * tmp = symbols[cnt];
     while(NULL != tmp && cnt < size){
-        string stmp(tmp);
+        string backtraceSymbols(tmp);
+        DEBUG("statickey",cerr << "backtraceSymbols: " << backtraceSymbols << endl ;);
+#ifndef MAC_OS
+        // /path/to/libprecisiontuning.so(Mangl_D2_FUncName+0x2e) [0x2aaaaacf5ede]
+        regex regex("[-_a-zA-Z/.0-9]+\\(([a-zA-Z_0-9]+)\\+([xa-f0-9]+)\\)\\s\\[0x[a-f0-9]+\\]$");
+        smatch m;
+        regex_match(backtraceSymbols, m, regex);
+        statHashKey += m[1];
+        statHashKey += m[2];
+        DEBUG("statickey", cerr << "Function: " << m[1] << endl;);
+        DEBUG("statickey", cerr << "?main: " << (m[1].compare("main")==0) << endl;);
+        if(m[1].compare("main")==0)
+            cnt=size;
+#else// Mac OS environment
         std::vector<std::string> result;
-        std::istringstream iss(stmp);
-        DEBUG("statickey",cerr << " result: " ;);
+        std::istringstream iss(backtraceSymbols);
         for(std::string s; iss >> s; ){
             DEBUG("statickey",cerr << s << " " ;);
             result.push_back(s);
         }
         DEBUG("statickey",cerr << endl << __FUNCTION__ << ":" << __LINE__
-            << " Result size: "<< result.size() << endl;);
+                << " Result size: "<< result.size() << endl;);
         DEBUG("statickey",cerr << " Elts chosen for static key: " <<endl << result[3]<< " " << result[5] << endl;);
         statHashKey += result[3];
         statHashKey += result[5];
         //If main function call is reached, stop the callstack unstacking.
         if(result[3].compare("main")==0)
             cnt=size;
+#endif
         cnt++;
         tmp = symbols[cnt];
     }
@@ -81,7 +98,7 @@ uint64_t Profile::__dynHashKey(vector<void*> btVec){
     for(auto it = btVec.begin(); it != btVec.end() && cnt < ONE; it++){
         void *ip = *it;
         assert(NULL != ip);
-        assert( (dynHashKey+ (uintptr_t) ip) < numeric_limits<uintptr_t>::max());
+        assert( (dynHashKey+ (uintptr_t) ip) <numeric_limits<uintptr_t>::max());
         DEBUG("dynHashKey",cerr << __FUNCTION__ << ":" << __LINE__ << dynHashKey
                 << " " << cnt << "/" << ONE << " " << (uintptr_t) ip << endl;);
         dynHashKey += (uintptr_t) ip;
@@ -96,13 +113,13 @@ bool Profile::applyStrategy(vector<void*> & btVec){
     shared_ptr<DynFuncCall> dfc;
     DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__ << " " << dfc << endl);
     DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__<<  " Static map " << endl;
-                __displayBacktraceStaticMap(););
+            __displayBacktraceStaticMap(););
     // if exist or not go on perm HashMap
     auto hashKeyIte = __backtraceDynamicMap.find(dynHashKey);
     if(hashKeyIte == __backtraceDynamicMap.end()){
         string staticHashKey = __staticHashKey(btVec);
         DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " staticHashKey:" << 
-               staticHashKey << endl);
+                staticHashKey << endl);
         auto stathashKeyIte = __backtraceStaticMap.find(staticHashKey);
         if(stathashKeyIte == __backtraceStaticMap.end()){
             cerr << __FUNCTION__ << ":" << __LINE__ << " ERROR staticHashKey:" << staticHashKey << endl;
@@ -123,7 +140,7 @@ bool Profile::applyStrategy(vector<void*> & btVec){
 }
 
 /* Compute hash and add or update DynamicHashMap
- */
+*/
 void Profile::applyProfiling(vector<void*> & btVec){
     uintptr_t dynHashKey = __dynHashKey(btVec);
     shared_ptr<DynFuncCall> dfc(nullptr);
@@ -221,7 +238,7 @@ void Profile::__buildProfiledDataFromJsonFile(string fileAbsPath){
       Because it is the name as the call stack, which is the list of virtual addresses.
       Can not be Dynamic Function call. It is in between DynFuncCall and Static function call site.
       Maybe Dynamic Function Call Site? Containing ASVR dependent and ASVR independent.
-     */
+      */
     //unordered_map<uint64_t, struct CallData> backtraceMap;
     DEBUG("info",cerr << "STARTING "<< __FUNCTION__ << endl;);
     std::ifstream infile(fileAbsPath, std::ifstream::binary);

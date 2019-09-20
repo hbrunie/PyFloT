@@ -1,6 +1,5 @@
 #include <alloca.h>
 #include <assert.h>
-//#include <bits/stdc++.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
@@ -8,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits.h>
+#include <math.h>
 #include <sstream>
 
 #include <dlfcn.h>

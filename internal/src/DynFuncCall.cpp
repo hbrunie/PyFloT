@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <math.h>
 
 #include <execinfo.h>
 #include <json/json.h>
@@ -67,7 +68,7 @@ DynFuncCall::DynFuncCall(vector<void*>  btVec, uint64_t dynHashKey) : DynFuncCal
     __dynHashKey = dynHashKey; 
 }
 
-DynFuncCall::DynFuncCall(vector<void*> btVec, unsigned long profiledDyncount) : DynFuncCall(btVec){
+DynFuncCall::DynFuncCall(vector<void*> btVec, uint32_t profiledDyncount) : DynFuncCall(btVec){
     __profiledDyncount = profiledDyncount;
 }
 
@@ -76,7 +77,7 @@ DynFuncCall::DynFuncCall(vector<void*> btVec, string statHashKey, bool lowered) 
     __loweredCount = lowered ? 1 : 0;
 }
 
-DynFuncCall::DynFuncCall(vector<void*> btVec, unsigned long profiledDyncount, bool lowered) :
+DynFuncCall::DynFuncCall(vector<void*> btVec, uint32_t profiledDyncount, bool lowered) :
     DynFuncCall(btVec, profiledDyncount){
     __loweredCount = lowered ? 1 : 0;
 }

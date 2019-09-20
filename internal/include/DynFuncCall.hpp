@@ -46,8 +46,8 @@ class DynFuncCall
         DynFuncCall(vector<void*>, string);
         // static
         DynFuncCall(vector<void*>, string, bool);
-        DynFuncCall(vector<void*>, unsigned long); 
-        DynFuncCall(vector<void*>, unsigned long, bool);
+        DynFuncCall(vector<void*>, uint32_t);
+        DynFuncCall(vector<void*>, uint32_t, bool);
         Value getJsonValue();
         vector<void*> getBtVector();
         bool applyStrategy();

@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <execinfo.h>
+#include <math.h>
 
 #include "Debug.hpp"
 #include "PrecisionTuner.hpp"    
