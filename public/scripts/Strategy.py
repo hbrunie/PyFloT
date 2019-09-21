@@ -13,53 +13,102 @@ class Strategy:
     __JSON_DYNCALL_STRATEGY_DETAILED_KEY = "DetailedStrategy"
     __JSON_CALLSCOUNT = "CallsCount"
     __strategy = []
-    ## 2 call sites
-    #strategies = [[[0,1]],[[0,1]],[[0,1]],[[0,0]],[[0,0]],[[0,1]],[[0,0]],[[0,0]]]
-    ## 1 call sites
-    strategies = [[[0,1]],[[0,0.5]],[[0.5,1]],[[0,0.4]],[[0,0.3]],[[0,0.2]],[[0,0.1]],[[0,0]]]
-    strategiesPerCall = [[[0,1]],[[0,0.5]],[[0.5,1]],[[0,0.4]],[[0,0.3]],[[0,0.2]],[[0,0.1]],[[0.6,1]],[[0.7,1]],[[0.8,1]],[[0.9,1]],[[0,0]]]
+    stratCoupleList = [
+            ([[0,1]],[[0,0.9]]),
+            ([[0.1,1]],[[0.2,1]]),
+            ([[0,0.8]],[[0.3,1]]),
+            ([[0,0.7]],[[0.4,1]]),
+            ([[0,0.6]],[[0,0.5]]),
+            ([[0.5,1]],[[0,0.4]]),
+            ([[0.6,1]],[[0,0.3]]),
+            ([[0.7,1]],[[0,0.2]]),
+            ([[0.,.1]],[[0.9,1]]),
+            ([[0,0]],[[0,0]])
+            ]
     strategiesForAllCall = []
     __firstCall = True
 
-    def updateStrategies(self, l):
-        strat = [0,0.5]
-        for i in range(l):
-            local = []#list(Strategy.strategiesPerCall)
-            isIn = float(i) / float(l)
-            if strat[0] < isIn and isIn <= strat[1]:
-                local.append([[0,1]])
+    ## CallSites, containing many dynamic calls
+    ## "Strategies" is a list S[S],
+    ## Inside there are one list s[s] for each strategy to test.
+    ## Each Strategy list is made of as many lists c[c] as CallSites
+    ## S[ s[c1[ multiSet c1],c2[ multiSet c2],...,cn[ multiSet cn]s], s[c1[ multiSet c1],c2[ multiSet c2],...,cn[ multiSet cn]s], ..., s[c1[ multiSet c1],c2[ multiSet c2],...,cn[ multiSet cn]s] S]
+    ##--> [ [ [[],[]] [[],[]]... [[],[]] ], ... [[[]] [[]] ... [[]]] ]
+    def updateStrategies(self, callSitesCount):
+        def updateStrategy(stratList, cond, stratCouple):
+            if cond:
+                stratList.append(stratCouple[0])
             else:
-                local.append([[0,0]])
+                stratList.append(stratCouple[1])
 
-            Strategy.strategiesForAllCall.append(list(local))
-
+        for stratCouple in self.stratCoupleList:
+            for strat in [[0,1],[0,0.5],[0.5,1],[0,0]]:
+                ## callSites will stratCouple[0]
+                ## or stratCouple[1] according to their belonging to strat
+                strategyForAllCallSites = []
+                for cs in range(callSitesCount):
+                    ## Normalize cs ID
+                    isIn = float(cs) / float(callSitesCount)
+                    sup = strat[0] <= isIn
+                    inf = isIn < strat[1]
+                    cond = sup and inf
+                    updateStrategy(strategyForAllCallSites, cond, stratCouple)
+                Strategy.strategiesForAllCall.append(list(strategyForAllCallSites))
 
     def __init__(self, binary, directory, readJsonProfileFile, count):
+        """ def detailedStrategy: strategy multiset
+            converted from 0 -- 1 to 0 -- totalDynCall
+            basically: bound*totalDynCall
+        """
+        def readFileName(count):
+            return "readJsonStrat_{}.json".format(count)
+        def dumpFileName(count):
+            return "dumpJsonStratResults_{}.json".format(count)
         def roundUp(x):
             return int(decimal.Decimal(x).quantize(decimal.Decimal('1'),
         rounding=decimal.ROUND_HALF_UP))
+        def inf(x,cc):
+            """ Compute inf bound detailed strategy:
+                from CallsCount and strategy contiguous set """
+            return roundUp(cc*x[0])
+        def sup(x,cc):
+            """ Compute sup bound detailed strategy:
+                from CallsCount and strategy contiguous set """
+            return roundUp(cc*x[1])-1
 
-        self.__readJsonStratFile = directory + "readJsonStrat_{}.json".format(count)
-        self.__dumpJsonStratResultFile = directory + "dumpJsonStratResults_{}.json".format(count)
-        self.__binary = binary
-        ## Dev strategy: Only done by first instanciation
+        self.__readJsonStratFile       = directory + readFileName(count)
+        self.__dumpJsonStratResultFile = directory + dumpFileName(count)
+        self.__binary                  = binary
+
+        ##TODO: do it only once (first instanciation) use static class attribute
+        ## for profile
+        ## BE AWARE: profile variable is local to each instance for filling
+        ## strategy read JSON files
         with open(readJsonProfileFile, 'r') as json_file:
             profile = json.load(json_file)
+        ## Dev strategy: Only done by first instanciation
         if Strategy.__firstCall:
             self.updateStrategies(len(profile[self.__JSON_MAIN_LIST]))
             Strategy.__firstCall = False
 
-        ## For each instanciation: fill strategy json file
-        allSitesStrategy = []
+        ## Pop from Strategies list the first strategy for all call sites
+        strategyForAllCallSites = Strategy.strategiesForAllCall.pop(0)
+        ## for each call site: pop corresponding strategy
+        ## and convert to detailedStrategy
+        self.__strategy = []
         for i,dynCall in enumerate(profile[self.__JSON_MAIN_LIST]):
-            strategy = Strategy.strategiesForAllCall[i].pop(0)
             callsCount = dynCall[self.__JSON_CALLSCOUNT]
-            detailedStrategy = [[roundUp(callsCount*x[0]), roundUp(callsCount*x[1])] for x in strategy]
-            allSitesStrategy.append(list(detailedStrategy))
+            ## Specific call site strategy
+            strategy = strategyForAllCallSites.pop(0)
+            ## convert to detailed strategy
+            detailedStrategy = [[inf(x,callsCount), sup(x, callsCount)] for x in strategy]
+            ## update JSON representation
             dynCall[self.__JSON_DYNCALL_STRATEGY_KEY] = strategy
-            print(strategy,detailedStrategy,callsCount)
-            dynCall[self.__JSON_DYNCALL_STRATEGY_DETAILED_KEY] = detailedStrategy #[strategy[0]*callsCount, strategy[1]*callsCount]
-        self.__strategy = allSitesStrategy
+            dynCall[self.__JSON_DYNCALL_STRATEGY_DETAILED_KEY] = detailedStrategy
+            ## Store current strategy for display if WINNER
+            self.__strategy.append(list(detailedStrategy))
+        print(self.__strategy)
+        ## Each time Strategy is instantiate: fill strategy json file
         with open(self.__readJsonStratFile, 'w') as json_file:
             json.dump(profile, json_file, indent=2)
         return None
@@ -70,13 +119,13 @@ class Strategy:
         ## by the PrecisionTuner library
         procenv["READJSONPROFILESTRATFILE"]     = self.__readJsonStratFile
         procenv["DUMPJSONSTRATSRESULTSFILE"]   = self.__dumpJsonStratResultFile
-        procenv["DEBUG"] = "fperrorplus"
+        #procenv["DEBUG"] = "fperror"
         #print("PYTHON: ", procenv["READJSONPROFILESTRATFILE"])
         #print("PYTHON: ", procenv["DUMPJSONSTRATSRESULTSFILE"])
  
         command = []
         command.append(self.__binary)
-        print(command)
+        print("Command: ",command)
         out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
         strout = out.decode("utf-8")
         print(strout)
@@ -90,4 +139,4 @@ class Strategy:
             return False
     
     def isLast(self):
-        return len(Strategy.strategiesForAllCall[0]) == 0
+        return len(Strategy.strategiesForAllCall) == 0
