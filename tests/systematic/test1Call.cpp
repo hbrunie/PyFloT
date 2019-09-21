@@ -16,7 +16,7 @@ int main(){
 #else
     // can not lower any
     cerr << "Can not lower any calls " << endl;
-    const double EPSILON = 0.0000000001;
+    const double EPSILON = 1E-17;
 #endif
     if(relErr> EPSILON)
         success = false;

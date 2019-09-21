@@ -2,7 +2,7 @@
 #include <iostream>
 #include "PT_math.h"
 //#include "math.h"
-#define LOOP 100//0000
+#define LOOP 1000000
 using namespace std;
 
 double g(double a, int c){
@@ -22,18 +22,17 @@ double f(double a, int c){
     b = fabs(b);
     return b;
 }
-//double refvalue = 1536.800436;//1000 000
-double refvalue = 370.126166;//100
+double refvalue = 905.7020870020163557;
 #ifdef V1
-const double EPSILON = 1E-1;
+const double EPSILON = 1E0;
 #elif V2
-const double EPSILON = 1E-2;
+const double EPSILON = 5E-1;
 #elif V3
-const double EPSILON = 1E-3;
+const double EPSILON = 1E-1;
 #elif V4
-const double EPSILON = 1E-4;
+const double EPSILON = 5E-2;
 #elif V5
-const double EPSILON = 1E-5;
+const double EPSILON = 1E-2;
 #endif
 
 int main(){
@@ -45,7 +44,7 @@ int main(){
     double err = refvalue - a;
     double absErr = err > 0 ? err : -err;
     double relError= absErr / refvalue;
-    fprintf(stderr, "EPSILON=%f, reference=%f a=%f\n",
+    fprintf(stderr, "EPSILON=%f, reference=%.16f a=%.16f\n",
             EPSILON, refvalue, a);
     if(relError < EPSILON)
         fprintf(stderr, "SUCCESS(%f)\n",relError);
