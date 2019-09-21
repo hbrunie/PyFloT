@@ -8,6 +8,7 @@ PTHOME=/Users/hbrunie/Codes/tools/precisiontuning/
 PUBLICLIB=$(PTHOME)/public/lib/
 INCDIR= -I $(PTHOME)/internal/utils/ -I $(PTHOME)/internal/include/ $(INCLUDEDIR) -I. 
 DYNLIB=-shared -fPIC
+GCCDYNLIB=
 
 ## Use PrecisionTuning framework
 PTLIB=-L $(PUBLICLIB) -lprecisiontuning
