@@ -1,4 +1,4 @@
-#!/usr/common/software/python/3.7-anaconda-2019.07/bin/python
+#!/usr/bin/env python3
 import sys
 
 from parse import parse
