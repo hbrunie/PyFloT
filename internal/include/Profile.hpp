@@ -27,7 +27,7 @@ class Profile{
         void __dumpJsonPermanentHashMap();
         void __displayBacktraceDynMap();
         void __displayBacktraceStaticMap();
-        uint64_t __dynHashKey(vector<void*> btVec);
+        uintptr_t __dynHashKey(vector<void*> btVec);
         string __staticHashKey(vector<void*> btVec);
         /// JSON Keys
         // List of all the call stack dictionnaries

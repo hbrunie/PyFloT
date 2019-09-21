@@ -92,7 +92,7 @@ string Profile::__staticHashKey(vector<void*> btVec){
     return statHashKey;
 }
 
-uint64_t Profile::__dynHashKey(vector<void*> btVec){
+uintptr_t Profile::__dynHashKey(vector<void*> btVec){
     uintptr_t dynHashKey = 0;
     uint64_t cnt = 0;
     for(auto it = btVec.begin(); it != btVec.end() && cnt < ONE; it++){
@@ -239,7 +239,6 @@ void Profile::__buildProfiledDataFromJsonFile(string fileAbsPath){
       Can not be Dynamic Function call. It is in between DynFuncCall and Static function call site.
       Maybe Dynamic Function Call Site? Containing ASVR dependent and ASVR independent.
       */
-    //unordered_map<uint64_t, struct CallData> backtraceMap;
     DEBUG("info",cerr << "STARTING "<< __FUNCTION__ << endl;);
     std::ifstream infile(fileAbsPath, std::ifstream::binary);
     if(!stream_check(infile))

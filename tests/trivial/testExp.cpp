@@ -2,8 +2,8 @@
 #include <iostream>
 #include "PT_math.h"
 using namespace std;
-int main(int argc, char * argv[]){
+int main(){
     double a = exp(3.14);
-    cout << "SUCCESS" << endl;
+    cout << "SUCCESS: "<< a << endl;
     return 0;
 }

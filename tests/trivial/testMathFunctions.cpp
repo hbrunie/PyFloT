@@ -22,7 +22,7 @@ double f(double a, int c){
     return b;
 }
 double refvalue = 1911391536333.537109;
-int main(int argc, char ** argv){
+int main(){
     char * th = getenv("THRESHOLD");
     double threshold = 0.1;
     bool success = true;

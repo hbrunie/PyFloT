@@ -3,7 +3,7 @@
 
 #include "Debug.hpp"
 
-int main(int argc, char * argv []){
+int main(){
     debugtypeOption(getenv("DEBUG"));
     DEBUG("warning", printf("toto"););
     DEBUG("info", printf("blabla"););

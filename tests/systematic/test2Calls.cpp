@@ -26,11 +26,11 @@ int main(){
     relErr = relErrorA + relErrorB;
     const double EPSILON = 0.0000000001;
 #elif V3
-    cerr << "Can not lower first call " << endl;
+    cerr << "Can not lower first call (no use of " << relErrorB << ")" << endl;
     relErr = relErrorA;
     const double EPSILON = 0.000000001;
 #elif V4
-    cerr << "Can not lower second call " << endl;
+    cerr << "Can not lower second call (no use of " << relErrorA << ")" << endl;
     relErr = relErrorB;
     const double EPSILON = 0.0000000001;
 #endif

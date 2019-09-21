@@ -31,7 +31,7 @@ class DynFuncCall
         unsigned long __loweredCount;
         unsigned long __dyncount;
         unsigned long __profiledDyncount;
-        uint64_t __dynHashKey;
+        uintptr_t __dynHashKey;
         string __statHashKey;
         list<struct FloatSet> __stratMultiSet;
     public:
@@ -41,7 +41,7 @@ class DynFuncCall
         //
         DynFuncCall(vector<void*>);
         // dynamic HashKey, used in applyProfiling
-        DynFuncCall(vector<void*>, uint64_t);
+        DynFuncCall(vector<void*>, uintptr_t);
         // static
         DynFuncCall(vector<void*>, string);
         // static

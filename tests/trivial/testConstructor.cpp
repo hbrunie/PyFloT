@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include "PrecisionTuner.hpp"
 
-int main(int argc, char * argv[]){
+int main(){
     PrecisionTuner pt;
     return 0;
 }

@@ -64,7 +64,7 @@ DynFuncCall::DynFuncCall(vector<void*>  btVec, string statHashKey) : DynFuncCall
     __statHashKey = statHashKey; 
 }
 
-DynFuncCall::DynFuncCall(vector<void*>  btVec, uint64_t dynHashKey) : DynFuncCall(btVec){
+DynFuncCall::DynFuncCall(vector<void*>  btVec, uintptr_t dynHashKey) : DynFuncCall(btVec){
     __dynHashKey = dynHashKey; 
 }
 
