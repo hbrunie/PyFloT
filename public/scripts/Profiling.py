@@ -22,10 +22,11 @@ class Profiling:
     def getCodeProfile(self):
         procenv = os.environ.copy()
         procenv["DUMPJSONPROFILINGFILE"] = self.__dumpJsonProfileFile
-        procenv["DEBUG"] = "fperror"
+        #procenv["DEBUG"] = "fperror"
         command = []
         command.append(self.__binary)
         #print("PYTHON: DUMPJSONPROFILINGFILE-->",procenv["DUMPJSONPROFILINGFILE"])
+        print("Command: ",command)
         out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
         strout = out.decode("utf-8")
         print(strout)
