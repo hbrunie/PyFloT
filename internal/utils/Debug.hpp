@@ -16,8 +16,8 @@
 
 #else
 
-#define isCurrentDebugType(X) (false)
-#define setCurrentDebugType(X)
+//#define isCurrentDebugType(X) (false)
+//#define setCurrentDebugType(X)
 #define DEBUG(TYPE, X) do { } while (0)
 
 #endif /* NDEBUG */
