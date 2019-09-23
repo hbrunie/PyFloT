@@ -12,6 +12,7 @@ class Strategy:
     __JSON_DYNCALL_STRATEGY_KEY = "Strategy"
     __JSON_DYNCALL_STRATEGY_DETAILED_KEY = "DetailedStrategy"
     __JSON_CALLSCOUNT = "CallsCount"
+    __JSON_TOTALCALLSTACKS = "TotalCallStacks"
     __strategy = []
     stratCoupleList = [
             ([[0,1]],[[0,0.9]]),
@@ -87,6 +88,8 @@ class Strategy:
         with open(readJsonProfileFile, 'r') as json_file:
             profile = json.load(json_file)
         ## Dev strategy: Only done by first instanciation
+        if profile[self.__JSON_TOTALCALLSTACKS] == 0:
+            exit(-1)
         if Strategy.__firstCall:
             self.updateStrategies(len(profile[self.__JSON_MAIN_LIST]))
             Strategy.__firstCall = False
