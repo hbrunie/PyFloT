@@ -4,7 +4,6 @@ import subprocess
 import decimal
 
 class Strategy:
-    __readJsonProfileFile = "None"
     __readJsonStratFile = "None"
     __dumpJsonStratResultFile = "None"
     __binary = "None"

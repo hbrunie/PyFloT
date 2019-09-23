@@ -6,12 +6,12 @@ class Profiling:
     __dumpJsonProfileFile = "None"
     __directory = "None"
 
-    def __init__(self, binary, directory):
+    def __init__(self, binary, directory, profileFile):
         self.__directory = directory
         self.__binary = binary
-        self.__dumpJsonProfileFile = directory + "/profile.json"
+        self.__dumpJsonProfileFile = directory + "/" + profileFile
         assert self.__dumpJsonProfileFile != "None"
-        self.getCodeProfile()
+        #self.getCodeProfile()
         return None
 
     def __repr__(self):

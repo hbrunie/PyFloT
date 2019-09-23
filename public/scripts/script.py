@@ -6,7 +6,7 @@ from Profiling import Profiling
 
 args = parse()
 ## First code execution
-profile = Profiling(args.binary, args.directory)
+profile = Profiling(args.binary, args.directory, args.profilefile)
 stopSearch = False
 ## Calls Strategy constructor
 stratGen = profile.developStrategy()
