@@ -13,17 +13,15 @@ class Strategy:
     __JSON_CALLSCOUNT = "CallsCount"
     __JSON_TOTALCALLSTACKS = "TotalCallStacks"
     __strategy = []
+    __count = 0
     stratCoupleList = [
-            ([[0,1]],[[0,0.9]]),
-            ([[0.1,1]],[[0.2,1]]),
-            ([[0,0.8]],[[0.3,1]]),
-            ([[0,0.7]],[[0.4,1]]),
-            ([[0,0.6]],[[0,0.5]]),
-            ([[0.5,1]],[[0,0.4]]),
-            ([[0.6,1]],[[0,0.3]]),
-            ([[0.7,1]],[[0,0.2]]),
-            ([[0.,.1]],[[0.9,1]]),
-            ([[0,0]],[[0,0]])
+            ([[0,0.3]],[[0.7,1]]),
+            ([[0,0.2]],[[0.8,1]]),
+            ([[0,0.15]],[[0.85,1]]),
+            ([[0,0.1]],[[0.9,1]]),
+            ([[0,0.05]],[[0.95,1]]),
+            ([[0,0.01]],[[0.99,1]]),
+            ([[0,0.005]],[[0.995,1]])
             ]
     strategiesForAllCall = []
     __firstCall = True
@@ -79,6 +77,7 @@ class Strategy:
         self.__readJsonStratFile       = directory + readFileName(count)
         self.__dumpJsonStratResultFile = directory + dumpFileName(count)
         self.__binary                  = binary
+        self.__count = count
 
         ##TODO: do it only once (first instanciation) use static class attribute
         ## for profile
@@ -109,7 +108,7 @@ class Strategy:
             dynCall[self.__JSON_DYNCALL_STRATEGY_DETAILED_KEY] = detailedStrategy
             ## Store current strategy for display if WINNER
             self.__strategy.append(list(detailedStrategy))
-        print(self.__strategy)
+        #print(self.__strategy)
         ## Each time Strategy is instantiate: fill strategy json file
         with open(self.__readJsonStratFile, 'w') as json_file:
             json.dump(profile, json_file, indent=2)
@@ -119,19 +118,27 @@ class Strategy:
         procenv = os.environ.copy()
         ## TODO: No need of profile file for these executions 
         ## by the PrecisionTuner library
-        procenv["READJSONPROFILESTRATFILE"]     = self.__readJsonStratFile
-        procenv["DUMPJSONSTRATSRESULTSFILE"]   = self.__dumpJsonStratResultFile
-        #procenv["DEBUG"] = "fperror"
+        procenv["PRECISION_TUNER_READJSONPROFILESTRATFILE"]     = self.__readJsonStratFile
+        procenv["PRECISION_TUNER_DUMPJSONSTRATSRESULTSFILE"]   = self.__dumpJsonStratResultFile
+        procenv["PRECISION_TUNER_MODE"]= "APPLYING_STRAT"
+        procenv["OMP_NUM_THREADS"]= "1"
+        #procenv["DEBUG"] = "fperror,comparison"
         #print("PYTHON: ", procenv["READJSONPROFILESTRATFILE"])
         #print("PYTHON: ", procenv["DUMPJSONSTRATSRESULTSFILE"])
  
         command = []
         command.append(self.__binary)
-        print("Command: ",command)
+        print("Strategy Command: ",command)
+        #command = ["./PeleC2d.gnu.haswell.OMP.ex", "./inputs-2d-regt"]
+        #command.append("/global/cscratch1/sd/hbrunie/applications/AMReX-Combustion/PeleC/Exec/RegTests/PMF/inputs-2d-regt")
         out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
         strout = out.decode("utf-8")
+        #f = "ptuner_strat{}_haswell_night.dat".format(self.__count)
+        #with open(f, "w") as ouf:
+        #    ouf.write(strout)
         print(strout)
         #get count of lowered from output
+        print(checkString, checkString in strout)
         if checkString in strout:
             print("Valid strategy found: ", self.__readJsonStratFile)
             print(self.__strategy)

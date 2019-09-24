@@ -15,7 +15,7 @@
   } while (0)
 
 #else
-
+#define UNUSED(expr) do { (void)(expr); } while (0)
 //#define isCurrentDebugType(X) (false)
 //#define setCurrentDebugType(X)
 #define DEBUG(TYPE, X) do { } while (0)

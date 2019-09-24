@@ -1,6 +1,8 @@
 import os
 import subprocess
 from Strategy import Strategy
+import subprocess
+
 class Profiling:
     __binary = "None"
     __dumpJsonProfileFile = "None"
@@ -21,14 +23,18 @@ class Profiling:
 
     def getCodeProfile(self):
         procenv = os.environ.copy()
-        procenv["DUMPJSONPROFILINGFILE"] = self.__dumpJsonProfileFile
-        #procenv["DEBUG"] = "fperror"
+        procenv["PRECISION_TUNER_DUMPJSONPROFILINGFILE"] = self.__dumpJsonProfileFile
+        procenv["OMP_NUM_THREADS"]="1"
+        procenv["PRECISION_TUNER_MODE"]="APPLYING_PROF"
+        #procenv["PRECISION_TUNER_DEBUG"] = ""
         command = []
+        #command = ["./PeleC2d.gnu.haswell.OMP.ex", "./inputs-2d-regt"]
         command.append(self.__binary)
-        #print("PYTHON: DUMPJSONPROFILINGFILE-->",procenv["DUMPJSONPROFILINGFILE"])
-        print("Command: ",command)
+        print("PROFILING Command: ",command)
         out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
         strout = out.decode("utf-8")
+        #with open(f, "w") as ouf:
+        #    ouf.write(strout)
         print(strout)
         ## TODO:check the dumpJsonProfilingFile file has been created
         ## TODO:check its content

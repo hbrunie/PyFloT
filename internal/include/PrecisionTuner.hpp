@@ -7,7 +7,7 @@ using namespace std;
   do {if(NULL == (X)) {cerr << "Error: " << Y << " == NULL" << endl; Z = false;} \
   } while (0)
 
-enum MODE{PROFILING, APPLYING_STRAT};
+enum MODE{APPLYING_PROF, APPLYING_STRAT};
 
 class PrecisionTuner
 {
@@ -22,11 +22,11 @@ class PrecisionTuner
         /* JSON values and sections keys */
         // Number of independant call stacks
         static const string JSON_TOTALCALLSTACKS_KEY;
+        static const string PRECISION_TUNER_MODE;
         // JSON FILE ENV VARS
         static const string DUMP_JSON_PROFILING_FILE;
         static const string DUMP_JSON_STRATSRESULTS_FILE;
         static const string READ_JSON_PROFILE_STRAT_FILE;
-        static const string READ_JSON_STRAT_FILE;
 
     public:
         PrecisionTuner();
