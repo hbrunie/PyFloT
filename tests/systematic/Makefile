@@ -1,6 +1,13 @@
-all: testManyCalls test1CallSiteMultipleDynCalls test1Call test2Calls
+all: testManyCallsExp testManyCalls test1CallSiteMultipleDynCalls test1Call test2Calls
 
 include ../../make.def
+
+testManyCallsExp:
+	$(CXX) -o $@_v1 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV1
+	$(CXX) -o $@_v2 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV2
+	$(CXX) -o $@_v3 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV3
+	$(CXX) -o $@_v4 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV4
+	$(CXX) -o $@_v5 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV5
 
 testManyCalls:
 	$(CXX) -o $@_v1 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV1
@@ -43,4 +50,4 @@ clean:
 	rm -f *.o
 
 cleanall: clean
-	rm -rf test1Call_* test2Calls_* test1CallSiteMultipleDynCalls_* testManyCalls_*
+	rm -rf test1Call_* test2Calls_* test1CallSiteMultipleDynCalls_* testManyCalls_* testManyCallsExp_*
