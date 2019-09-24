@@ -2,7 +2,7 @@ CXX=g++ -std=c++11 -Wall -Wextra -g -rdynamic
 JSONDIR=${SCRATCH}/tools/jsoncpp/
 INCLUDEDIR=-I ${JSONDIR}/include/
 LIB=-L ${JSONDIR}build/src/lib_json/ -ljsoncpp
-OPTIM=-O3
+OPTIM=-O3 -DNDEBUG
 
 ## Compile PrecisionTuning framework
 PTHOME=${SCRATCH}/tools/precisiontuning/
