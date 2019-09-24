@@ -11,7 +11,7 @@ class Profiling:
         self.__binary = binary
         self.__dumpJsonProfileFile = directory + "/" + profileFile
         assert self.__dumpJsonProfileFile != "None"
-        #self.getCodeProfile()
+        self.getCodeProfile()
         return None
 
     def __repr__(self):
