@@ -2,6 +2,11 @@ import os
 import json
 import subprocess
 import decimal
+import datetime
+import io
+
+now = datetime.datetime.now()
+
 
 class Strategy:
     __readJsonStratFile = "None"
@@ -14,17 +19,24 @@ class Strategy:
     __JSON_TOTALCALLSTACKS = "TotalCallStacks"
     __strategy = []
     __count = 0
+    stratRepartingCoupleList = [[0,1],[0,0.5],[0.5,1],[0,0]] # [[0.5,1],[0,0]]:
     stratCoupleList = [
-            ([[0,0.3]],[[0.7,1]]),
-            ([[0,0.2]],[[0.8,1]]),
-            ([[0,0.15]],[[0.85,1]]),
-            ([[0,0.1]],[[0.9,1]]),
-            ([[0,0.05]],[[0.95,1]]),
-            ([[0,0.01]],[[0.99,1]]),
-            ([[0,0.005]],[[0.995,1]])
+            ([[0,0.003]],[[0.997,1]]),
+            ([[0,0.002]],[[0.998,1]]),
+            ([[0,0.0015]],[[0.9985,1]]),
+            ([[0,0.001]],[[0.999,1]]),
+            ([[0,0.05]],[[0.9995,1]]),
+            ([[0,0.01]],[[0.9998,1]]),
+            ([[0,0.005]],[[0.9999,1]])
             ]
     strategiesForAllCall = []
     __firstCall = True
+    ## Looking for a better strategy
+    ## We stop when the strategy has not been increase in the last X steps
+    ## start with some random lower, then lower around this call
+    ## Lower more and more aggressively when it works
+    ## Lower less and less when it does not (factor of the loss)
+    ## See algorithm pseudo code
 
     ## CallSites, containing many dynamic calls
     ## "Strategies" is a list S[S],
@@ -40,7 +52,7 @@ class Strategy:
                 stratList.append(stratCouple[1])
 
         for stratCouple in self.stratCoupleList:
-            for strat in [[0,1],[0,0.5],[0.5,1],[0,0]]:
+            for strat in self.stratRepartingCoupleList:
                 ## callSites will stratCouple[0]
                 ## or stratCouple[1] according to their belonging to strat
                 strategyForAllCallSites = []
@@ -53,7 +65,8 @@ class Strategy:
                     updateStrategy(strategyForAllCallSites, cond, stratCouple)
                 Strategy.strategiesForAllCall.append(list(strategyForAllCallSites))
 
-    def __init__(self, binary, directory, readJsonProfileFile, count):
+    def __init__(self, binary, param, directory, readJsonProfileFile,
+            count, outputFile, onlyApplyingStrat):
         """ def detailedStrategy: strategy multiset
             converted from 0 -- 1 to 0 -- totalDynCall
             basically: bound*totalDynCall
@@ -77,12 +90,14 @@ class Strategy:
         self.__readJsonStratFile       = directory + readFileName(count)
         self.__dumpJsonStratResultFile = directory + dumpFileName(count)
         self.__binary                  = binary
+        self.__param                  = param
         self.__count = count
+        date = f"{now.month}-{now.day}-{now.year}_{now.hour}-{now.minute}"
+        self.__outputFile             = "ptuner_strat{}_{}_{}.txt".format(count,date,outputFile)
 
-        ##TODO: do it only once (first instanciation) use static class attribute
-        ## for profile
-        ## BE AWARE: profile variable is local to each instance for filling
-        ## strategy read JSON files
+        if onlyApplyingStrat:
+            return None
+        ### Generating strategy JSON files from profile JSON file ###
         with open(readJsonProfileFile, 'r') as json_file:
             profile = json.load(json_file)
         ## Dev strategy: Only done by first instanciation
@@ -115,31 +130,39 @@ class Strategy:
         return None
 
     def applyStrategy(self, checkString):
+        def lastOccurence(s, text):
+            res = "NoOccurence"
+            for line in io.StringIO(text).readlines():
+                if s in line:
+                    res = line
+            return res
         procenv = os.environ.copy()
-        ## TODO: No need of profile file for these executions 
-        ## by the PrecisionTuner library
         procenv["PRECISION_TUNER_READJSONPROFILESTRATFILE"]     = self.__readJsonStratFile
         procenv["PRECISION_TUNER_DUMPJSONSTRATSRESULTSFILE"]   = self.__dumpJsonStratResultFile
         procenv["PRECISION_TUNER_MODE"]= "APPLYING_STRAT"
         procenv["OMP_NUM_THREADS"]= "1"
         #procenv["DEBUG"] = "fperror,comparison"
-        #print("PYTHON: ", procenv["READJSONPROFILESTRATFILE"])
-        #print("PYTHON: ", procenv["DUMPJSONSTRATSRESULTSFILE"])
- 
+
         command = []
-        command.append(self.__binary)
+        command.append(self.__binary+" " +self.__param)
         print("Strategy Command: ",command)
-        #command = ["./PeleC2d.gnu.haswell.OMP.ex", "./inputs-2d-regt"]
-        #command.append("/global/cscratch1/sd/hbrunie/applications/AMReX-Combustion/PeleC/Exec/RegTests/PMF/inputs-2d-regt")
-        out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
-        strout = out.decode("utf-8")
-        #f = "ptuner_strat{}_haswell_night.dat".format(self.__count)
-        #with open(f, "w") as ouf:
-        #    ouf.write(strout)
-        print(strout)
+        out = ""
+        try:
+                output = subprocess.check_output(
+                                command, stderr=subprocess.STDOUT, shell=True,
+                                        universal_newlines=True, env=procenv)
+        except subprocess.CalledProcessError as exc:
+                out = "Status : FAIL\nCode: {}\n{}".format(exc.returncode, exc.output)
+        else:
+                out = "Output: \n{}\n".format(output)
+        laststep = lastOccurence("STEP", out)
+        #out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
+        #strout = out.decode("utf-8")
+        print("Strategy: {}, STEP reached: {}".format(self.__count, laststep))
+        with open(self.__outputFile, "w") as ouf:
+            ouf.write(out)
         #get count of lowered from output
-        print(checkString, checkString in strout)
-        if checkString in strout:
+        if checkString in out:
             print("Valid strategy found: ", self.__readJsonStratFile)
             print(self.__strategy)
             print("Results in: ", self.__dumpJsonStratResultFile)

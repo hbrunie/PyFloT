@@ -6,16 +6,22 @@ from Profiling import Profiling
 
 args = parse()
 ## First code execution
-profile = Profiling(args.binary, args.directory, args.profilefile)
+profile = Profiling(args.binary, args.directory, args.profilefile, args.param,
+        args.outputfile, args.onlyGenStrat, args.onlyApplyingStrat)
+if args.onlyProfile:
+    exit(0)
 stopSearch = False
 ## Calls Strategy constructor
-stratGen = profile.developStrategy()
+stratGen = profile.developStrategy(args.onlyApplyingStrat)
 while not stopSearch:
     try:
         ## Calls Strategy constructor
         strat = next(stratGen)
     except StopIteration:
-        print("No more strategy to test")
+        if args.onlyGenStrat:
+            print("No more strategy to generate.")
+        else:
+            print("No more strategy to test.")
         sys.exit()
-    if not args.onlyProfile:
+    if not args.onlyGenStrat:
         stopSearch = strat.applyStrategy(args.verif_text)

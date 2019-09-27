@@ -8,12 +8,16 @@ class Profiling:
     __dumpJsonProfileFile = "None"
     __directory = "None"
 
-    def __init__(self, binary, directory, profileFile):
+    def __init__(self, binary, directory, profileFile, param,
+            outputFile, onlyGenStrat, onlyApplyingStrat):
         self.__directory = directory
         self.__binary = binary
+        self.__param = param
+        self.__outputFile = outputFile
         self.__dumpJsonProfileFile = directory + "/" + profileFile
         assert self.__dumpJsonProfileFile != "None"
-        self.getCodeProfile()
+        if not onlyGenStrat and not onlyApplyingStrat:
+            self.getCodeProfile()
         return None
 
     def __repr__(self):
@@ -28,23 +32,21 @@ class Profiling:
         procenv["PRECISION_TUNER_MODE"]="APPLYING_PROF"
         #procenv["PRECISION_TUNER_DEBUG"] = ""
         command = []
-        #command = ["./PeleC2d.gnu.haswell.OMP.ex", "./inputs-2d-regt"]
-        command.append(self.__binary)
+        command.append(self.__binary+" " +self.__param)
         print("PROFILING Command: ",command)
-        out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
+        out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv, shell=True)
         strout = out.decode("utf-8")
-        #with open(f, "w") as ouf:
-        #    ouf.write(strout)
+        with open(self.__outputFile+"_profile.txt", "w") as ouf:
+            ouf.write(strout)
         print(strout)
-        ## TODO:check the dumpJsonProfilingFile file has been created
-        ## TODO:check its content
 
-    def developStrategy(self):
+    def developStrategy(self, onlyApplyingStrat):
         strategies = []
         stop = False
         count = 0
         while (not stop):
-            strat = Strategy(self.__binary,self.__directory,self.__dumpJsonProfileFile, count)
+            strat = Strategy(self.__binary,self.__param,self.__directory,self.__dumpJsonProfileFile,
+                    count, self.__outputFile, onlyApplyingStrat)
             yield strat
             stop = strat.isLast()
             count += 1
