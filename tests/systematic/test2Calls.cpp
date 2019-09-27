@@ -6,12 +6,20 @@ using namespace std;
 int main(){
     bool success = true;
     double relErr = 0.;
-    double b = exp(0.0000014);
+#ifdef USE_LABEL
+    double a = exp(3.141592,"first");
+#else
+    double a = exp(3.141592);
+#endif
     double refB =1.00000140000098;
     double errb = refB - b;
     double absErrb = errb > 0 ? errb : -errb;
     double relErrorB = absErrb / refB;
+#ifdef USE_LABEL
+    double a = exp(3.141592,"second");
+#else
     double a = exp(3.141592);
+#endif
     double refA =23.1406775082637;
     double erra = refA - a;
     double absErra = erra > 0 ? erra : -erra;

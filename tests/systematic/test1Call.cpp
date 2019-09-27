@@ -3,7 +3,11 @@
 #include "PT_math.h"
 using namespace std;
 int main(){
+#ifdef USE_LABEL
+    double a = exp(3.141592,"uniaue");
+#else
     double a = exp(3.141592);
+#endif
     double refA =23.1406775082637;
     bool success = true;
     double err = refA - a;

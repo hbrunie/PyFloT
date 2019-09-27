@@ -9,7 +9,11 @@ double g(double a, int c){
     if(c/2==0)
         a = a * cos(-a);
     else
+#ifndef USE_LABEL
         a = a *log(exp(a));
+#else
+        a = a *log(exp(a, "inloop"));
+#endif
     return a;
 }
 
@@ -37,7 +41,11 @@ const double EPSILON = 1E-2;
 
 int main(){
     double a = 0.00001;
+#ifndef USE_LABEL
     a = a * exp(a+0.0005);
+#else
+    a = a * exp(a+0.0005,"inmain");
+#endif
     a = f(a,0);
     for(int i = 0;i<LOOP;i++)
         a = f(a,i);

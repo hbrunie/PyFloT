@@ -6,7 +6,11 @@ using namespace std;
 int main(){
     double a=0.0;
     for (int i = 0; i<LOOP;i++) {
+#ifdef USE_LABEL
+        a += exp(3.141592,"loop");
+#else
         a += exp(3.141592);
+#endif
     }
     double refA =231.406775082637;
     double err = refA - a;
