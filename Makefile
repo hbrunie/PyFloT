@@ -3,6 +3,7 @@ all: lib unittest
 include make.def
 
 lib:
+	make -C external-deps
 	make -C internal/src/
 
 unittest:
