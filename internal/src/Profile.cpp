@@ -11,6 +11,7 @@
 
 #include <execinfo.h>
 #include <json/json.h>
+#include <math.h>
 
 #include "Debug.hpp"
 #include "Profile.hpp"
@@ -23,6 +24,20 @@ const string Profile::JSON_TOTALCALLSTACKS_KEY  = "TotalCallStacks";
 const string Profile::JSON_TOTALDYNCOUNT_KEY    = "CallsCount";
 const string Profile::JSON_MAIN_LIST            = "IndependantCallStacks";
 const string Profile::JSON_HASHKEY_KEY          = "HashKey";
+
+uintptr_t hashLabel(string label){
+    uintptr_t key = 0;
+    uint32_t p = 0;
+    for (auto it = label.cbegin() ; it != label.cend(); ++it){
+        uintptr_t letter = (uintptr_t) *it;
+        uintptr_t letterBase = pow(letter,p);
+        assert( (key+letterBase) <numeric_limits<uintptr_t>::max());
+        key += letterBase;
+        p++;
+    }
+    return key;
+}
+
 
 Profile::~Profile(){
     // delete all DynCallFunc objects: automatic with shared pointers
@@ -43,7 +58,7 @@ Profile::Profile(bool profiling, string readFile,
 /* the Static Hash Key corresponds to a non ASLR dependent HashKey
  * User can define the level of callstack he wants to use for
  * defining the DynamicCallSite.
- * By default the level is 1: only the __overloaded_mathFunction call is taken into account. 
+ * By default the level is 1: only the __overloaded_mathFunction call is taken into account.
  */
 string Profile::__staticHashKey(vector<void*> btVec){
     string statHashKey;
@@ -87,7 +102,7 @@ string Profile::__staticHashKey(vector<void*> btVec){
         cnt++;
         tmp = symbols[cnt];
     }
-    DEBUG("statickey",cerr << __FUNCTION__ << ":" << __LINE__ 
+    DEBUG("statickey",cerr << __FUNCTION__ << ":" << __LINE__
             << " staticHashKey: " << statHashKey << endl;);
     return statHashKey;
 }
@@ -107,9 +122,16 @@ uintptr_t Profile::__dynHashKey(vector<void*> btVec){
     return dynHashKey;
 }
 
-bool Profile::applyStrategy(vector<void*> & btVec){
+bool Profile::applyStrategy(vector<void*> & btVec, string label){
     //compute hash
+#ifndef USE_LABEL
+    //TODO: more efficient to change hashMap with key string?
     uintptr_t dynHashKey = __dynHashKey(btVec);
+    UNUSED(label);
+#else
+    uintptr_t dynHashKey = hashLabel(label);
+    UNUSED(btVec);
+#endif
     shared_ptr<DynFuncCall> dfc;
     DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__ << " " << dfc << endl);
     DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__<<  " Static map " << endl;
@@ -117,8 +139,12 @@ bool Profile::applyStrategy(vector<void*> & btVec){
     // if exist or not go on perm HashMap
     auto hashKeyIte = __backtraceDynamicMap.find(dynHashKey);
     if(hashKeyIte == __backtraceDynamicMap.end()){
+#ifndef USE_LABEL
         string staticHashKey = __staticHashKey(btVec);
-        DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " staticHashKey:" << 
+#else
+        string staticHashKey = label;
+#endif
+        DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " staticHashKey:" <<
                 staticHashKey << endl);
         auto stathashKeyIte = __backtraceStaticMap.find(staticHashKey);
         if(stathashKeyIte == __backtraceStaticMap.end()){
@@ -141,8 +167,14 @@ bool Profile::applyStrategy(vector<void*> & btVec){
 
 /* Compute hash and add or update DynamicHashMap
 */
-void Profile::applyProfiling(vector<void*> & btVec){
+void Profile::applyProfiling(vector<void*> & btVec, string label){
+#ifndef USE_LABEL
+    //TODO: more efficient to change hashMap with key string?
     uintptr_t dynHashKey = __dynHashKey(btVec);
+    UNUSED(label);
+#else
+    uintptr_t dynHashKey = hashLabel(label);
+#endif
     shared_ptr<DynFuncCall> dfc(nullptr);
     auto dynHashKeyIte = __backtraceDynamicMap.find(dynHashKey);
     /* Can not find the element in Dynamic Hash Map */
@@ -150,7 +182,11 @@ void Profile::applyProfiling(vector<void*> & btVec){
         dfc = make_shared<DynFuncCall>(btVec, dynHashKey);
         __backtraceDynamicMap[dynHashKey] = dfc;
         /* Update Static HashMap */
+#ifndef USE_LABEL
         string staticHashKey = __staticHashKey(btVec);
+#else
+        string staticHashKey = label;
+#endif
         /* The element is necessarily not in StaticHashMap either,
          * Because static and dynamic HashMap are "identical" */
         __backtraceStaticMap[staticHashKey] = dfc;
@@ -192,8 +228,8 @@ void Profile::__dumpJsonPermanentHashMap(){
     ofstream fb;
     fb.open(__dumpFile,ios::out);
     if(!fb.is_open()){
-        cerr << "Profile: Wrong jsonfile abspath: " 
-            << __dumpFile << endl 
+        cerr << "Profile: Wrong jsonfile abspath: "
+            << __dumpFile << endl
             << "Dumping on stdout " << endl;
     }else
         useCout = false;
@@ -207,16 +243,16 @@ void Profile::__dumpJsonPermanentHashMap(){
         shared_ptr<DynFuncCall>value = it->second;
         Value statHashKey(key);
         Value jsonDynFuncCall = value->getJsonValue();
-        jsonDynFuncCall[JSON_HASHKEY_KEY] = statHashKey; 
+        jsonDynFuncCall[JSON_HASHKEY_KEY] = statHashKey;
         jsonDynFuncCallsList.append(jsonDynFuncCall);
     }
     jsonDictionary[JSON_MAIN_LIST] = jsonDynFuncCallsList;
     DEBUG("infoplus",cerr << __FUNCTION__ << jsonDictionary<< endl;);
     DEBUG("infoplus",cerr << __FUNCTION__ << useCout << __dumpFile << endl;);
     if (useCout)
-        cout <<jsonDictionary << endl; 
+        cout <<jsonDictionary << endl;
     else{
-        fb << jsonDictionary << endl;; 
+        fb << jsonDictionary << endl;;
     }
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
     //TODO: find proper C++ way to do this fopen with defaut == cout
@@ -241,8 +277,10 @@ void Profile::__buildProfiledDataFromJsonFile(string fileAbsPath){
       */
     DEBUG("info",cerr << "STARTING "<< __FUNCTION__ << endl;);
     std::ifstream infile(fileAbsPath, std::ifstream::binary);
-    if(!stream_check(infile))
+    if(!stream_check(infile)){
+        cerr << __FUNCTION__ << " wrong path for file: " << fileAbsPath << endl;
         exit(-1);
+    }
     Value jsonDictionary;
     infile >>  jsonDictionary;
     DEBUG("info",cerr << "READING JSON "<< __FUNCTION__ << endl;);

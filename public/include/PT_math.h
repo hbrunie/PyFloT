@@ -8,6 +8,9 @@
 #endif
 #include<math.h>
 
+#include <string>
+using namespace std;
+
 double __overloaded_exp(double var);
 double __overloaded_log(double var);
 double __overloaded_log10(double var);
@@ -16,6 +19,15 @@ double __overloaded_sin(double var);
 double __overloaded_sqrt(double var);
 double __overloaded_fabs(double var);
 double __overloaded_pow(double var, double p);
+
+double __overloaded_exp(double var, string label);
+double __overloaded_log(double var, string label);
+double __overloaded_log10(double var, string label);
+double __overloaded_cos(double var, string label);
+double __overloaded_sin(double var, string label);
+double __overloaded_sqrt(double var, string label);
+double __overloaded_fabs(double var, string label);
+double __overloaded_pow(double var, double p, string label);
 
 // FLOAT exponential function
 //#ifdef expf

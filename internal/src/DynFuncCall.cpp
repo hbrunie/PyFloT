@@ -6,8 +6,8 @@
 #include <execinfo.h>
 #include <json/json.h>
 
-#include "PrecisionTuner.hpp"    
-#include "Debug.hpp"    
+#include "PrecisionTuner.hpp"
+#include "Debug.hpp"
 using namespace std;
 using namespace Json;
 
@@ -18,7 +18,7 @@ const string DynFuncCall::JSON_LOWERCOUNT_KEY      = "LowerCount";
 DynFuncCall::DynFuncCall(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     __dynHashKey = 0;
-    __statHashKey = ""; 
+    __statHashKey = "";
     __dyncount = 0;
     __profiledDyncount = 0;
     __loweredCount = 0;
@@ -61,18 +61,18 @@ DynFuncCall::DynFuncCall(vector<void*> btVec) : DynFuncCall(){
 }
 
 DynFuncCall::DynFuncCall(vector<void*>  btVec, string statHashKey) : DynFuncCall(btVec){
-    __statHashKey = statHashKey; 
+    __statHashKey = statHashKey;
 }
 
 DynFuncCall::DynFuncCall(vector<void*>  btVec, uintptr_t dynHashKey) : DynFuncCall(btVec){
-    __dynHashKey = dynHashKey; 
+    __dynHashKey = dynHashKey;
 }
 
 DynFuncCall::DynFuncCall(vector<void*> btVec, uint32_t profiledDyncount) : DynFuncCall(btVec){
     __profiledDyncount = profiledDyncount;
 }
 
-DynFuncCall::DynFuncCall(vector<void*> btVec, string statHashKey, bool lowered) : 
+DynFuncCall::DynFuncCall(vector<void*> btVec, string statHashKey, bool lowered) :
     DynFuncCall(btVec, statHashKey){
     __loweredCount = lowered ? 1 : 0;
 }
@@ -87,7 +87,7 @@ ostream& operator<<(ostream& os, const DynFuncCall& dfc){
     os << "CallData: Dyncount("<< dfc.__dyncount
         << ") __profiledDyncount(" << dfc.__profiledDyncount
         << ") loweredCount("
-        << dfc.__loweredCount << ") btVec (size="<< dfc.__btVec.size()<< ")" 
+        << dfc.__loweredCount << ") btVec (size="<< dfc.__btVec.size()<< ")"
         " dynHashKey: " << dfc.__dynHashKey <<
         " statHashKey: " << dfc.__statHashKey << endl;
     for(auto it = dfc.__btVec.begin() ; it != dfc.__btVec.end() ; it++){
@@ -135,7 +135,7 @@ Value DynFuncCall::getJsonValue(){
     v[JSON_LOWERCOUNT_KEY] = loweredCount;
     for(unsigned int i =0; i< __btVec.size();i++){
         Value addr = (LargestInt)__btVec[i];
-        btVec.append(addr); 
+        btVec.append(addr);
     }
     v[JSON_CALLSTACK_ADDR_LIST_KEY] = btVec;
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);

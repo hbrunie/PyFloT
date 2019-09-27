@@ -38,15 +38,15 @@ class Profile{
         // LOWERED Dynamic calls count
         static const string JSON_TOTALCALLSTACKS_KEY;
         static const string JSON_HASHKEY_KEY;
-        bool singlePrecision(vector<void*> & btVec);
+        bool singlePrecision(vector<void*> & btVec, string label);
         void updateHashMap(DynFuncCall &);
 
     public:
         //Profile();
         ~Profile();
         Profile(bool, string, string);
-        bool applyStrategy(vector<void*> & btVec);
-        void applyProfiling(vector<void*> & btVec);
+        bool applyStrategy(vector<void*> & btVec, string label);
+        void applyProfiling(vector<void*> & btVec, string label);
         void dumpJson();
 };
 #endif //Profile_H

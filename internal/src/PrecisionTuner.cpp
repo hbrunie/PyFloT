@@ -5,7 +5,7 @@
 #include <math.h>
 
 #include "Debug.hpp"
-#include "PrecisionTuner.hpp"    
+#include "PrecisionTuner.hpp"
 
 using namespace std;
 
@@ -40,14 +40,14 @@ PrecisionTuner::PrecisionTuner(){
         cerr << "Error: no mode chosen! " << endl;
         exit(-1);
     }
+    bool checkOk = true;
     if(__mode == APPLYING_PROF){
         cerr << __FUNCTION__ << ": MODE PROFILING " << endl;
-        envVarString = getenv(DUMP_JSON_PROFILING_FILE.c_str());
+        CHECK_NULL(envVarString = getenv(DUMP_JSON_PROFILING_FILE.c_str()),DUMP_JSON_PROFILING_FILE,checkOk);
         string dumpFile(envVarString);
         __profile = new Profile(true, "None", dumpFile);
     }else{// Applying strategy mode
         cerr << __FUNCTION__ << ": MODE APPLYING_STRAT " << endl;
-        bool checkOk = true;
         CHECK_NULL(envVarString1 = getenv(READ_JSON_PROFILE_STRAT_FILE.c_str()),READ_JSON_PROFILE_STRAT_FILE,checkOk);
         CHECK_NULL(envVarString2 = getenv(DUMP_JSON_STRATSRESULTS_FILE.c_str()), DUMP_JSON_STRATSRESULTS_FILE, checkOk);
         DEBUG("info", cerr << __FUNCTION__ << ": "<< DUMP_JSON_STRATSRESULTS_FILE
@@ -71,30 +71,39 @@ PrecisionTuner::~PrecisionTuner(){
     delete(__profile);
 }
 
-double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, float), double (*func)(double, double), 
-        double value, double parameter){
+double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, float), double (*func)(double, double),
+        double value, double parameter, string label){
     float fvalue, fparameter, fres;
     double dres;
 
     fvalue = (float)value;
     fparameter = (float)parameter;
-
+#ifndef USE_LABEL
     vector<void*> btVec = __getContextHashBacktrace();
+#else
+    vector<void*> btVec;
+#endif
     fres = (double) sp_func(fvalue, fparameter);
     dres = func(value, parameter);
-    return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value);
+    return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
 }
 
-double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double), double value){
+double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double),
+        double value, string label){
     double dres;
     float fvalue, fres;
 
     fvalue = (float)value;
 
+#ifndef USE_LABEL
     vector<void*> btVec = __getContextHashBacktrace();
+#else
+    UNUSED(label);
+    vector<void*> btVec;
+#endif
     fres = (double) sp_func(fvalue);
     dres = func(value);
-    return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value);
+    return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
 }
 
 /*** PRIVATE FUNCTIONS ***/
@@ -116,7 +125,8 @@ vector<void*> PrecisionTuner::__getContextHashBacktrace() {
     return btVec;
 }
 
-double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, float fres, double dres, double value){
+double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, float fres, double dres,
+        double value, string label){
     bool singlePrecision;
     double res;
 #ifdef NDEBUG
@@ -126,17 +136,17 @@ double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, fl
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
 
     singlePrecision = false;
-    switch(__mode){ 
+    switch(__mode){
         case APPLYING_STRAT:
-            singlePrecision = __profile->applyStrategy(btVec);
+            singlePrecision = __profile->applyStrategy(btVec, label);
             break;
         case APPLYING_PROF:
-            __profile->applyProfiling(btVec);
+            __profile->applyProfiling(btVec, label);
             break;
         default:
             cerr << "PrecisionTuner ERROR: no __mode chosen" << endl;
     }
-    res = singlePrecision ? (double) fres : dres; 
+    res = singlePrecision ? (double) fres : dres;
 
     DEBUG("fperrorplus", cerr << std::setprecision(16) ; double relErr = fabs(fres - dres) / fabs(dres); if(singlePrecision)  cerr << s << " dres=" << dres << " fres=" << fres << " AbsError: " << fabs(fres - dres)<<" RelError: " << relErr << " value=" << value <<endl; else cerr << s << " dres=" << dres<< " value=" << value << endl;);
     DEBUG("fperror", cerr << std::setprecision(16) ; double relErr = fabs(fres - dres) / fabs(dres); if(singlePrecision)  cerr << s << " RelError: " << relErr  <<endl; else cerr << s << " in double precision." << endl;);
