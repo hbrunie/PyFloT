@@ -1,9 +1,12 @@
-all: lib unittest 
+## IN THAT ORDER !
+all: jsoncpp lib unittest
 
 include make.def
 
-lib:
+jsoncpp:
 	make -C external-deps
+
+lib:
 	make -C internal/src/
 
 unittest:
