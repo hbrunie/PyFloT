@@ -9,14 +9,14 @@ class Profiling:
     __directory = "None"
 
     def __init__(self, binary, directory, profileFile, param,
-            outputFile, onlyGenStrat, onlyApplyingStrat):
+            outputFile, doNotExec):
         self.__directory = directory
         self.__binary = binary
         self.__param = param
         self.__outputFile = outputFile
         self.__dumpJsonProfileFile = directory + "/" + profileFile
         assert self.__dumpJsonProfileFile != "None"
-        if not onlyGenStrat and not onlyApplyingStrat:
+        if not doNotExec:
             self.getCodeProfile()
         return None
 
@@ -40,13 +40,16 @@ class Profiling:
             ouf.write(strout)
         print(strout)
 
-    def developStrategy(self, onlyApplyingStrat):
+    def developStrategy(self, onlyApplyingStrat, stratgenfiles,
+            readstratfiles):
         strategies = []
         stop = False
         count = 0
         while (not stop):
-            strat = Strategy(self.__binary,self.__param,self.__directory,self.__dumpJsonProfileFile,
-                    count, self.__outputFile, onlyApplyingStrat)
+            strat = Strategy(self.__binary, self.__param,
+                    self.__directory, self.__dumpJsonProfileFile,
+                    count, self.__outputFile, onlyApplyingStrat,
+                    stratgenfiles, readstratfiles)
             yield strat
             stop = strat.isLast()
             count += 1

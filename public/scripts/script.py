@@ -5,14 +5,18 @@ from parse import parse
 from Profiling import Profiling
 
 args = parse()
+print(args.stratfiles)
 ## First code execution
-profile = Profiling(args.binary, args.directory, args.profilefile, args.param,
-        args.outputfile, args.onlyGenStrat, args.onlyApplyingStrat)
+
+profile = Profiling(args.binary, args.ptunerdir, args.profilefile, args.param, 
+        args.outputfile,
+        doNotExec=args.onlyGenStrat or args.onlyApplyingStrat)
 if args.onlyProfile:
     exit(0)
 stopSearch = False
 ## Calls Strategy constructor
-stratGen = profile.developStrategy(args.onlyApplyingStrat)
+stratGen = profile.developStrategy(args.onlyApplyingStrat, args.stratgenfiles, 
+        args.readstratfiles)
 while not stopSearch:
     try:
         ## Calls Strategy constructor
