@@ -6,19 +6,19 @@ import datetime
 import io
 
 now = datetime.datetime.now()
-
+date = f"{now.month}-{now.day}-{now.year}_{now.hour}-{now.minute}"
 
 class Strategy:
-    __readJsonStratFile = "None"
-    __dumpJsonStratResultFile = "None"
-    __binary = "None"
-    __JSON_MAIN_LIST = "IndependantCallStacks"
-    __JSON_DYNCALL_STRATEGY_KEY = "Strategy"
+    __readJsonStratFile                  = "None"
+    __dumpJsonStratResultFile            = "None"
+    __binary                             = "None"
+    __strategy                           = []
+    __count                              = 0
+    __JSON_MAIN_LIST                     = "IndependantCallStacks"
+    __JSON_DYNCALL_STRATEGY_KEY          = "Strategy"
     __JSON_DYNCALL_STRATEGY_DETAILED_KEY = "DetailedStrategy"
-    __JSON_CALLSCOUNT = "CallsCount"
-    __JSON_TOTALCALLSTACKS = "TotalCallStacks"
-    __strategy = []
-    __count = 0
+    __JSON_CALLSCOUNT                    = "CallsCount"
+    __JSON_TOTALCALLSTACKS               = "TotalCallStacks"
     stratRepartingCoupleList = [[0,1],[0,0.5],[0.5,1],[0,0]] # [[0.5,1],[0,0]]:
     stratCoupleList = [
             ([[0,0.003]],[[0.997,1]]),
@@ -66,7 +66,7 @@ class Strategy:
                 Strategy.strategiesForAllCall.append(list(strategyForAllCallSites))
 
     def __init__(self, binary, param, directory, readJsonProfileFile,
-            count, outputFile, onlyApplyingStrat):
+            outputFile, onlyApplyingStrat, count):
         """ def detailedStrategy: strategy multiset
             converted from 0 -- 1 to 0 -- totalDynCall
             basically: bound*totalDynCall
@@ -90,10 +90,9 @@ class Strategy:
         self.__readJsonStratFile       = directory + readFileName(count)
         self.__dumpJsonStratResultFile = directory + dumpFileName(count)
         self.__binary                  = binary
-        self.__param                  = param
-        self.__count = count
-        date = f"{now.month}-{now.day}-{now.year}_{now.hour}-{now.minute}"
-        self.__outputFile             = "ptuner_strat{}_{}_{}.txt".format(count,date,outputFile)
+        self.__param                   = param
+        self.__count                   = count
+        self.__outputFile              = "ptuner_strat{}_{}_{}.txt".format(count,date,outputFile)
 
         if onlyApplyingStrat:
             return None

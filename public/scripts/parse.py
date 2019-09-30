@@ -55,7 +55,8 @@ def parse():
     No application execution here.""",
     action='store_true', default=False)
 
-    parser.add_argument("--onlyApplyingStrat", help="Choose to do only applying strategy. These MUST already have been generated.",
+    parser.add_argument("--onlyApplyingStrat",
+            help="Choose to do only applying strategy. These MUST already have been generated.",
     action='store_true', default=False)
 
     parser.add_argument("--verif_text", help="Text searched in output to verify the code executed without accuracy error")

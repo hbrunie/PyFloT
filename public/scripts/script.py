@@ -12,7 +12,7 @@ if args.onlyProfile:
     exit(0)
 stopSearch = False
 ## Calls Strategy constructor
-stratGen = profile.developStrategy(args.onlyApplyingStrat)
+stratGen = profile.developStrategy()
 while not stopSearch:
     try:
         ## Calls Strategy constructor

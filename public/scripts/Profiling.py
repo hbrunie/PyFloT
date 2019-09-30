@@ -13,6 +13,7 @@ class Profiling:
         self.__directory = directory
         self.__binary = binary
         self.__param = param
+        self.__onlyApplyingStrat = onlyApplyingStrat
         self.__outputFile = outputFile
         self.__dumpJsonProfileFile = directory + "/" + profileFile
         assert self.__dumpJsonProfileFile != "None"
@@ -40,13 +41,13 @@ class Profiling:
             ouf.write(strout)
         print(strout)
 
-    def developStrategy(self, onlyApplyingStrat):
-        strategies = []
+    def developStrategy(self):
         stop = False
         count = 0
         while (not stop):
-            strat = Strategy(self.__binary,self.__param,self.__directory,self.__dumpJsonProfileFile,
-                    count, self.__outputFile, onlyApplyingStrat)
+            strat = Strategy(self.__binary, self.__param, self.__directory,
+                            self.__dumpJsonProfileFile, self.__outputFile,
+                            self.__onlyApplyingStrat, count)
             yield strat
             stop = strat.isLast()
             count += 1
