@@ -13,6 +13,7 @@ class Profiling:
         self.__directory = directory
         self.__binary = binary
         self.__param = param
+        self.__onlyApplyingStrat = onlyApplyingStrat
         self.__outputFile = outputFile
         self.__dumpJsonProfileFile = directory + "/" + profileFile
         assert self.__dumpJsonProfileFile != "None"

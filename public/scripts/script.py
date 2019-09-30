@@ -15,8 +15,12 @@ if args.onlyProfile:
     exit(0)
 stopSearch = False
 ## Calls Strategy constructor
+<<<<<<< HEAD
 stratGen = profile.developStrategy(args.onlyApplyingStrat, args.stratgenfiles, 
         args.readstratfiles)
+=======
+stratGen = profile.developStrategy()
+>>>>>>> master
 while not stopSearch:
     try:
         ## Calls Strategy constructor

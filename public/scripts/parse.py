@@ -66,7 +66,11 @@ def parse():
     No application execution here.""",
     action='store_true', default=False)
 
+<<<<<<< HEAD
     parser.add_argument("--onlyApplyingStrat", 
+=======
+    parser.add_argument("--onlyApplyingStrat",
+>>>>>>> master
             help="Choose to do only applying strategy. These MUST already have been generated.",
     action='store_true', default=False)
 

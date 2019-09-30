@@ -44,12 +44,20 @@ PrecisionTuner::PrecisionTuner(){
     if(__mode == APPLYING_PROF){
         cerr << __FUNCTION__ << ": MODE PROFILING " << endl;
         CHECK_NULL(envVarString = getenv(DUMP_JSON_PROFILING_FILE.c_str()),DUMP_JSON_PROFILING_FILE,checkOk);
+        if(!checkOk){
+            cerr << "Please provide a file for dumping profiling ( *.json)." << endl;
+            exit(-1);
+        }
         string dumpFile(envVarString);
         __profile = new Profile(true, "None", dumpFile);
     }else{// Applying strategy mode
         cerr << __FUNCTION__ << ": MODE APPLYING_STRAT " << endl;
         CHECK_NULL(envVarString1 = getenv(READ_JSON_PROFILE_STRAT_FILE.c_str()),READ_JSON_PROFILE_STRAT_FILE,checkOk);
         CHECK_NULL(envVarString2 = getenv(DUMP_JSON_STRATSRESULTS_FILE.c_str()), DUMP_JSON_STRATSRESULTS_FILE, checkOk);
+        if(!checkOk){
+            cerr << "Please provide a file for reading strategy and/or for dumping applying strategy resuts ( *.json)." << endl;
+            exit(-1);
+        }
         DEBUG("info", cerr << __FUNCTION__ << ": "<< DUMP_JSON_STRATSRESULTS_FILE
                 << " " << string(envVarString1) << endl;);
         DEBUG("info", cerr << __FUNCTION__ << ": "<< READ_JSON_PROFILE_STRAT_FILE

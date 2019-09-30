@@ -20,8 +20,7 @@
 
 using namespace std;
 
-static string JSONFILE = "Users/hbrunie/Codes/output.json";
-
+#ifndef TEST_VERSION
 /******** Globals variables **********/
 
 static PrecisionTuner ptuner;
@@ -103,3 +102,4 @@ double __overloaded_pow(double var, double p) {
 double __overloaded_pow(double var, double p, string label) {
     return ptuner.overloading_function("Pow",powf,pow,var,p, label);
 }
+#endif
