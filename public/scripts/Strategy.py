@@ -32,7 +32,6 @@ class Strategy:
     strategiesForAllCall = []
     __firstCall = True
 
-
     def __init__(self, binary, param, directory, readJsonProfileFile,
             count, outputFile, onlyApplyingStrat, stratgenfiles, readstratfiles,
              genRandomStrat=False):
@@ -40,6 +39,7 @@ class Strategy:
             converted from 0 -- 1 to 0 -- totalDynCall
             basically: bound*totalDynCall
         """
+        ### Some local lambda functions ###
         def readFileName(count):
             return "readJsonStrat_{}.json".format(count)
         def dumpFileName(count):
@@ -55,12 +55,15 @@ class Strategy:
             """ Compute sup bound detailed strategy:
                 from CallsCount and strategy contiguous set """
             return roundUp(cc*x[1])-1
+
         # CallSiteCount = len(profile[self.__JSON_MAIN_LIST]
         if Strategy.__firstCall:
             if genRandomStrat:
                 self.updateStrategies(callSitesCount))
             Strategy.__firstCall = False
+
         self.updateAttribute2ApplyStrategy()
+
         if onlyApplyingStrat:
             return None
         ### Generating strategy JSON files from profile JSON file ###
@@ -68,12 +71,17 @@ class Strategy:
         return None
 
     def applyStrategy(self, checkString):
+        """
+        """
+        ### Some local lambda functions ###
         def lastOccurence(s, text):
             res = "NoOccurence"
             for line in io.StringIO(text).readlines():
                 if s in line:
                     res = line
             return res
+
+        ### Starting core function code ###
         procenv = os.environ.copy()
         procenv["PRECISION_TUNER_READJSONPROFILESTRATFILE"]     = self.__readJsonStratFile
         procenv["PRECISION_TUNER_DUMPJSONSTRATSRESULTSFILE"]   = self.__dumpJsonStratResultFile
