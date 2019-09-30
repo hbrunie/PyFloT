@@ -32,76 +32,6 @@ class Strategy:
     strategiesForAllCall = []
     __firstCall = True
 
-    def updateAttribute2ApplyStrategy(self):
-        self.__readJsonStratFile       = directory + readFileName(count)
-        self.__dumpJsonStratResultFile = directory + dumpFileName(count)
-        self.__binary                  = binary
-        self.__param                  = param
-        self.__count = count
-        date = f"{now.month}-{now.day}-{now.year}_{now.hour}-{now.minute}"
-        self.__outputFile             = "ptuner_strat{}_{}_{}.txt".format(count,date,outputFile)
-
-    def generatesStrategy(self, readJsonProfileFile):
-        with open(readJsonProfileFile, 'r') as json_file:
-            profile = json.load(json_file)
-        ## Dev strategy: Only done by first instanciation
-        if profile[Strategy.__JSON_TOTALCALLSTACKS] == 0:
-            exit(-1)
-
-        ## Pop from Strategies list the first strategy for all call sites
-        strategyForAllCallSites = Strategy.strategiesForAllCall.pop(0)
-        ## for each call site: pop corresponding strategy
-        ## and convert to detailedStrategy
-        self.__strategy = []
-        for i,dynCall in enumerate(profile[Strategy.__JSON_MAIN_LIST]):
-            callsCount = dynCall[Strategy.__JSON_CALLSCOUNT]
-            ## Specific call site strategy
-            strategy = strategyForAllCallSites.pop(0)
-            ## convert to detailed strategy
-            detailedStrategy = [[inf(x,callsCount), sup(x, callsCount)] for x in strategy]
-            ## update JSON representation
-            dynCall[self.__JSON_DYNCALL_STRATEGY_KEY] = strategy
-            dynCall[self.__JSON_DYNCALL_STRATEGY_DETAILED_KEY] = detailedStrategy
-            ## Store current strategy for display if WINNER
-            self.__strategy.append(list(detailedStrategy))
-        #print(self.__strategy)
-        ## Each time Strategy is instantiate: fill strategy json file
-        with open(self.__readJsonStratFile, 'w') as json_file:
-            json.dump(profile, json_file, indent=2)
-
-    ## Looking for a better strategy
-    ## We stop when the strategy has not been increase in the last X steps
-    ## start with some random lower, then lower around this call
-    ## Lower more and more aggressively when it works
-    ## Lower less and less when it does not (factor of the loss)
-    ## See algorithm pseudo code
-
-    ## CallSites, containing many dynamic calls
-    ## "Strategies" is a list S[S],
-    ## Inside there are one list s[s] for each strategy to test.
-    ## Each Strategy list is made of as many lists c[c] as CallSites
-    ## S[ s[c1[ multiSet c1],c2[ multiSet c2],...,cn[ multiSet cn]s], s[c1[ multiSet c1],c2[ multiSet c2],...,cn[ multiSet cn]s], ..., s[c1[ multiSet c1],c2[ multiSet c2],...,cn[ multiSet cn]s] S]
-    ##--> [ [ [[],[]] [[],[]]... [[],[]] ], ... [[[]] [[]] ... [[]]] ]
-    def updateStrategies(self, callSitesCount):
-        def updateStrategy(stratList, cond, stratCouple):
-            if cond:
-                stratList.append(stratCouple[0])
-            else:
-                stratList.append(stratCouple[1])
-
-        for stratCouple in self.stratCoupleList:
-            for strat in self.stratRepartingCoupleList:
-                ## callSites will stratCouple[0]
-                ## or stratCouple[1] according to their belonging to strat
-                strategyForAllCallSites = []
-                for cs in range(callSitesCount):
-                    ## Normalize cs ID
-                    isIn = float(cs) / float(callSitesCount)
-                    sup = strat[0] <= isIn
-                    inf = isIn < strat[1]
-                    cond = sup and inf
-                    updateStrategy(strategyForAllCallSites, cond, stratCouple)
-                Strategy.strategiesForAllCall.append(list(strategyForAllCallSites))
 
     def __init__(self, binary, param, directory, readJsonProfileFile,
             count, outputFile, onlyApplyingStrat, stratgenfiles, readstratfiles,
@@ -180,3 +110,74 @@ class Strategy:
     
     def isLast(self):
         return len(Strategy.strategiesForAllCall) == 0
+
+    def updateAttribute2ApplyStrategy(self):
+        self.__readJsonStratFile       = directory + readFileName(count)
+        self.__dumpJsonStratResultFile = directory + dumpFileName(count)
+        self.__binary                  = binary
+        self.__param                  = param
+        self.__count = count
+        date = f"{now.month}-{now.day}-{now.year}_{now.hour}-{now.minute}"
+        self.__outputFile             = "ptuner_strat{}_{}_{}.txt".format(count,date,outputFile)
+
+    def generatesStrategy(self, readJsonProfileFile):
+        with open(readJsonProfileFile, 'r') as json_file:
+            profile = json.load(json_file)
+        ## Dev strategy: Only done by first instanciation
+        if profile[Strategy.__JSON_TOTALCALLSTACKS] == 0:
+            exit(-1)
+
+        ## Pop from Strategies list the first strategy for all call sites
+        strategyForAllCallSites = Strategy.strategiesForAllCall.pop(0)
+        ## for each call site: pop corresponding strategy
+        ## and convert to detailedStrategy
+        self.__strategy = []
+        for i,dynCall in enumerate(profile[Strategy.__JSON_MAIN_LIST]):
+            callsCount = dynCall[Strategy.__JSON_CALLSCOUNT]
+            ## Specific call site strategy
+            strategy = strategyForAllCallSites.pop(0)
+            ## convert to detailed strategy
+            detailedStrategy = [[inf(x,callsCount), sup(x, callsCount)] for x in strategy]
+            ## update JSON representation
+            dynCall[self.__JSON_DYNCALL_STRATEGY_KEY] = strategy
+            dynCall[self.__JSON_DYNCALL_STRATEGY_DETAILED_KEY] = detailedStrategy
+            ## Store current strategy for display if WINNER
+            self.__strategy.append(list(detailedStrategy))
+        #print(self.__strategy)
+        ## Each time Strategy is instantiate: fill strategy json file
+        with open(self.__readJsonStratFile, 'w') as json_file:
+            json.dump(profile, json_file, indent=2)
+
+    ## Looking for a better strategy
+    ## We stop when the strategy has not been increase in the last X steps
+    ## start with some random lower, then lower around this call
+    ## Lower more and more aggressively when it works
+    ## Lower less and less when it does not (factor of the loss)
+    ## See algorithm pseudo code
+
+    ## CallSites, containing many dynamic calls
+    ## "Strategies" is a list S[S],
+    ## Inside there are one list s[s] for each strategy to test.
+    ## Each Strategy list is made of as many lists c[c] as CallSites
+    ## S[ s[c1[ multiSet c1],c2[ multiSet c2],...,cn[ multiSet cn]s], s[c1[ multiSet c1],c2[ multiSet c2],...,cn[ multiSet cn]s], ..., s[c1[ multiSet c1],c2[ multiSet c2],...,cn[ multiSet cn]s] S]
+    ##--> [ [ [[],[]] [[],[]]... [[],[]] ], ... [[[]] [[]] ... [[]]] ]
+    def updateStrategies(self, callSitesCount):
+        def updateStrategy(stratList, cond, stratCouple):
+            if cond:
+                stratList.append(stratCouple[0])
+            else:
+                stratList.append(stratCouple[1])
+
+        for stratCouple in self.stratCoupleList:
+            for strat in self.stratRepartingCoupleList:
+                ## callSites will stratCouple[0]
+                ## or stratCouple[1] according to their belonging to strat
+                strategyForAllCallSites = []
+                for cs in range(callSitesCount):
+                    ## Normalize cs ID
+                    isIn = float(cs) / float(callSitesCount)
+                    sup = strat[0] <= isIn
+                    inf = isIn < strat[1]
+                    cond = sup and inf
+                    updateStrategy(strategyForAllCallSites, cond, stratCouple)
+                Strategy.strategiesForAllCall.append(list(strategyForAllCallSites))
