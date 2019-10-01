@@ -1,0 +1,12 @@
+{
+	"IndependantCallStacks" : 
+	[
+		{
+			"CallStack" : null,
+			"CallsCount" : 1,
+			"HashKey" : "noLabel",
+			"LowerCount" : 0
+		}
+	],
+	"TotalCallStacks" : 1
+}
