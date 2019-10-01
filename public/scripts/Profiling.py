@@ -8,17 +8,17 @@ class Profiling:
     __dumpJsonProfileFile = "None"
     __directory = "None"
 
-    def __init__(self, binary, directory, profileFile, param,
-            outputFile, doNotExec):
-        self.__directory = directory
-        self.__binary = binary
-        self.__param = param
-        self.__onlyApplyingStrat = onlyApplyingStrat
-        self.__outputFile = outputFile
-        self.__dumpJsonProfileFile = directory + "/" + profileFile
+    def __init__(self, args, doNotExec):
+        self.__directory           = args.ptunerdir
+        self.__binary              = args.binary
+        self.__param               = args.param
+        self.__onlyApplyingStrat   = args.onlyApplyingStrat
+        self.__onlyGenStrat        = args.onlyGenStrat
+        self.__outputFile          = args.outputfile
+        self.__dumpJsonProfileFile = args.ptunerdir + "/" + args.profilefile
         assert self.__dumpJsonProfileFile != "None"
         if not doNotExec:
-            self.getCodeProfile()
+            self.executeApplicationProfiling()
         return None
 
     def __repr__(self):
@@ -26,7 +26,7 @@ class Profiling:
                 self.__binary, self.__dumpJsonProfile)
         return s
 
-    def getCodeProfile(self):
+    def executeApplicationProfiling(self):
         procenv = os.environ.copy()
         procenv["PRECISION_TUNER_DUMPJSONPROFILINGFILE"] = self.__dumpJsonProfileFile
         procenv["OMP_NUM_THREADS"]="1"
@@ -37,20 +37,18 @@ class Profiling:
         print("PROFILING Command: ",command)
         out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv, shell=True)
         strout = out.decode("utf-8")
-        with open(self.__outputFile+"_profile.txt", "w") as ouf:
+        outputfile = self.__directory + self.__outputFile+"_profile.txt"
+        with open(outputfile, "w") as ouf:
             ouf.write(strout)
         print(strout)
 
-    def developStrategy(self, onlyApplyingStrat, stratgenfiles,
-            readstratfiles):
-        strategies = []
+    def developStrategy(self, stratfiles):
         stop = False
         count = 0
         while (not stop):
-            strat = Strategy(self.__binary, self.__param,
-                    self.__directory, self.__dumpJsonProfileFile,
-                    count, self.__outputFile, onlyApplyingStrat,
-                    stratgenfiles, readstratfiles)
+            strat = Strategy(self.__binary, self.__param, self.__directory,
+                             self.__dumpJsonProfileFile, self.__outputFile,
+                             self.__onlyApplyingStrat, self.__onlyGenStrat, stratfiles, count)
             yield strat
             stop = strat.isLast()
             count += 1

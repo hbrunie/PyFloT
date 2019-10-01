@@ -42,11 +42,8 @@ def parse():
     parser.add_argument("--ptunerdir", 
             help="directory absolute path for all files generated and read by tool analysis")
 
-    parser.add_argument("--stratgenfiles", nargs="+", 
-            help="List of json files containing generated strategies.")
-
-    parser.add_argument("--readstratfiles", nargs="+", 
-            help="List of json files containing strategies to apply.")
+    parser.add_argument("--stratfiles", nargs="+", 
+            help="List of json files containing either generated strategies and/or strategies to apply.")
 
     parser.add_argument("--outputfile", 
     help="""Stdout and stderr are dumped into:
@@ -66,11 +63,7 @@ def parse():
     No application execution here.""",
     action='store_true', default=False)
 
-<<<<<<< HEAD
-    parser.add_argument("--onlyApplyingStrat", 
-=======
     parser.add_argument("--onlyApplyingStrat",
->>>>>>> master
             help="Choose to do only applying strategy. These MUST already have been generated.",
     action='store_true', default=False)
 
