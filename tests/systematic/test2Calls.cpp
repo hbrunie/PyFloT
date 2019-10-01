@@ -7,9 +7,9 @@ int main(){
     bool success = true;
     double relErr = 0.;
 #ifdef USE_LABEL
-    double a = exp(3.141592,"first");
+    double b = exp(3.141592,"first");
 #else
-    double a = exp(3.141592);
+    double b = exp(3.141592);
 #endif
     double refB =1.00000140000098;
     double errb = refB - b;
