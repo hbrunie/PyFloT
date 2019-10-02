@@ -5,7 +5,6 @@ from parse import parse
 from Profiling import Profiling
 
 args = parse()
-print(args.stratfiles)
 dontExecApp4Profile = args.onlyGenStrat or args.onlyApplyingStrat
 profile = Profiling(args, dontExecApp4Profile)
 if args.onlyProfile:

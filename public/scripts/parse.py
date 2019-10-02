@@ -6,7 +6,9 @@ def parse():
     """ Parse config file, update with command line arguments
     """
     # defaults arguments
-    defaults = { "profilefile":"profile.json" , "verif_text":"VERIFICATION SUCCESSFUL", "param":"","outputfile":"stdoutAndstderr"}
+    defaults = { "profilefile":"profile.json" , "verif_text":"VERIFICATION SUCCESSFUL", 
+            "param":"","outputfile":"stdoutAndstderr",
+            "ptunerdir":"./"}
     # Parse any conf_file specification
     conf_parser = argparse.ArgumentParser(
         description=__doc__, # printed with -h/--help

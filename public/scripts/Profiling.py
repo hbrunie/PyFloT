@@ -1,14 +1,16 @@
 import os
 import subprocess
-from Strategy import Strategy
-import subprocess
 
-class Profiling:
+from Strategy import Strategy
+from Envvars import Envvars
+
+class Profiling(Envvars):
     __binary = "None"
     __dumpJsonProfileFile = "None"
     __directory = "None"
 
     def __init__(self, args, doNotExec):
+        super(Profiling, self).__init__()
         self.__directory           = args.ptunerdir
         self.__binary              = args.binary
         self.__param               = args.param
@@ -28,9 +30,9 @@ class Profiling:
 
     def executeApplicationProfiling(self):
         procenv = os.environ.copy()
-        procenv["PRECISION_TUNER_DUMPJSONPROFILINGFILE"] = self.__dumpJsonProfileFile
-        procenv["OMP_NUM_THREADS"]="1"
-        procenv["PRECISION_TUNER_MODE"]="APPLYING_PROF"
+        procenv[self._ENVVAR_PTUNERDUMPPROF] = self.__dumpJsonProfileFile
+        procenv[self._ENVVAR_OMPNUMTHREADS] = "1"
+        procenv[self._ENVVAR_PTUNERMODE] = self._MODE_PROF
         #procenv["PRECISION_TUNER_DEBUG"] = ""
         command = []
         command.append(self.__binary+" " +self.__param)

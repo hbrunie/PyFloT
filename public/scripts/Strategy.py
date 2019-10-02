@@ -5,25 +5,22 @@ import decimal
 import datetime
 import io
 
+from Envvars import Envvars
+from DataStrategy import DataStrategy
+
 now = datetime.datetime.now()
 date = f"{now.month}-{now.day}-{now.year}_{now.hour}-{now.minute}"
 
-class Strategy:
+class Strategy(Envvars):
     __readJsonStratFile                  = "None"
     __dumpJsonStratResultFile            = "None"
     __binary                             = "None"
     #__strategy                           = []
-    __count                              = 0
     __JSON_MAIN_LIST                     = "IndependantCallStacks"
     __JSON_DYNCALL_STRATEGY_KEY          = "Strategy"
     __JSON_DYNCALL_STRATEGY_DETAILED_KEY = "DetailedStrategy"
     __JSON_CALLSCOUNT                    = "CallsCount"
     __JSON_TOTALCALLSTACKS               = "TotalCallStacks"
-    __ENVVAR_DUMPSTRAT                   = "PRECISION_TUNER_DUMPJSONSTRATSRESULTSFILE"
-    __ENVVAR_READSTRAT                   = "PRECISION_TUNER_READJSONPROFILESTRATFILE"
-    __ENVVAR_PTUNERMODE                  = "PRECISION_TUNER_MODE"
-    __ENVVAR_OMPNUMTHREADS               = "OMP_NUM_THREADS"
-    __ENVVAR_PTUNERDEBUG                 = "DEBUG"
     __firstCall                          = True
 
     def __init__(self, binary, param, directory, readJsonProfileFile,
@@ -40,19 +37,22 @@ class Strategy:
             (3) Application is run reading stratfiles.
         """
         ### Core code ###
+        super(Strategy, self).__init__()
+        self.__onlyApplyingStrat = onlyApplyingStrat
         if Strategy.__firstCall:
+            Strategy.__count = 0
+            Strategy.__decount = self.countStratFiles(directory)## number of strat files
             Strategy.__stratfiles = stratfiles
-            print("stratfiles",stratfiles)
             if not onlyApplyingStrat:
                 self.updateStrategiesStaticList(readJsonProfileFile)
             Strategy.__firstCall = False
-        print(Strategy.strategiesForAllCall)
         readJsonStratFile = directory + "/readJsonStrat_{}.json".format(Strategy.__count)
         if not onlyApplyingStrat:
             self.generatesStrategyJSONfile(readJsonProfileFile, readJsonStratFile)
         if not onlyGenStrat:
             self.updateAttribute2ApplyStrategy(readJsonStratFile, param, binary, directory)
         Strategy.__count += 1
+        Strategy.__decount -= 1
         return None
 
     def applyStrategy(self, checkString):
@@ -68,12 +68,11 @@ class Strategy:
 
         ### Starting core function code ###
         procenv                                  = os.environ.copy()
-        procenv[Strategy.__ENVVAR_READSTRAT]     = self.__readJsonStratFile
-        procenv[Strategy.__ENVVAR_DUMPSTRAT]     = self.__dumpJsonStratResultFile
-        procenv[Strategy.__ENVVAR_PTUNERMODE]    = "APPLYING_STRAT"
-        procenv[Strategy.__ENVVAR_OMPNUMTHREADS] = "1"
+        procenv[self._ENVVAR_READSTRAT]     = self.__readJsonStratFile
+        procenv[self._ENVVAR_DUMPSTRAT]     = self.__dumpJsonStratResultFile
+        procenv[self._ENVVAR_PTUNERMODE]    = self._MODE_STRAT
+        procenv[self._ENVVAR_OMPNUMTHREADS] = "1"
         #procenv[Strategy.__ENVVAR_PTUNERDEBUG]  = "fperror,comparison"
-
         command = []
         command.append(self.__binary+" " +self.__param)
         print("Strategy Command: ",command)
@@ -90,8 +89,7 @@ class Strategy:
         #out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
         #strout = out.decode("utf-8")
         print("Strategy: {}, STEP reached: {}".format(self.__count, laststep))
-        outputfile = self.__outputFile+"_applyStrat.txt"
-        with open(outputfile, "w") as ouf:
+        with open(self.__outputFile, "w") as ouf:
             ouf.write(out)
         #get count of lowered from output
         if checkString in out:
@@ -103,15 +101,20 @@ class Strategy:
             return False
     
     def isLast(self):
-        return len(Strategy.strategiesForAllCall) == 0
+        if self.__onlyApplyingStrat:
+            return self.__decount == 0
+        else:
+            return len(Strategy.strategiesForAllCall) == 0
+
+    def countStratFiles(self, directory):
+        return len([name for name in os.listdir(directory) if os.path.isfile(os.path.join(directory, name)) and "readJsonStrat" in name])
 
     def updateAttribute2ApplyStrategy(self, readStratFile, param, binary, directory):
         self.__readJsonStratFile       = readStratFile
         self.__binary                  = binary
         self.__param                   = param
-        self.__outputFile              = directory + "/ptuner_strat{}_{}.txt".format(Strategy.__count, date)
-        dumpStratFile                  = directory + "dumpJsonStratResults_{}.json".format(Strategy.__count)
-        self.__dumpJsonStratResultFile = dumpStratFile
+        self.__outputFile              = directory + "/ptuner_applystrat{}_{}.txt".format(Strategy.__count, date)
+        self.__dumpJsonStratResultFile = directory + "dumpStratResults_{}.json".format(Strategy.__count)
 
     def generatesStrategyJSONfile(self, readJsonProfileFile, readJsonStratFile):
         ### Some local lambda functions ###
@@ -158,16 +161,6 @@ class Strategy:
     ## Lower less and less when it does not (factor of the loss)
     ## See algorithm pseudo code
 
-    stratRepartingCoupleList = [[0,1],[0,0.5],[0.5,1],[0,0]] # [[0.5,1],[0,0]]:
-    stratCoupleList = [
-            ([[0,0.003]],[[0.997,1]]),
-            ([[0,0.002]],[[0.998,1]]),
-            ([[0,0.0015]],[[0.9985,1]]),
-            ([[0,0.001]],[[0.999,1]]),
-            ([[0,0.05]],[[0.9995,1]]),
-            ([[0,0.01]],[[0.9998,1]]),
-            ([[0,0.005]],[[0.9999,1]])
-            ]
     strategiesForAllCall = []
 
     ## CallSites, containing many dynamic calls
@@ -194,8 +187,9 @@ class Strategy:
             print("Error no callstacks")
             exit(-1)
         callSitesCount = len(profile[Strategy.__JSON_MAIN_LIST])
-        for stratCouple in self.stratCoupleList:
-            for strat in self.stratRepartingCoupleList:
+        print("DATASTRAT",DataStrategy.stratCoupleList)
+        for stratCouple in DataStrategy.stratCoupleList:
+            for strat in DataStrategy.stratRepartingCoupleList:
                 ## callSites will stratCouple[0]
                 ## or stratCouple[1] according to their belonging to strat
                 strategyForAllCallSites = []
