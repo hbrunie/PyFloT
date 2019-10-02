@@ -26,9 +26,13 @@ class DynFuncCall
         static const string JSON_CALLSTACK_ADDR_LIST_KEY;
         // LOWERED Dynamic calls count
         static const string JSON_LOWERCOUNT_KEY;
+        static const string JSON_LOWERBOUND_KEY;
+        static const string JSON_UPPERBOUND_KEY;
         vector<void*> __btVec;
         vector<void*> __staticBtVec;
         unsigned long __loweredCount;
+        unsigned int __lowerBound;
+        unsigned int __upperBound;
         unsigned long __dyncount;
         unsigned long __profiledDyncount;
         uintptr_t __dynHashKey;

@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <limits>
 #include <math.h>
 
 #include <execinfo.h>
@@ -14,6 +15,8 @@ using namespace Json;
 const string DynFuncCall::JSON_CALLSTACK_ADDR_LIST_KEY = "CallStack";
 const string DynFuncCall::JSON_CALLSCOUNT_KEY      = "CallsCount";
 const string DynFuncCall::JSON_LOWERCOUNT_KEY      = "LowerCount";
+const string DynFuncCall::JSON_LOWERBOUND_KEY      = "LowerBound";
+const string DynFuncCall::JSON_UPPERBOUND_KEY      = "UpperBound";
 
 DynFuncCall::DynFuncCall(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
@@ -22,6 +25,8 @@ DynFuncCall::DynFuncCall(){
     __dyncount = 0;
     __profiledDyncount = 0;
     __loweredCount = 0;
+    __lowerBound   = numeric_limits<unsigned int>::max();
+    __upperBound   = 0;
 }
 
 DynFuncCall::DynFuncCall(Value dynFuncCall, string statHashKey) : DynFuncCall(){
@@ -109,7 +114,9 @@ bool DynFuncCall::applyStrategy(){
     for(auto it = __stratMultiSet.begin() ; it != __stratMultiSet.end(); it++){
         struct FloatSet fs = *it;
         unsigned int lowerBound = round(__profiledDyncount*fs.low);
+        __lowerBound = min(lowerBound, __lowerBound);
         unsigned int upperBound = round(__profiledDyncount*fs.high);
+        __upperBound = max(upperBound, __upperBound);
         bool comparison = lowerBound < this->__dyncount && this->__dyncount <= upperBound;
         DEBUG("comparison",cerr << "Comparison: " << lowerBound << " < " << __dyncount
                 << " <= " <<  upperBound << " "<< (comparison ? "TRUE" : "FALSE") << endl;);
@@ -129,10 +136,14 @@ Value DynFuncCall::getJsonValue(){
     Value v;
     Value dyncount((UInt)__dyncount);
     Value loweredCount((UInt)__loweredCount);
+    Value lowerBound((UInt)__lowerBound);
+    Value upperBound((UInt)__upperBound);
     Value btVec;
 
     v[JSON_CALLSCOUNT_KEY] = dyncount;
     v[JSON_LOWERCOUNT_KEY] = loweredCount;
+    v[JSON_LOWERBOUND_KEY] = lowerBound;
+    v[JSON_UPPERBOUND_KEY] = upperBound;
     for(unsigned int i =0; i< __btVec.size();i++){
         Value addr = (LargestInt)__btVec[i];
         btVec.append(addr);
