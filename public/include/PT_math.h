@@ -29,17 +29,18 @@ double __overloaded_sqrt(double var, string label);
 double __overloaded_fabs(double var, string label);
 double __overloaded_pow(double var, double p, string label);
 
-// FLOAT exponential function
-#ifdef expf
-#undef expf
-#endif
-#define expf __overloaded_expf
-
 // exponential function
 #ifdef exp
 #undef exp
 #endif
 #define exp __overloaded_exp
+
+#ifndef ONLY_EXP
+// FLOAT exponential function
+#ifdef expf
+#undef expf
+#endif
+#define expf __overloaded_expf
 
 // logarithm function
 #ifdef log
@@ -82,4 +83,5 @@ double __overloaded_pow(double var, double p, string label);
 #undef fabs
 #endif
 #define fabs __overloaded_fabs
+#endif
 #endif
