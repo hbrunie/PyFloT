@@ -24,7 +24,8 @@ class Strategy(Envvars):
     __firstCall                          = True
 
     def __init__(self, binary, param, directory, readJsonProfileFile,
-            outputFile, onlyApplyingStrat, onlyGenStrat, stratfiles, count):
+            outputFile, onlyApplyingStrat, onlyGenStrat, stratfiles, count,
+            executeAllStrat):
         """ Instantiate Strategy. 
             Either:
                 (1) Generate and apply 
@@ -39,6 +40,7 @@ class Strategy(Envvars):
         ### Core code ###
         super(Strategy, self).__init__()
         self.__onlyApplyingStrat = onlyApplyingStrat
+        self.__executeAllStrategies = executeAllStrat
         if Strategy.__firstCall:
             Strategy.__count = 0
             Strategy.__decount = self.countStratFiles(directory)## number of strat files
@@ -55,6 +57,16 @@ class Strategy(Envvars):
         Strategy.__decount -= 1
         return None
 
+    def execute(self, command, outputfile, procenv, count):
+        out = super().execute(command,outputfile, procenv)
+        os.system("mv plt00000 plt00000_strat{}".format(count))
+        os.system("mv plt00030 plt00030_strat{}".format(count))
+        os.system("mv chk00000 chk00000_strat{}".format(count))
+        os.system("mv chk00030 chk00030_strat{}".format(count))
+        #laststep = lastOccurence("STEP", out)
+        #print("Strategy: {}, STEP reached: {}".format(self.__count, laststep))
+        return out
+
     def applyStrategy(self, checkString):
         """
         """
@@ -67,7 +79,7 @@ class Strategy(Envvars):
             return res
 
         ### Starting core function code ###
-        procenv                                  = os.environ.copy()
+        procenv                             = os.environ.copy()
         procenv[self._ENVVAR_READSTRAT]     = self.__readJsonStratFile
         procenv[self._ENVVAR_DUMPSTRAT]     = self.__dumpJsonStratResultFile
         procenv[self._ENVVAR_PTUNERMODE]    = self._MODE_STRAT
@@ -76,27 +88,15 @@ class Strategy(Envvars):
         command = []
         command.append(self.__binary+" " +self.__param)
         print("Strategy Command: ",command)
-        out = ""
-        try:
-                output = subprocess.check_output(
-                                command, stderr=subprocess.STDOUT, shell=True,
-                                        universal_newlines=True, env=procenv)
-        except subprocess.CalledProcessError as exc:
-                out = "Status : FAIL\nCode: {}\n{}".format(exc.returncode, exc.output)
-        else:
-                out = "Output: \n{}\n".format(output)
-        laststep = lastOccurence("STEP", out)
-        #out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv)
-        #strout = out.decode("utf-8")
-        print("Strategy: {}, STEP reached: {}".format(self.__count, laststep))
-        with open(self.__outputFile, "w") as ouf:
-            ouf.write(out)
+        out = self.execute(command, self.__outputFile, procenv, Strategy.__count)
         #get count of lowered from output
         if checkString in out:
             print("Valid strategy found: ", self.__readJsonStratFile)
-            #print(Strategy.__strategy)
             print("Results in: ", self.__dumpJsonStratResultFile)
-            return True
+            if (self.__executeAllStrategies):
+                return False ## Execute all strategies
+            else:
+                return True
         else:
             return False
     
@@ -187,9 +187,9 @@ class Strategy(Envvars):
             print("Error no callstacks")
             exit(-1)
         callSitesCount = len(profile[Strategy.__JSON_MAIN_LIST])
-        print("DATASTRAT",DataStrategy.stratCoupleList)
-        for stratCouple in DataStrategy.stratCoupleList:
-            for strat in DataStrategy.stratRepartingCoupleList:
+        ds = DataStrategy()
+        for stratCouple in ds.stratCoupleList:
+            for strat in ds.stratRepartingCoupleList:
                 ## callSites will stratCouple[0]
                 ## or stratCouple[1] according to their belonging to strat
                 strategyForAllCallSites = []

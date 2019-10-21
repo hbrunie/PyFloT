@@ -1,5 +1,4 @@
 import os
-import subprocess
 
 from Strategy import Strategy
 from Envvars import Envvars
@@ -16,6 +15,7 @@ class Profiling(Envvars):
         self.__param               = args.param
         self.__onlyApplyingStrat   = args.onlyApplyingStrat
         self.__onlyGenStrat        = args.onlyGenStrat
+        self.__execAllStrat        = args.execAllStrat
         self.__outputFile          = args.outputfile
         self.__dumpJsonProfileFile = args.ptunerdir + "/" + args.profilefile
         assert self.__dumpJsonProfileFile != "None"
@@ -28,6 +28,14 @@ class Profiling(Envvars):
                 self.__binary, self.__dumpJsonProfile)
         return s
 
+    def execute(self, command, outputfile, procenv):
+        out = super().execute(command,outputfile, procenv)
+        os.system("mv plt00000 plt00000_profile")
+        os.system("mv plt00030 plt00030_profile")
+        os.system("mv chk00000 chk00000_profile")
+        os.system("mv chk00030 chk00030_profile")
+        return out
+
     def executeApplicationProfiling(self):
         procenv = os.environ.copy()
         procenv[self._ENVVAR_PTUNERDUMPPROF] = self.__dumpJsonProfileFile
@@ -37,12 +45,8 @@ class Profiling(Envvars):
         command = []
         command.append(self.__binary+" " +self.__param)
         print("PROFILING Command: ",command)
-        out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=procenv, shell=True)
-        strout = out.decode("utf-8")
         outputfile = self.__directory + self.__outputFile+"_profile.txt"
-        with open(outputfile, "w") as ouf:
-            ouf.write(strout)
-        print(strout)
+        out = self.execute(command,outputfile,procenv)
 
     def developStrategy(self, stratfiles):
         stop = False
@@ -50,7 +54,8 @@ class Profiling(Envvars):
         while (not stop):
             strat = Strategy(self.__binary, self.__param, self.__directory,
                              self.__dumpJsonProfileFile, self.__outputFile,
-                             self.__onlyApplyingStrat, self.__onlyGenStrat, stratfiles, count)
+                             self.__onlyApplyingStrat, self.__onlyGenStrat,
+                             stratfiles, count, self.__execAllStrat)
             yield strat
             stop = strat.isLast()
             count += 1
