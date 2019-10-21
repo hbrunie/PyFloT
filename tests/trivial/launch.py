@@ -3,9 +3,9 @@ import subprocess
 from outputs import *
 tests = ["./testConstructor", "./testExp", "./testHeader", "./testMathFunctions"]
 tests = ["./test5Exp"]
-optionBin = ["--onlyProfile", "--onlyGenStrat", "--onlyApplyingStrat"] 
+optionBin = ["--onlyProfile", "--onlyGenStrat", "--onlyApplyingStrat", ""]
 script = "../../public/scripts/script.py"
-    
+
 def dump(f,s):
     with open(f,"a") as inf:
         inf.write(s)
@@ -34,4 +34,4 @@ for binary in tests:
         #dump("cmdOutput",out)
         #dump("refOutput",output)
         print(out == output)
-    #os.system(f"rm {ptunerdir}*.txt {ptunerdir}*.json")
+    os.system(f"rm {ptunerdir}*.txt {ptunerdir}*.json")
