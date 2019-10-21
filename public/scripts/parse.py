@@ -1,13 +1,22 @@
 import argparse
 import configparser
 import sys
+def get_config(confPath):
+    config = configparser.ConfigParser()
+    config.optionxform=str
+    try:
+        config.read(confPath)
+        return config
+    except Exception as e:
+         log.error(e)
 
 def parse():
     """ Parse config file, update with command line arguments
     """
     # defaults arguments
-    defaults = { "profilefile":"profile.json" , "verif_text":"VERIFICATION SUCCESSFUL", 
-            "param":"","outputfile":"stdoutAndstderr",
+    defaults = { "profilefile":"profile.json" , "verif_text":"VERIFICATION SUCCESSFUL",
+            "param":"","outputfile":"stdoutAndstderr", "movePLTdir":False, "onlyProfile":False,
+            "onlyGenStrat":False, "onlyApplyingStrat":False, "execAllStrat":False,
             "ptunerdir":"./"}
     # Parse any conf_file specification
     conf_parser = argparse.ArgumentParser(
@@ -22,8 +31,7 @@ def parse():
     args, remaining_argv = conf_parser.parse_known_args()
 
     if args.conf_file:
-        config = configparser.ConfigParser()
-        config.read([args.conf_file])
+        config = get_config([args.conf_file])
         defaults.update(dict(config.items("Defaults")))
 
     # Parse rest of arguments
@@ -41,35 +49,43 @@ def parse():
                         (ex: ./inputs-2d-regt). Several arguments
                         should be written in between quotes: \"arg1 arg2 ...\" """)
 
-    parser.add_argument("--ptunerdir", 
+    parser.add_argument("--ptunerdir",
             help="directory absolute path for all files generated and read by tool analysis")
 
-    parser.add_argument("--stratfiles", nargs="+", 
+    parser.add_argument("--stratfiles", nargs="+",
             help="List of json files containing either generated strategies and/or strategies to apply.")
 
-    parser.add_argument("--outputfile", 
+    parser.add_argument("--outputfile",
     help="""Stdout and stderr are dumped into:
     /path/to/outputdirectory/outputfile_profile.txt or ./ptuner_stratCOUNT_DATE_outputfile.txt""")
 
-    parser.add_argument("--profilefile", 
+    parser.add_argument("--profilefile",
     help="""Profile phase dumps the JSON into profilefile into outputdir,
     Applying strat phase read into to create strat files.""")
 
-    parser.add_argument("--onlyProfile", 
+    parser.add_argument("--onlyProfile",
     help="""Choose to do only profiling no strategy generation,
     no applying strategy. One execution.""",
-    action='store_true', default=False)
+    action='store_true')
 
-    parser.add_argument("--onlyGenStrat", 
+    parser.add_argument("--onlyGenStrat",
     help="""Choose to do only strategies generation based on existing profiling.
     No application execution here.""",
-    action='store_true', default=False)
+    action='store_true')
 
     parser.add_argument("--onlyApplyingStrat",
             help="Choose to do only applying strategy. These MUST already have been generated.",
-    action='store_true', default=False)
+    action='store_true')
 
-    parser.add_argument("--verif_text", 
+    parser.add_argument("--movePLTdir",
+            help="Choose to move plt directories according to strategy number.",
+    action='store_true')
+
+    parser.add_argument("--execAllStrat",
+    help="Exec all strategies even when a valid one is found",
+    action='store_true')
+
+    parser.add_argument("--verif_text",
             help="Text searched in output to verify the code executed without accuracy error")
 
     args = parser.parse_args(remaining_argv)
