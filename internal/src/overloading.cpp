@@ -23,7 +23,7 @@ using namespace std;
 #ifndef TEST_VERSION
 /******** Globals variables **********/
 
-static PrecisionTuner ptuner;
+thread_local static PrecisionTuner ptuner;
 
 /******** Function definitions **********/
 

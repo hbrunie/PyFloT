@@ -1,6 +1,13 @@
 all: testManyCallsExp testManyCalls test1CallSiteMultipleDynCalls test1Call test2Calls
 
 include ../../make.def
+CXXOMP=/Users/hbrunie/usr/local/bin/clang++ -lm -I/opt/local/include/libomp -L/opt/local/lib/libomp -fopenmp -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include
+testManyCallsOMP:
+	$(CXXOMP) -o $@_v1 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV1
+	$(CXXOMP) -o $@_v2 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV2
+	$(CXXOMP) -o $@_v3 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV3
+	$(CXXOMP) -o $@_v4 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV4
+	$(CXXOMP) -o $@_v5 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV5
 
 testManyCallsExp:
 	$(CXX) $(CXXFLAGS) -o $@_$(DEBUG)_v1 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV1
