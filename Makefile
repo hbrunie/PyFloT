@@ -1,5 +1,6 @@
 ## IN THAT ORDER !
-all: jsoncpp lib unittest
+all: jsoncpp lib
+allplus: all unittest
 
 include make.def
 
