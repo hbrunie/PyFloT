@@ -1,3 +1,6 @@
 [submodule "external-deps/jsoncpp"]
 	path = external-deps/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
+[submodule "external-deps/GOTCHA"]
+	path = external-deps/GOTCHA
+	url = https://github.com/LLNL/GOTCHA.git
