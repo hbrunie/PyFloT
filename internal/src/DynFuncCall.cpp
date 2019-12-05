@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <math.h>
+#include <vector>
 
 #include <execinfo.h>
 #include <json/json.h>
@@ -14,15 +16,45 @@ using namespace Json;
 
 const string DynFuncCall::JSON_CALLSTACK_ADDR_LIST_KEY = "CallStack";
 const string DynFuncCall::JSON_CALLSCOUNT_KEY      = "CallsCount";
+const string DynFuncCall::JSON_INREGION0_KEY      = "InRegion0";
+const string DynFuncCall::JSON_INREGION1_KEY      = "InRegion1";
+const string DynFuncCall::JSON_INREGION2_KEY      = "InRegion2";
 const string DynFuncCall::JSON_LOWERCOUNT_KEY      = "LowerCount";
 const string DynFuncCall::JSON_LOWERBOUND_KEY      = "LowerBound";
 const string DynFuncCall::JSON_UPPERBOUND_KEY      = "UpperBound";
+
+static volatile bool GLOBAL_IN_REGION0 = false;
+static volatile bool GLOBAL_IN_REGION1 = false;
+static volatile bool GLOBAL_IN_REGION2 = false;
+void setInRegion(int reg){
+    if(reg==0)
+        GLOBAL_IN_REGION0 = true;
+    if(reg==1)
+        GLOBAL_IN_REGION1 = true;
+    if(reg==2)
+        GLOBAL_IN_REGION2 = true;
+}
+
+void unSetInRegion(int reg){
+    if(reg==0)
+        GLOBAL_IN_REGION0 = false;
+    if(reg==1)
+        GLOBAL_IN_REGION1 = false;
+    if(reg==2)
+        GLOBAL_IN_REGION2 = false;
+}
 
 DynFuncCall::DynFuncCall(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     __dynHashKey = 0;
     __statHashKey = "";
     __dyncount = 0;
+    __inRegion0 = 0;
+    __inRegion1 = 0;
+    __inRegion2 = 0;
+    __inRegionBool0 = GLOBAL_IN_REGION0;
+    __inRegionBool1 = GLOBAL_IN_REGION1;
+    __inRegionBool2 = GLOBAL_IN_REGION2;
     __profiledDyncount = 0;
     __loweredCount = 0;
     __lowerBound   = numeric_limits<unsigned int>::max();
@@ -106,6 +138,12 @@ vector<void*> DynFuncCall::getBtVector(){return __btVec;}
 
 void DynFuncCall::applyProfiling(){
     __dyncount ++;
+    if(__inRegionBool0)
+        __inRegion0++;
+    if(__inRegionBool1)
+        __inRegion1++;
+    if(__inRegionBool2)
+        __inRegion2++;
 }
 
 bool DynFuncCall::applyStrategy(){
@@ -136,17 +174,31 @@ Value DynFuncCall::getJsonValue(){
     Value v;
     Value dyncount((UInt)__dyncount);
     Value loweredCount((UInt)__loweredCount);
+    Value inRegion0((UInt)__inRegion0);
+    Value inRegion1((UInt)__inRegion1);
+    Value inRegion2((UInt)__inRegion2);
     Value lowerBound((UInt)__lowerBound);
     Value upperBound((UInt)__upperBound);
     Value btVec;
 
     v[JSON_CALLSCOUNT_KEY] = dyncount;
     v[JSON_LOWERCOUNT_KEY] = loweredCount;
+    v[JSON_INREGION0_KEY]   = inRegion0;
+    v[JSON_INREGION1_KEY]   = inRegion1;
+    v[JSON_INREGION2_KEY]   = inRegion2;
     v[JSON_LOWERBOUND_KEY] = lowerBound;
     v[JSON_UPPERBOUND_KEY] = upperBound;
+    void** sym_array = (void**) malloc(sizeof(void*)*__btVec.size());
     for(unsigned int i =0; i< __btVec.size();i++){
-        Value addr = (LargestInt)__btVec[i];
-        btVec.append(addr);
+        sym_array[i] = __btVec[i];
+    }
+    //copy(__btVec.begin(), __btVec.end(), sym_array);
+    char ** char_array = backtrace_symbols((void* const*)sym_array, __btVec.size());
+    free(sym_array);
+    for(unsigned int i =0; i< __btVec.size();i++){
+        String s(char_array[i]);
+        Value sym = s;
+        btVec.append(sym);
     }
     v[JSON_CALLSTACK_ADDR_LIST_KEY] = btVec;
     DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);

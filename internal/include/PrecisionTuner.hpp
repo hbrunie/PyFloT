@@ -9,6 +9,7 @@ using namespace std;
 
 enum MODE{APPLYING_PROF, APPLYING_STRAT};
 
+
 class PrecisionTuner
 {
     private:

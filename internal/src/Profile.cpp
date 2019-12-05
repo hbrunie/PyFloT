@@ -16,7 +16,7 @@
 #include "Debug.hpp"
 #include "Profile.hpp"
 // ONE == 4 because of Ptuning internal calls below __overloaded_mathFunction
-#define ONE 4
+#define ONE 6
 using namespace std;
 using namespace Json;
 

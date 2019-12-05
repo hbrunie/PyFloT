@@ -7,6 +7,17 @@
 #include "Debug.hpp"
 #include "PrecisionTuner.hpp"
 
+#include <gotcha/gotcha.h>
+typedef double (*exp_ptr) (double);
+
+double __overloaded_exp(double var);
+
+gotcha_wrappee_handle_t wrappee_exp_handle;
+gotcha_wrappee_handle_t wrappee_expf_handle;
+struct gotcha_binding_t wrap_actions [] = {
+    { "exp", __overloaded_exp, &wrappee_exp_handle },
+    { "expf", __overloaded_exp, &wrappee_expf_handle }
+};
 using namespace std;
 
 const unsigned int PrecisionTuner::MAXSTACKSIZE         = 500;
@@ -24,6 +35,9 @@ PrecisionTuner::PrecisionTuner(){
      * otherwise AS mode
      */
     char *envVarString=NULL, * envVarString1 = NULL, * envVarString2=NULL;
+    fprintf(stderr, "Wrapping %s, %s\n", wrap_actions[0].name, wrap_actions[1].name);
+    int res = gotcha_wrap(wrap_actions, 2, "PrecisionTuner");
+    fprintf(stderr,"gtcha: %d| %d %d %d %d\n", res,GOTCHA_SUCCESS, GOTCHA_FUNCTION_NOT_FOUND,GOTCHA_INVALID_TOOL,GOTCHA_INTERNAL);
 #ifndef NDEBUG
     debugtypeOption(getenv("DEBUG"));
 #endif
@@ -112,8 +126,14 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
     UNUSED(label);
     vector<void*> btVec;
 #endif
-    fres = (double) sp_func(fvalue);
-    dres = func(value);
+    //TODO: generic wrapper, not just exp (add argument with handler from gotcha?)
+    //fres = (double) sp_func(fvalue);
+    //dres = func(value);
+    double (*wrappee_expf) (double) = gotcha_get_wrappee(wrappee_expf_handle); // get my wrappee from Gotcha
+    exp_ptr wrappee_exp = (exp_ptr) gotcha_get_wrappee(wrappee_exp_handle); // get my wrappee from Gotcha
+    dres = wrappee_exp(value);
+    fres = wrappee_expf(value);
+    
     return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
 }
 
