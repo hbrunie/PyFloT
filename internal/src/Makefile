@@ -1,11 +1,17 @@
 all: libprecisiontuning.so
 
 include ../../make.def
+SOURCES=PrecisionTuner.cpp overloading.cpp Profile.cpp DynFuncCall.cpp Labels.cpp
+OBJECTS=../utils/Debug.o Profile.o PrecisionTuner.o DynFuncCall.o overloading.o Labels.o
+GOTCHALIB=-L ../../external-deps/install/lib64/ -lgotcha -Wl,-rpath, /global/cscratch1/sd/hbrunie/tools/precisiontuning/external-deps/install/lib64/
+GOTCHAINC=-I ../../external-deps/install/include/
+PTLabels= -I ../../public/include/
+GOTCHAWARNING=-fpermissive
 
-libprecisiontuning.so: ../utils/Debug.o
+libprecisiontuning.so:
 	make -C ../utils/
-	$(CXX) $(CXXPTFLAGS) -c PrecisionTuner.cpp overloading.cpp Profile.cpp DynFuncCall.cpp -g $(DEBUG) -I. $(INCDIR) $(GCCDYNLIB) -I ../../external-deps/install/include/ -fpermissive
-	$(CXX) $(CXXPTFLAGS) -o $@ ../utils/Debug.o Profile.o PrecisionTuner.o DynFuncCall.o overloading.o -g $(LIB) $(DEBUG) $(DYNLIB) -L ../../external-deps/install/lib64/ -lgotcha
+	$(CXX) $(CXXPTFLAGS) -c  -g $(DEBUG) $(SOURCES) -I. $(INCDIR) $(GCCDYNLIB) $(GOTCHAINC) $(GOTCHAWARNING) $(PTLabels)
+	$(CXX) $(CXXPTFLAGS) -o $@ $(OBJECTS) -g $(LIB) $(DEBUG) $(DYNLIB) $(GOTCHALIB)
 	mkdir -p $(PTHOME)/public/lib/
 	mv $@ $(PTHOME)/public/lib/
 

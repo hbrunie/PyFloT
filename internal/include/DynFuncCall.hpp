@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <Labels.hpp>
 #include <json/json.h>
 
 using namespace std;
@@ -20,25 +21,18 @@ struct FloatSet{
 class DynFuncCall
 {
     private:
+        Labels labels;
         // Dynamic calls total count
         static const string JSON_CALLSCOUNT_KEY;
         // List of Hexadecimal virtual addresses
         static const string JSON_CALLSTACK_ADDR_LIST_KEY;
         // LOWERED Dynamic calls count
-        static const string JSON_INREGION0_KEY;
-        static const string JSON_INREGION1_KEY;
-        static const string JSON_INREGION2_KEY;
+        static const string JSON_LABELS_KEY;
         static const string JSON_LOWERCOUNT_KEY;
         static const string JSON_LOWERBOUND_KEY;
         static const string JSON_UPPERBOUND_KEY;
         vector<void*> __btVec;
         vector<void*> __staticBtVec;
-        bool __inRegionBool0;
-        unsigned long __inRegion0;
-        bool __inRegionBool1;
-        unsigned long __inRegion1;
-        bool __inRegionBool2;
-        unsigned long __inRegion2;
         unsigned long __loweredCount;
         unsigned int __lowerBound;
         unsigned int __upperBound;
