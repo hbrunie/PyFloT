@@ -1,3 +1,4 @@
 public/scripts/__pycache__/*
+external-deps/install/*
 tests/systematic/tmp/*
 tests/trivial/tmp/*
