@@ -18,9 +18,12 @@ const string DynFuncCall::JSON_LOWERCOUNT_KEY      = "LowerCount";
 const string DynFuncCall::JSON_LOWERBOUND_KEY      = "LowerBound";
 const string DynFuncCall::JSON_UPPERBOUND_KEY      = "UpperBound";
 
+set<string> DynFuncCall::backtraceToLower = set<string>();
+
 DynFuncCall::DynFuncCall(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     __dynHashKey = 0;
+    __backtraceStrat = false;
     __statHashKey = "";
     __dyncount = 0;
     __profiledDyncount = 0;
@@ -108,7 +111,38 @@ void DynFuncCall::applyProfiling(){
     __dyncount ++;
 }
 
-bool DynFuncCall::applyStrategy(){
+void DynFuncCall::updateStrategyBacktraceList(){
+    //read file
+    try{
+        char * envVarString = getenv("BACKTRACE_LIST");
+        string file(envVarString);
+        if(NULL == envVarString)
+            file = "BackraceList.txt";
+        std::ifstream f(file);
+        if(!f){
+            std::cerr << "ERROR: Cannot open "<< file << " !" << std::endl;
+            exit(1);
+        }
+        std::string line;
+        while (std::getline(f,line)){
+            backtraceToLower.insert(line);     
+        }
+    }
+    catch(const std::exception& ex){
+        std::cerr << "Exception: '" << ex.what() << "'!" << std::endl;
+        exit(1);
+    }
+}
+void DynFuncCall::updateStrategyBacktrace(){
+        auto ite = backtraceToLower.find(__statHashKey);
+        // Look for backtrace in strategy to lower
+        if(ite == backtraceToLower.end())
+            __backtraceStrat = false;
+        else
+            __backtraceStrat = true;
+}
+
+bool DynFuncCall::applyStrategyBacktrace(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     this->__dyncount ++;
     for(auto it = __stratMultiSet.begin() ; it != __stratMultiSet.end(); it++){
@@ -123,6 +157,26 @@ bool DynFuncCall::applyStrategy(){
         //TODO: with python script, display the non normalized interval
         //TODO: with only one call (number 0) it belongs to any [0,x], but to no [x,1], is this wanted?
         // it should appear in some documentation
+        if(comparison){
+            this->__loweredCount++;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool DynFuncCall::applyStrategyDynCount(){
+    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    this->__dyncount ++;
+    for(auto it = __stratMultiSet.begin() ; it != __stratMultiSet.end(); it++){
+        struct FloatSet fs = *it;
+        unsigned int lowerBound = round(__profiledDyncount*fs.low);
+        __lowerBound = min(lowerBound, __lowerBound);
+        unsigned int upperBound = round(__profiledDyncount*fs.high);
+        __upperBound = max(upperBound, __upperBound);
+        bool comparison = lowerBound < this->__dyncount && this->__dyncount <= upperBound;
+        DEBUG("comparison",cerr << "Comparison: " << lowerBound << " < " << __dyncount
+                << " <= " <<  upperBound << " "<< (comparison ? "TRUE" : "FALSE") << endl;);
         if(comparison){
             this->__loweredCount++;
             return true;

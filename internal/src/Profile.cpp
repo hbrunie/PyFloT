@@ -152,6 +152,7 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
             exit(-1);
         }
         dfc = __backtraceStaticMap[staticHashKey];
+        dfc->updateStrategyBacktrace();
         DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " " << dfc << endl);
         __backtraceDynamicMap[dynHashKey] = dfc;
     }else{
@@ -159,7 +160,7 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
         DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " " << dfc << endl);
     }
     // Then compare currentDyncount with set
-    bool res = dfc->applyStrategy();
+    bool res = dfc->applyStrategyBacktrace();
     DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " " << dfc << endl);
     DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__<< " Dynamic map " << endl;__displayBacktraceDynMap(););
     return res;
@@ -187,6 +188,7 @@ void Profile::applyProfiling(vector<void*> & btVec, string label){
 #else
         string staticHashKey = label;
 #endif
+        DEBUG("profile",cerr << "STATIC HASH KEY: ("<< staticHashKey << ")" << endl;);
         /* The element is necessarily not in StaticHashMap either,
          * Because static and dynamic HashMap are "identical" */
         __backtraceStaticMap[staticHashKey] = dfc;
