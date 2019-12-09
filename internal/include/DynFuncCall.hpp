@@ -4,6 +4,7 @@
 #include <iostream>
 #include <list>
 #include <string>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -33,6 +34,7 @@ class DynFuncCall
         static const string JSON_UPPERBOUND_KEY;
         vector<void*> __btVec;
         vector<void*> __staticBtVec;
+        bool __backtraceStrat;
         unsigned long __loweredCount;
         unsigned int __lowerBound;
         unsigned int __upperBound;
@@ -41,6 +43,7 @@ class DynFuncCall
         uintptr_t __dynHashKey;
         string __statHashKey;
         list<struct FloatSet> __stratMultiSet;
+        static set<string> backtraceToLower;
     public:
         DynFuncCall();
         // static: called in __buildProfiledDataFromJsonFile
@@ -57,7 +60,10 @@ class DynFuncCall
         DynFuncCall(vector<void*>, uint32_t, bool);
         Value getJsonValue();
         vector<void*> getBtVector();
-        bool applyStrategy();
+        void updateStrategyBacktraceList();
+        void updateStrategyBacktrace();
+        bool applyStrategyDynCount();
+        bool applyStrategyBacktrace();
         void applyProfiling();
         void dumpStack();
         friend ostream& operator<<(ostream& os, const DynFuncCall& cd);
