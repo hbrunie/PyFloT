@@ -1,6 +1,6 @@
 ### TO BE updated for each new usage ###
 CXX=g++
-OPTIONS=-DUSE_LABEL -DNDEBUG
+OPTIONS=-DNDEBUG
 PTHOME=${SCRATCH}/tools/precisiontuning/
 
 ### should not be modified ###
@@ -17,6 +17,6 @@ DYNLIB=-shared -fPIC
 GCCDYNLIB= -fPIC
 
 ## Use PrecisionTuning framework
-CXXFLAGS=-O3 -std=c++11 -g -rdynamic -DUSE_LABEL
+CXXFLAGS=-O3 -std=c++11 -g -rdynamic
 PTLIB=-L $(PTHOME)/public/lib/ -lprecisiontuning
 PTINCDIR= -I $(PTHOME)/public/include/
