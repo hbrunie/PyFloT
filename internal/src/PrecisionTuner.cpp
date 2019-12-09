@@ -14,10 +14,12 @@ double __overloaded_exp(double var);
 
 gotcha_wrappee_handle_t wrappee_exp_handle;
 gotcha_wrappee_handle_t wrappee_expf_handle;
+
 struct gotcha_binding_t wrap_actions [] = {
-    { "exp", __overloaded_exp, &wrappee_exp_handle },
-    { "expf", __overloaded_exp, &wrappee_expf_handle }
+    { "exp", (void*)__overloaded_exp, &wrappee_exp_handle },
+    { "expf", (void*)__overloaded_exp, &wrappee_expf_handle }
 };
+
 using namespace std;
 
 const unsigned int PrecisionTuner::MAXSTACKSIZE         = 500;
@@ -113,12 +115,12 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double),
         double value, string label){
     double dres;
-    float fvalue, fres;
-    //float fres;
+    //float fvalue, fres;
+    float fres;
     UNUSED(sp_func);
     UNUSED(func);
 
-    fvalue = (float)value;
+    //fvalue = (float)value;
 
 #ifndef USE_LABEL
     vector<void*> btVec = __getContextHashBacktrace();
@@ -129,11 +131,11 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
     //TODO: generic wrapper, not just exp (add argument with handler from gotcha?)
     //fres = (double) sp_func(fvalue);
     //dres = func(value);
-    double (*wrappee_expf) (double) = gotcha_get_wrappee(wrappee_expf_handle); // get my wrappee from Gotcha
+    double (*wrappee_expf) (double) = (double (*)(double))gotcha_get_wrappee(wrappee_expf_handle); // get my wrappee from Gotcha
     exp_ptr wrappee_exp = (exp_ptr) gotcha_get_wrappee(wrappee_exp_handle); // get my wrappee from Gotcha
     dres = wrappee_exp(value);
     fres = wrappee_expf(value);
-    
+
     return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
 }
 
