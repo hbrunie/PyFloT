@@ -11,8 +11,9 @@
 
 #include <PT_Labels.hpp>
 
-#include "PrecisionTuner.hpp"
 #include "Debug.hpp"
+#include "PrecisionTuner.hpp"
+#include "Utils.hpp"
 
 using namespace std;
 using namespace Json;
@@ -25,7 +26,6 @@ const string DynFuncCall::JSON_LOWERBOUND_KEY          = "LowerBound";
 const string DynFuncCall::JSON_UPPERBOUND_KEY          = "UpperBound";
 
 int setInRegion(string label){
-    cerr << "In region " << label <<endl ;
     Labels labels;
     return labels.setInRegion(label);
 }
@@ -35,7 +35,6 @@ int unSetInRegion(string label){
 }
 
 int setInRegion(const char * label){
-    cerr << "In region " << label <<endl ;
     Labels labels;
     return labels.setInRegion(label);
 }
@@ -47,23 +46,25 @@ int unSetInRegion(const char * label){
 set<string> DynFuncCall::backtraceToLower = set<string>();
 
 DynFuncCall::DynFuncCall(){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    __dynHashKey = 0;
-    __backtraceStrat = false;
-    __statHashKey = "";
-    __dyncount = 0;
+    DEBUGINFO("STARTING");
+    __dynHashKey       = 0;
+    __backtraceStrat   = false;
+    __statHashKey      = "";
+    __dyncount         = 0;
     __profiledDyncount = 0;
-    __loweredCount = 0;
-    __lowerBound   = numeric_limits<unsigned int>::max();
-    __upperBound   = 0;
+    __loweredCount     = 0;
+    __lowerBound       = numeric_limits<unsigned int>::max();
+    __upperBound       = 0;
 }
 
+static bool onceForAll = true;
 DynFuncCall::DynFuncCall(Value dynFuncCall, string statHashKey) : DynFuncCall(){
-    DEBUG("info",cerr << __FUNCTION__<< ":" << __LINE__ << endl;);
+    DEBUGINFO("STARTING");
     __profiledDyncount = dynFuncCall[JSON_CALLSCOUNT_KEY].asUInt64();
-    DEBUG("dfc",cerr << __FUNCTION__<< ":" << __LINE__ <<
-           "call count:" << __profiledDyncount<< endl;);
     __loweredCount = dynFuncCall[JSON_LOWERCOUNT_KEY].asUInt64();
+    if(onceForAll)
+        updateStrategyBacktraceList();
+    onceForAll = false;
     Value stratSet = dynFuncCall["Strategy"];
     for(unsigned int multiSetInd = 0; multiSetInd < stratSet.size(); multiSetInd++){
         Value s = stratSet[multiSetInd];
@@ -87,7 +88,7 @@ DynFuncCall::DynFuncCall(Value dynFuncCall, string statHashKey) : DynFuncCall(){
         __staticBtVec.push_back((void*) value);
     }
     __statHashKey = statHashKey;
-    DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
+    DEBUGINFO("ENDING");
 }
 
 DynFuncCall::DynFuncCall(vector<void*> btVec) : DynFuncCall(){
@@ -116,8 +117,14 @@ DynFuncCall::DynFuncCall(vector<void*> btVec, uint32_t profiledDyncount, bool lo
     __loweredCount = lowered ? 1 : 0;
 }
 
+ostream& operator<<(ostream& os, const set<string>& s){
+    for (auto it=s.begin(); it != s.end(); ++it)
+                os << ' ' << *it << endl;
+    return os;
+}
+
+
 ostream& operator<<(ostream& os, const DynFuncCall& dfc){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     os << "CallData: Dyncount("<< dfc.__dyncount
         << ") __profiledDyncount(" << dfc.__profiledDyncount
         << ") loweredCount("
@@ -127,7 +134,6 @@ ostream& operator<<(ostream& os, const DynFuncCall& dfc){
     for(auto it = dfc.__btVec.begin() ; it != dfc.__btVec.end() ; it++){
         os << *it << endl;
     }
-    DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
     return os;
 }
 
@@ -138,62 +144,40 @@ void DynFuncCall::applyProfiling(){
     labels.update();
 }
 
+//TODO: factorize with writeBacktraceKeyFile in Profile.cpp (io.cpp?)
 void DynFuncCall::updateStrategyBacktraceList(){
     //read file
-    try{
-        char * envVarString = getenv("BACKTRACE_LIST");
-        string file(envVarString);
-        if(NULL == envVarString)
-            file = "BackraceList.txt";
-        std::ifstream f(file);
-        if(!f){
-            std::cerr << "ERROR: Cannot open "<< file << " !" << std::endl;
-            exit(1);
-        }
-        std::string line;
-        while (std::getline(f,line)){
-            backtraceToLower.insert(line);     
-        }
+    ifstream f = readFile(string("BACKTRACE_LIST"),string("BackraceList.txt"));
+
+    string line;
+    while (getline(f,line)){
+        backtraceToLower.insert(line);
     }
-    catch(const std::exception& ex){
-        std::cerr << "Exception: '" << ex.what() << "'!" << std::endl;
-        exit(1);
-    }
+    DEBUG("backstrat",cerr << backtraceToLower << endl;);
 }
 void DynFuncCall::updateStrategyBacktrace(){
-        auto ite = backtraceToLower.find(__statHashKey);
-        // Look for backtrace in strategy to lower
-        if(ite == backtraceToLower.end())
-            __backtraceStrat = false;
-        else
-            __backtraceStrat = true;
+    DEBUGINFO("backtraceToLower " << backtraceToLower);
+    auto ite = backtraceToLower.find(__statHashKey);
+    // Look for backtrace in strategy to lower
+    if(ite == backtraceToLower.end())
+        __backtraceStrat = false;
+    else
+        __backtraceStrat = true;
+    DEBUGINFO("toLower?"<< __backtraceStrat);
 }
 
 bool DynFuncCall::applyStrategyBacktrace(){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    DEBUGINFO("backtraceStrat?(" << __backtraceStrat << ")");
     this->__dyncount ++;
-    for(auto it = __stratMultiSet.begin() ; it != __stratMultiSet.end(); it++){
-        struct FloatSet fs = *it;
-        unsigned int lowerBound = round(__profiledDyncount*fs.low);
-        __lowerBound = min(lowerBound, __lowerBound);
-        unsigned int upperBound = round(__profiledDyncount*fs.high);
-        __upperBound = max(upperBound, __upperBound);
-        bool comparison = lowerBound < this->__dyncount && this->__dyncount <= upperBound;
-        DEBUG("comparison",cerr << "Comparison: " << lowerBound << " < " << __dyncount
-                << " <= " <<  upperBound << " "<< (comparison ? "TRUE" : "FALSE") << endl;);
-        //TODO: with python script, display the non normalized interval
-        //TODO: with only one call (number 0) it belongs to any [0,x], but to no [x,1], is this wanted?
-        // it should appear in some documentation
-        if(comparison){
-            this->__loweredCount++;
-            return true;
-        }
+    if(__backtraceStrat){
+        this->__loweredCount++;
+        return true;
     }
     return false;
 }
 
 bool DynFuncCall::applyStrategyDynCount(){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    DEBUGINFO("STARTING");
     this->__dyncount ++;
     for(auto it = __stratMultiSet.begin() ; it != __stratMultiSet.end(); it++){
         struct FloatSet fs = *it;
@@ -202,8 +186,8 @@ bool DynFuncCall::applyStrategyDynCount(){
         unsigned int upperBound = round(__profiledDyncount*fs.high);
         __upperBound = max(upperBound, __upperBound);
         bool comparison = lowerBound < this->__dyncount && this->__dyncount <= upperBound;
-        DEBUG("comparison",cerr << "Comparison: " << lowerBound << " < " << __dyncount
-                << " <= " <<  upperBound << " "<< (comparison ? "TRUE" : "FALSE") << endl;);
+        DEBUGINFO("Comparison: " << lowerBound << " < " << __dyncount
+                << " <= " <<  upperBound << " "<< (comparison ? "TRUE" : "FALSE"));
         if(comparison){
             this->__loweredCount++;
             return true;
@@ -213,7 +197,7 @@ bool DynFuncCall::applyStrategyDynCount(){
 }
 
 Value DynFuncCall::getJsonValue(){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
+    DEBUGINFO("STARTING");
     Value v;
     Value dyncount((UInt)__dyncount);
     Value loweredCount((UInt)__loweredCount);
@@ -239,6 +223,6 @@ Value DynFuncCall::getJsonValue(){
         btVec.append(sym);
     }
     v[JSON_CALLSTACK_ADDR_LIST_KEY] = btVec;
-    DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
+    DEBUGINFO("ENDING");
     return v;
 }

@@ -3,9 +3,14 @@
 #include "Profile.hpp"
 using namespace std;
 
-#define CHECK_NULL(X, Y, Z) 				\
-  do {if(NULL == (X)) {cerr << "Error: " << Y << " == NULL" << endl; Z = false;} \
+#define CHECK_NULL(X, Y) 				\
+  do {if(NULL == (X)) {cerr << "Error: " << Y << " == NULL" << endl; \
+      cerr << "Please provide a file for reading strategy and/or for dumping applying strategy resuts ( *.json)." << endl; exit(-1);} \
   } while (0)
+
+#define CHECK_POS(X,Y) \
+    do { if((X) < 0){cerr << "Error: "<< Y << " < 0" << endl; exit(-1);}\
+    } while (0)
 
 enum MODE{APPLYING_PROF, APPLYING_STRAT};
 
@@ -14,6 +19,7 @@ class PrecisionTuner
 {
     private:
         enum MODE __mode;
+        void checkPrecisionTunerMode();
         /* Profiling */
         Profile * __profile;
         double __overloading_function(vector<void*> &btVec, string s, float fres, double dres, double value, string label);
@@ -24,10 +30,6 @@ class PrecisionTuner
         // Number of independant call stacks
         static const string JSON_TOTALCALLSTACKS_KEY;
         static const string PRECISION_TUNER_MODE;
-        // JSON FILE ENV VARS
-        static const string DUMP_JSON_PROFILING_FILE;
-        static const string DUMP_JSON_STRATSRESULTS_FILE;
-        static const string READ_JSON_PROFILE_STRAT_FILE;
 
     public:
         PrecisionTuner();

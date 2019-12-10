@@ -44,6 +44,7 @@ class DynFuncCall
         string __statHashKey;
         list<struct FloatSet> __stratMultiSet;
         static set<string> backtraceToLower;
+        void displaySet();
     public:
         DynFuncCall();
         // static: called in __buildProfiledDataFromJsonFile
@@ -67,5 +68,6 @@ class DynFuncCall
         void applyProfiling();
         void dumpStack();
         friend ostream& operator<<(ostream& os, const DynFuncCall& cd);
+        friend ostream& operator<<(ostream& os, const set<string>& s);
 };
 #endif // DynFuncCall_H

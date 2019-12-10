@@ -1,8 +1,8 @@
 all: libprecisiontuning.so
 
 include ../../make.def
-SOURCES=PrecisionTuner.cpp overloading.cpp Profile.cpp DynFuncCall.cpp Labels.cpp
-OBJECTS=../utils/Debug.o Profile.o PrecisionTuner.o DynFuncCall.o overloading.o Labels.o
+SOURCES=PrecisionTuner.cpp overloading.cpp Profile.cpp DynFuncCall.cpp Labels.cpp Utils.cpp
+OBJECTS=../utils/Debug.o Profile.o PrecisionTuner.o DynFuncCall.o overloading.o Labels.o Utils.o
 GOTCHALIB=-L ../../external-deps/install/lib64/ -lgotcha -Wl,-rpath, /global/cscratch1/sd/hbrunie/tools/precisiontuning/external-deps/install/lib64/
 GOTCHAINC=-I ../../external-deps/install/include/
 PTLabels= -I ../../public/include/

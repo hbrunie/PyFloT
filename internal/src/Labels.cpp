@@ -6,11 +6,13 @@
 #include "Debug.hpp"
 
 using namespace std;
+
 string Labels::labels_string[STRING_LABEL_ARRAY_SIZE];
 bool   Labels::labels_activated[STRING_LABEL_ARRAY_SIZE];
 unsigned int Labels::current_size;
+
 Labels::Labels(){
-    DEBUG("labels",cerr << "STARTING " << __FUNCTION__ << endl;);
+    DEBUGINFO("STARTING");
     for(unsigned int i = 0 ; i < STRING_LABEL_ARRAY_SIZE ; i ++){
         labels_counter[i] = 0;
     }
@@ -30,23 +32,23 @@ void Labels::displayArrays(){
  * otherwize return label index;
  * */
 bool Labels::containsLabel(string label){
+    DEBUGINFO("STARTING");
     unsigned int cnt = 0;
     string current_label;
-    DEBUG("labels",cerr << "STARTING " << __FUNCTION__ << endl;);
-    do{ 
+    do{
         current_label = labels_string[cnt];
-        DEBUG("labels", cerr << "compare: " << current_label  << " with " << label << " gives " << current_label.compare(label) <<endl;);
+        DEBUGG("labels", "compare: " << current_label
+                         << " with " << label << " gives "
+                         << current_label.compare(label));
         if(current_label.compare(label) == 0){
             // Label found
-            DEBUG("labels",cerr << __FUNCTION__ << ": Label found("<<
-                    cnt<< ")." << endl;);
+            DEBUGG("labels","Label found(" << cnt << ").");
             return cnt;
         }
         if(current_label.empty()){
-            assert(cnt == current_size); 
+            assert(cnt == current_size);
             addLabel(label);
-            DEBUG("labels",cerr << __FUNCTION__ << ": Label added("<<
-                    cnt<< ")." << endl;);
+            DEBUGG("labels","Label added("<< cnt<< ").");
             return cnt;
         }
         cnt++;
@@ -56,7 +58,7 @@ bool Labels::containsLabel(string label){
 
 int Labels::addLabel(string label){
     unsigned int lab_index = 0;
-    DEBUG("labels",cerr << "STARTING " << __FUNCTION__ << endl;);
+    DEBUGINFO("STARTING ");
     if(current_size >= STRING_LABEL_ARRAY_SIZE)
         return -1; // too many labels
 
@@ -64,7 +66,7 @@ int Labels::addLabel(string label){
     lab_index = current_size;
     labels_string[current_size] = label;
     current_size++;
-    DEBUG("labels",cerr << "ENDING " << __FUNCTION__ << endl;);
+    DEBUGINFO("ENDING");
     return lab_index;
 }
 
@@ -73,25 +75,22 @@ int Labels::addLabel(string label){
 int Labels::update(){
     // For each activated labels, increase counter.
     int cnt = 0;
-    DEBUG("labels",cerr << "STARTING " << __FUNCTION__ << endl;);
-    DEBUG("labels",cerr << __FUNCTION__ << 
-            " current size: " << current_size << endl;);
+    DEBUGG("labels", "current size: " << current_size);
     for(unsigned int i=0 ; i<current_size ; i++){
         if(labels_activated[i]){
             labels_counter[i]++;
             cnt++;
         }
-        DEBUG("labels",cerr << __FUNCTION__ << ": activated["<<
+        DEBUGG("labels","activated["<<
                 i << "] ? "<< labels_activated[i]<<
-                " counter? "<<labels_counter[i] << endl;);
+                " counter? "<<labels_counter[i]);
     }
-    DEBUG("labels",cerr << "ENDING " << __FUNCTION__ << endl;);
+    DEBUGINFO("ENDING");
     return cnt;
 }
 
 Value Labels::getJsonValue(){
     Value v;
-    DEBUG("labels",cerr << "STARTING " << __FUNCTION__ << endl;);
     for(unsigned int i=0 ; i<current_size ; i++){
         Value vint((UInt)labels_counter[i]);
         v[labels_string[i]] = vint;
@@ -106,19 +105,19 @@ int Labels::setInRegion(const char * label){
 int Labels::setInRegion(string label){
     int contain = -1;
     int lab_index = -1;
-    DEBUG("labels",cerr << "STARTING " << __FUNCTION__ << endl;);
     contain = containsLabel(label);
-    DEBUG("labels",cerr << "Contain labels? ("<< contain << ")" << " current size? ("<<
-            current_size<< ") "  << __FUNCTION__ << endl;);
-    if(0 > contain){//=1? why?
+    DEBUGG("labels","Contain labels? ("<< contain
+                    << ")" << " current size? ("
+                    << current_size << ") ");
+    if(0 > contain){
         lab_index = addLabel(label);
     }else{
         lab_index = contain;
     }
     if(lab_index > -1)
         labels_activated[lab_index] = true;
-    displayArrays();
-    DEBUG("labels",cerr << "ENDING " << __FUNCTION__ << endl;);
+    //displayArrays(); TODO: DEBUG create operator <<
+    DEBUGINFO("ENDING");
     return lab_index;
 }
 
@@ -128,13 +127,14 @@ int Labels::unSetInRegion(const char * label){
 }
 
 int Labels::unSetInRegion(string label){
+    DEBUGINFO("STARTING");
     int contain = -1;
     int lab_index = -1;
-    DEBUG("labels",cerr << "STARTING " << __FUNCTION__ << endl;);
     if(-1 == (contain = containsLabel(label)))
         return -2;//Should not unSet region which does not exist
     else
         lab_index = contain;
     labels_activated[lab_index] = false;
+    DEBUGINFO("ENDING");
     return lab_index;
 }

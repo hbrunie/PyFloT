@@ -15,15 +15,28 @@
 
 #include "Debug.hpp"
 #include "Profile.hpp"
+#include "Utils.hpp"
 // ONE == 4 because of Ptuning internal calls below __overloaded_mathFunction
 #define ONE 6
 using namespace std;
 using namespace Json;
 
+// Profiling mode
+const string Profile::DUMP_JSON_PROFILING_FILE     = "PRECISION_TUNER_DUMPJSON";
+// Applying strategy mode
+const string Profile::DUMP_JSON_STRATSRESULTS_FILE = "PRECISION_TUNER_DUMPJSON";
+const string Profile::READ_JSON_PROFILE_STRAT_FILE = "PRECISION_TUNER_READJSON";
+const string Profile::BACKTRACE_LIST               = "BACKTRACE_LIST";
+
 const string Profile::JSON_TOTALCALLSTACKS_KEY  = "TotalCallStacks";
 const string Profile::JSON_TOTALDYNCOUNT_KEY    = "CallsCount";
 const string Profile::JSON_MAIN_LIST            = "IndependantCallStacks";
 const string Profile::JSON_HASHKEY_KEY          = "HashKey";
+
+const string Profile::DEFAULT_READ_JSON_STRAT_FILE       = "readJsonProfileStrat.json";
+const string Profile::DEFAULT_DUMP_JSON_PROF_FILE        = "dumpProfile.json";
+const string Profile::DEFAULT_DUMP_JSON_STRATRESULT_FILE = "dumpJsonStratResults.json";
+const string Profile::DEFAULT_BACKTRACE_LIST             = "BackraceList.txt";
 
 uintptr_t hashLabel(string label){
     uintptr_t key = 0;
@@ -38,21 +51,13 @@ uintptr_t hashLabel(string label){
     return key;
 }
 
-
 Profile::~Profile(){
     // delete all DynCallFunc objects: automatic with shared pointers
 }
 
-Profile::Profile(bool profiling, string readFile,
-        string dumpFile){
-    DEBUG("apply",cerr << __FUNCTION__ << " --> dumpFile: " << dumpFile << " profiling: " << profiling << endl;);
-    if(profiling){
-        __dumpFile = dumpFile;
-    }
-    else{
-        __buildProfiledDataFromJsonFile(readFile);
-        __dumpFile = dumpFile;
-    }
+Profile::Profile(bool mode) : __mode(mode){//True --> ApplyingStrat
+    if(__mode)
+        __buildProfiledDataFromJsonFile();
 }
 
 /* the Static Hash Key corresponds to a non ASLR dependent HashKey
@@ -188,7 +193,11 @@ void Profile::applyProfiling(vector<void*> & btVec, string label){
 #else
         string staticHashKey = label;
 #endif
-        DEBUG("profile",cerr << "STATIC HASH KEY: ("<< staticHashKey << ")" << endl;);
+        /* Dump all statichash key in FILE for use by backtraceStrategy on
+         * other executions.
+         * */
+        ofstream f = writeFile(BACKTRACE_LIST,DEFAULT_BACKTRACE_LIST);
+        f << staticHashKey << endl;
         /* The element is necessarily not in StaticHashMap either,
          * Because static and dynamic HashMap are "identical" */
         __backtraceStaticMap[staticHashKey] = dfc;
@@ -225,17 +234,7 @@ void Profile::__displayBacktraceDynMap(){
 }
 
 void Profile::__dumpJsonPermanentHashMap(){
-    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    bool useCout = true;
-    ofstream fb;
-    fb.open(__dumpFile,ios::out);
-    if(!fb.is_open()){
-        cerr << "Profile: Wrong jsonfile abspath: "
-            << __dumpFile << endl
-            << "Dumping on stdout " << endl;
-    }else
-        useCout = false;
-
+    DEBUGINFO("STARTING");
     Value jsonDictionary;
     Value jsonDynFuncCallsList;
     Value jsonTotalCallStacks = (UInt)__totalCallStacks;
@@ -249,42 +248,27 @@ void Profile::__dumpJsonPermanentHashMap(){
         jsonDynFuncCallsList.append(jsonDynFuncCall);
     }
     jsonDictionary[JSON_MAIN_LIST] = jsonDynFuncCallsList;
-    DEBUG("infoplus",cerr << __FUNCTION__ << jsonDictionary<< endl;);
-    DEBUG("infoplus",cerr << __FUNCTION__ << useCout << __dumpFile << endl;);
-    if (useCout)
-        cout <<jsonDictionary << endl;
-    else{
-        fb << jsonDictionary << endl;;
-    }
-    DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
-    //TODO: find proper C++ way to do this fopen with defaut == cout
-    // close the file
+    DEBUGINFO("JSON Dict: " << endl << jsonDictionary);
+    ofstream dumpFile;
+    if(__mode)
+        dumpFile = writeFile(DUMP_JSON_PROFILING_FILE, DEFAULT_DUMP_JSON_PROF_FILE);
+    else
+        dumpFile = writeFile(DUMP_JSON_STRATSRESULTS_FILE, DEFAULT_DUMP_JSON_STRATRESULT_FILE);
+    dumpFile << jsonDictionary << endl;;
+    DEBUGINFO("ENDING");
 }
 
-static bool stream_check(ifstream& s){
-    if(s.bad() || s.fail()){
-        cerr << __FUNCTION__ << ":" << __LINE__<< "Bad or failed "<< endl;
-    }
-    if(s.good() && s.is_open())
-        return true;
-    return false;
-}
-
-void Profile::__buildProfiledDataFromJsonFile(string fileAbsPath){
+void Profile::__buildProfiledDataFromJsonFile(){
     /*TODO: Find a different name for callStack the object
       containing number of calls, its call stack addresses and lowered count.
       Because it is the name as the call stack, which is the list of virtual addresses.
       Can not be Dynamic Function call. It is in between DynFuncCall and Static function call site.
       Maybe Dynamic Function Call Site? Containing ASVR dependent and ASVR independent.
       */
-    DEBUG("info",cerr << "STARTING "<< __FUNCTION__ << endl;);
-    std::ifstream infile(fileAbsPath, std::ifstream::binary);
-    if(!stream_check(infile)){
-        cerr << __FUNCTION__ << " wrong path for file: " << fileAbsPath << endl;
-        exit(-1);
-    }
+    DEBUGINFO("STARTING");
     Value jsonDictionary;
-    infile >>  jsonDictionary;
+    ifstream readProf = readFile(READ_JSON_PROFILE_STRAT_FILE, DEFAULT_READ_JSON_STRAT_FILE);
+    readProf >>  jsonDictionary;
     DEBUG("info",cerr << "READING JSON "<< __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << jsonDictionary << endl;);
 
