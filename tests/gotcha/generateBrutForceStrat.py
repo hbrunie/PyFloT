@@ -39,9 +39,9 @@ def generateStrat(linelist):
     assert len(stratlist) == pow(2,n) == numStrat(n)
     return stratlist
 
-def create():
+def create(stratfile):
     n = 0
-    with open(args.stratfile, "r") as inf:
+    with open(stratfile, "r") as inf:
         linelist = inf.readlines()
         l = generateStrat(linelist)
         n = len(l)
@@ -51,17 +51,19 @@ def create():
                     out.write(line)
     return n
 
-def launch(n):
+def launch():
     procenv = os.environ.copy()
+    outputfile = "outputProfile.out"
+    cmd = "PRECISION_TUNER_DUMPJSON=profile.json PRECISION_TUNER_MODE=APPLYING_PROF BACKTRACE_LIST=strat.txt ./test5Exp 3.14"
+    execute(cmd, outputfile, procenv)
+    n = create(args.stratfile)
     for i in range(n):
         outputfile = "outputStrat{}.out".format(i)
-        cmd = "PRECISION_TUNER_READJSON=dump.json PRECISION_TUNER_DUMPJSON=dumpStratResults{}.json BACKTRACE_LIST=./strat{}.txt PRECISION_TUNER_MODE=APPLYING_STRAT ./test5Exp 3.14".format(i,i)
-        #cmd = "PRECISION_TUNER_DUMPJSON=dumpStratResults{}.json BACKTRACE_LIST=./strat{}.txt PRECISION_TUNER_MODE=APPLYING_PROF ./test5Exp 3.14".format(i,i)
+        cmd = "PRECISION_TUNER_READJSON=profile.json PRECISION_TUNER_DUMPJSON=dumpStratResults{}.json BACKTRACE_LIST=./strat{}.txt PRECISION_TUNER_MODE=APPLYING_STRAT ./test5Exp 3.14".format(i,i)
         print(cmd)
         execute(cmd, outputfile, procenv)
 
-n = create()
-launch(n)
+launch()
 #generateStrat([1,2,3,4])
 #for i in range(10):
 #    print(i,numStrat(i))
