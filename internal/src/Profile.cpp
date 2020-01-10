@@ -17,8 +17,10 @@
 #include "Profile.hpp"
 #include "ShadowValue.hpp"
 #include "Utils.hpp"
+
 // ONE == 4 because of Ptuning internal calls below __overloaded_mathFunction
-#define ONE 6
+#define ONE 4
+
 using namespace std;
 using namespace Json;
 
@@ -64,13 +66,13 @@ Profile::Profile(bool mode) : __mode(mode){//True --> ApplyingStrat
 /* the Static Hash Key corresponds to a non ASLR dependent HashKey
  * User can define the level of callstack he wants to use for
  * defining the DynamicCallSite.
- * By default the level is 1: only the __overloaded_mathFunction call is taken into account.
+ * By default the level is 1: only the source code function call is taken into account.
  */
 string Profile::__staticHashKey(vector<void*> btVec){
     string statHashKey;
     string tmpHash;
     // Choosing level: ONE <= size <= btVec.size();
-    uint64_t size = ONE;
+    uint64_t size = ONE;//Higher for deeper analysis
     void ** btpointer = &btVec[0];
     char ** symbols = backtrace_symbols(btpointer, size);
     unsigned int cnt = 0;
@@ -114,9 +116,12 @@ string Profile::__staticHashKey(vector<void*> btVec){
 }
 
 uintptr_t Profile::__dynHashKey(vector<void*> btVec){
+    //TODO: factorize dynHashKey and staticHashKey code, always same size?
     uintptr_t dynHashKey = 0;
     uint64_t cnt = 0;
-    for(auto it = btVec.begin(); it != btVec.end() && cnt < ONE; it++){
+    // Choosing level: ONE <= size <= btVec.size();
+    uint64_t size = ONE;//Higher for deeper analysis
+    for(auto it = btVec.begin(); it != btVec.end() && cnt < size; it++){
         void *ip = *it;
         assert(NULL != ip);
         assert( (dynHashKey+ (uintptr_t) ip) <numeric_limits<uintptr_t>::max());
