@@ -45,9 +45,12 @@ PrecisionTuner::PrecisionTuner(){
     __profile  = new Profile(__mode == APPLYING_STRAT);
 }
 
+static long long reduced = 0;
+static long long total = 0;
 PrecisionTuner::~PrecisionTuner(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << __FUNCTION__ << __mode << endl;);
+    //cerr << "RATIO REDUCED: " << (double)reduced / (double)total << endl;
     __profile->dumpJson();
     delete(__profile);
 }
@@ -69,10 +72,22 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
     return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
 }
 
+bool NO = false;
+void setNO(){
+    NO=true;
+}
+
+void unsetNO(){
+    NO = false;
+}
+
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double),
         double value, string label){
     double dres;
     float fvalue, fres;
+    //float fres;
+    UNUSED(sp_func);
+    UNUSED(func);
 
     fvalue = (float)value;
 
@@ -85,14 +100,22 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
     //TODO: generic wrapper, not just exp (add argument with handler from gotcha?)
     //fres = (double) sp_func(fvalue);
     //dres = func(value);
+    total ++;
+    //if(NO){
+        exp_ptr wrappee_exp = (exp_ptr) gotcha_get_wrappee(wrappee_exp_handle); // get my wrappee from Gotcha
+        dres = wrappee_exp(value);
+    //    return dres;
+    //}
+
     expf_ptr wrappee_expf = (expf_ptr) gotcha_get_wrappee(wrappee_expf_handle); // get my wrappee from Gotcha
-    exp_ptr wrappee_exp = (exp_ptr) gotcha_get_wrappee(wrappee_exp_handle); // get my wrappee from Gotcha
-    dres = wrappee_exp(value);
     fres = wrappee_expf(value);
     DEBUG("debug", cerr << __FUNCTION__
             <<": exp " << dres
             <<" expf " << fres
+            << " s(" <<s << ") "
+            << "label (" << label << ")"
             <<endl;);
+    //reduced += 1;
     return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
 }
 
