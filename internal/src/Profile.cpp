@@ -15,6 +15,7 @@
 
 #include "Debug.hpp"
 #include "Profile.hpp"
+#include "ShadowValue.hpp"
 #include "Utils.hpp"
 // ONE == 4 because of Ptuning internal calls below __overloaded_mathFunction
 #define ONE 6
@@ -173,7 +174,7 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
 
 /* Compute hash and add or update DynamicHashMap
 */
-void Profile::applyProfiling(vector<void*> & btVec, string label){
+void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue sv){
 #ifndef USE_LABEL
     //TODO: more efficient to change hashMap with key string?
     uintptr_t dynHashKey = __dynHashKey(btVec);
@@ -185,7 +186,7 @@ void Profile::applyProfiling(vector<void*> & btVec, string label){
     auto dynHashKeyIte = __backtraceDynamicMap.find(dynHashKey);
     /* Can not find the element in Dynamic Hash Map */
     if(dynHashKeyIte == __backtraceDynamicMap.end()) {
-        dfc = make_shared<DynFuncCall>(btVec, dynHashKey);
+        dfc = make_shared<DynFuncCall>(btVec, dynHashKey, sv);
         __backtraceDynamicMap[dynHashKey] = dfc;
         /* Update Static HashMap */
 #ifndef USE_LABEL
@@ -208,7 +209,7 @@ void Profile::applyProfiling(vector<void*> & btVec, string label){
         DEBUG("total",cerr << __FUNCTION__ << ":" << __LINE__<< " Elt already in Dynamic Hash Map " << __totalCallStacks <<endl;);
         dfc = __backtraceDynamicMap[dynHashKey];
     }
-    dfc->applyProfiling();
+    dfc->applyProfiling(sv);
     __totalDynCount++;
 }
 

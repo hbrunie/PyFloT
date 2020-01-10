@@ -1,5 +1,6 @@
 #include <Utils.hpp>
 #include <Debug.hpp>
+#include <iostream>
 //static bool stream_check(ifstream& s){
 //    if(s.bad() || s.fail()){
 //        cerr << __FUNCTION__ << ":" << __LINE__<< "Bad or failed "<< endl;

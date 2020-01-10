@@ -6,6 +6,7 @@
 
 #include "Debug.hpp"
 #include "PrecisionTuner.hpp"
+#include "ShadowValue.hpp"
 #include "Utils.hpp"
 
 #include <gotcha/gotcha.h>
@@ -123,14 +124,14 @@ double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, fl
     UNUSED(value);
 #endif
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-
+    ShadowValue shadowValue(fres, dres, value);
     singlePrecision = false;
     switch(__mode){
         case APPLYING_STRAT:
             singlePrecision = __profile->applyStrategy(btVec, label);
             break;
         case APPLYING_PROF:
-            __profile->applyProfiling(btVec, label);
+            __profile->applyProfiling(btVec, label, shadowValue);
             break;
         default:
             cerr << "PrecisionTuner ERROR: no __mode chosen" << endl;

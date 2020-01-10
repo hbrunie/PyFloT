@@ -103,6 +103,12 @@ DynFuncCall::DynFuncCall(vector<void*>  btVec, uintptr_t dynHashKey) : DynFuncCa
     __dynHashKey = dynHashKey;
 }
 
+DynFuncCall::DynFuncCall(vector<void*>  btVec, uintptr_t dynHashKey, ShadowValue sv) : DynFuncCall(btVec, dynHashKey){
+    DEBUGG("sv","Pushing Back: " << sv);
+    __shadowValues.push_back(sv);
+    DEBUGG("sv",string("Vector: ") << __shadowValues);
+}
+
 DynFuncCall::DynFuncCall(vector<void*> btVec, uint32_t profiledDyncount) : DynFuncCall(btVec){
     __profiledDyncount = profiledDyncount;
 }
@@ -123,7 +129,6 @@ ostream& operator<<(ostream& os, const set<string>& s){
     return os;
 }
 
-
 ostream& operator<<(ostream& os, const DynFuncCall& dfc){
     os << "CallData: Dyncount("<< dfc.__dyncount
         << ") __profiledDyncount(" << dfc.__profiledDyncount
@@ -139,8 +144,11 @@ ostream& operator<<(ostream& os, const DynFuncCall& dfc){
 
 vector<void*> DynFuncCall::getBtVector(){return __btVec;}
 
-void DynFuncCall::applyProfiling(){
+void DynFuncCall::applyProfiling(ShadowValue sv){
     __dyncount ++;
+    DEBUGG("sv","Pushing Back: " << sv);
+    __shadowValues.push_back(sv);
+    DEBUGG("sv",string("Vector: ") << __shadowValues);
     labels.update();
 }
 
@@ -204,6 +212,7 @@ Value DynFuncCall::getJsonValue(){
     Value lowerBound((UInt)__lowerBound);
     Value upperBound((UInt)__upperBound);
     Value btVec;
+    Value shadowValues;
 
     v[JSON_LABELS_KEY] = labels.getJsonValue();
 
@@ -211,6 +220,11 @@ Value DynFuncCall::getJsonValue(){
     v[JSON_LOWERCOUNT_KEY] = loweredCount;
     v[JSON_LOWERBOUND_KEY] = lowerBound;
     v[JSON_UPPERBOUND_KEY] = upperBound;
+
+    for(unsigned int i=0; i<__shadowValues.size(); i++)
+        shadowValues.append(__shadowValues[i].getJsonValue());
+    v["ShadowValues"] = shadowValues;
+
     void** sym_array = (void**) malloc(sizeof(void*)*__btVec.size());
     for(unsigned int i =0; i< __btVec.size();i++){
         sym_array[i] = __btVec[i];

@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <Labels.hpp>
-#include <json/json.h>
+#include <ShadowValue.hpp>
 
 using namespace std;
 using namespace Json;
@@ -41,6 +41,7 @@ class DynFuncCall
         unsigned long __dyncount;
         unsigned long __profiledDyncount;
         uintptr_t __dynHashKey;
+        vector<ShadowValue> __shadowValues;
         string __statHashKey;
         list<struct FloatSet> __stratMultiSet;
         static set<string> backtraceToLower;
@@ -53,6 +54,7 @@ class DynFuncCall
         DynFuncCall(vector<void*>);
         // dynamic HashKey, used in applyProfiling
         DynFuncCall(vector<void*>, uintptr_t);
+        DynFuncCall(vector<void*>, uintptr_t, ShadowValue);
         // static
         DynFuncCall(vector<void*>, string);
         // static
@@ -65,9 +67,10 @@ class DynFuncCall
         void updateStrategyBacktrace();
         bool applyStrategyDynCount();
         bool applyStrategyBacktrace();
-        void applyProfiling();
+        void applyProfiling(ShadowValue);
         void dumpStack();
         friend ostream& operator<<(ostream& os, const DynFuncCall& cd);
         friend ostream& operator<<(ostream& os, const set<string>& s);
+        friend ostream& operator<<(ostream& os, const vector<ShadowValue>& v);
 };
 #endif // DynFuncCall_H
