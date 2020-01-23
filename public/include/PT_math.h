@@ -10,7 +10,8 @@
 
 #include <string>
 using namespace std;
-
+//TODO: add externC: otherwise symbol is
+// _Z16__overloaded_expd: problem with CCTBX.
 double __overloaded_exp(double var);
 double __overloaded_log(double var);
 double __overloaded_log10(double var);
