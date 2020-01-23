@@ -45,12 +45,12 @@ PrecisionTuner::PrecisionTuner(){
     __profile  = new Profile(__mode == APPLYING_STRAT);
 }
 
-static long long reduced = 0;
+static long long __totalReduced = 0;
 static long long total = 0;
 PrecisionTuner::~PrecisionTuner(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << __FUNCTION__ << __mode << endl;);
-    //cerr << "RATIO REDUCED: " << (double)reduced / (double)total << endl;
+    cerr << "RATIO REDUCED: " << (double)__totalReduced / (double)total << endl;
     __profile->dumpJson();
     delete(__profile);
 }
@@ -72,21 +72,21 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
     return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
 }
 
-bool NO = false;
-void setNO(){
-    NO=true;
+bool __specificRegion = false;
+void PTunerEnterSpecificRegion(){
+    __specificRegion=true;
 }
 
 void unsetNO(){
-    NO = false;
+    __specificRegion = false;
 }
 
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double),
         double value, string label){
     double dres;
     float fvalue, fres;
-    //float fres;
     UNUSED(sp_func);
+    UNUSED(fvalue);
     UNUSED(func);
 
     fvalue = (float)value;
@@ -98,14 +98,9 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
     vector<void*> btVec;
 #endif
     //TODO: generic wrapper, not just exp (add argument with handler from gotcha?)
-    //fres = (double) sp_func(fvalue);
-    //dres = func(value);
     total ++;
-    //if(NO){
-        exp_ptr wrappee_exp = (exp_ptr) gotcha_get_wrappee(wrappee_exp_handle); // get my wrappee from Gotcha
-        dres = wrappee_exp(value);
-    //    return dres;
-    //}
+    exp_ptr wrappee_exp = (exp_ptr) gotcha_get_wrappee(wrappee_exp_handle); // get my wrappee from Gotcha
+    dres = wrappee_exp(value);
 
     expf_ptr wrappee_expf = (expf_ptr) gotcha_get_wrappee(wrappee_expf_handle); // get my wrappee from Gotcha
     fres = wrappee_expf(value);
@@ -115,7 +110,6 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
             << " s(" <<s << ") "
             << "label (" << label << ")"
             <<endl;);
-    //reduced += 1;
     return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
 }
 
@@ -140,20 +134,26 @@ vector<void*> PrecisionTuner::__getContextHashBacktrace() {
 
 double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, float fres, double dres,
         double value, string label){
-    bool singlePrecision;
+    bool singlePrecision, singlePrecisionProfiling;
     double res;
 #ifdef NDEBUG
     UNUSED(s);
     UNUSED(value);
 #endif
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
-    ShadowValue shadowValue(fres, dres, value);
+    singlePrecisionProfiling = false;
     singlePrecision = false;
     switch(__mode){
         case APPLYING_STRAT:
             singlePrecision = __profile->applyStrategy(btVec, label);
             break;
         case APPLYING_PROF:
+            // TODO: make it more generic
+            // PeleC everything in lower but specific region (compKc)
+            singlePrecisionProfiling = __specificRegion ? false : true;
+            if(singlePrecisionProfiling)
+                __totalReduced += 1;
+            ShadowValue shadowValue(fres, dres, value, singlePrecisionProfiling);
             __profile->applyProfiling(btVec, label, shadowValue);
             break;
         default:
