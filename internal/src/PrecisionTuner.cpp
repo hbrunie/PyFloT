@@ -99,12 +99,12 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double),
         double value, string label){
     double dres;
-    //float fvalue, fres;
-    float fres;
+    float fvalue, fres;
+    //float fres;
     UNUSED(sp_func);
     UNUSED(func);
 
-    //fvalue = (float)value;
+    fvalue = (float)value;
 
 #ifndef USE_LABEL
     vector<void*> btVec = __getContextHashBacktrace();
