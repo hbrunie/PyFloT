@@ -8,11 +8,12 @@ using namespace Json;
 class ShadowValue{
     private:
         double __doubleP;
-        double __singleP; 
+        double __singleP;
         double __argument;
+        bool   __spBoolean;
         static unsigned long __index;
     public:
-        ShadowValue(double, float, double);
+        ShadowValue(double, float, double, bool);
         Value getJsonValue();
         friend ostream& operator<<(ostream& os, const ShadowValue& sv);
         friend ostream& operator<<(ostream& os, const vector<ShadowValue>& sv);

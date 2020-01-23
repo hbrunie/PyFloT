@@ -1,14 +1,16 @@
 #include <ShadowValue.hpp>
 unsigned long ShadowValue::__index = 0;
-ShadowValue::ShadowValue(double dp, float sp, double argument) : 
-    __doubleP(dp), __singleP((double)sp), __argument(argument){}
+ShadowValue::ShadowValue(double dp, float sp, double argument, bool spBoolean) :
+    __doubleP(dp), __singleP((double)sp), __argument(argument),__spBoolean(spBoolean){}
 Value ShadowValue::getJsonValue(){
     Value v;
     double dp = __doubleP;
     double sp = __singleP;
+    bool spBoolean = __spBoolean;
     double argument = __argument;
     v["arg"] = argument;
     v["index"] = __index++;
+    v["singlePrecision"] = spBoolean;
     v["double"] = dp;
     v["single"] = sp;
     v["absErr"] = abs(dp-sp);
@@ -17,9 +19,11 @@ Value ShadowValue::getJsonValue(){
 }
 
 ostream& operator<<(ostream& os, const ShadowValue& sv){
-    os << " Double Precision: "<< sv.__doubleP 
+    os << " Double Precision: "<< sv.__doubleP
         << " Argument: "<< sv.__argument
-        << " Single Precision: "<< sv.__singleP << endl;
+        << " Single Precision: "<< sv.__singleP
+        << " Single(true)OrDouble(false)? " << sv.__spBoolean
+        << endl;
     return os;
 }
 
