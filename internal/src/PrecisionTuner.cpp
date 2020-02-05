@@ -150,14 +150,20 @@ double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, fl
         case APPLYING_PROF:
             // TODO: make it more generic
             // PeleC everything in lower but specific region (compKc)
+            {
             singlePrecisionProfiling = __specificRegion ? false : true;
             if(singlePrecisionProfiling)
                 __totalReduced += 1;
             ShadowValue shadowValue(fres, dres, value, singlePrecisionProfiling);
             __profile->applyProfiling(btVec, label, shadowValue);
+            }
             break;
         default:
+            {
             cerr << "PrecisionTuner ERROR: no __mode chosen" << endl;
+            exit(-1);
+            }
+            break;
     }
     res = singlePrecision ? (double) fres : dres;
     DEBUG("fperror", cerr << "SINGLE precision? " << singlePrecision << endl; );
