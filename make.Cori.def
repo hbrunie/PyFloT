@@ -12,7 +12,8 @@ CXXPTFLAGS=-O3 -std=c++11 -Wall -Wextra -g -rdynamic $(OPTIONS)
 ## Compile PrecisionTuning framework
 JSONLIBDIR=${PTHOME}/external-deps/jsoncpp/build/src/lib_json/
 JSONINCDIR=${PTHOME}/external-deps/jsoncpp/include/
-INCDIR= -I $(PTHOME)/internal/utils/ -I $(PTHOME)/internal/include/ -I $(JSONINCDIR) -I.
+CEREALINCDIR=${PTHOME}/external-deps/cereal/include/
+INCDIR= -I $(PTHOME)/internal/utils/ -I $(PTHOME)/internal/include/ -I $(JSONINCDIR) -I. -I$(CEREALINCDIR)
 DYNLIB=-shared -fPIC
 GCCDYNLIB= -fPIC
 
