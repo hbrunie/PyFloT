@@ -11,7 +11,8 @@ class ShadowValue{
         double __singleP;
         double __argument;
         bool   __spBoolean;
-        static unsigned long __index;
+        unsigned long __index;
+        static unsigned long __globalCounter;
     public:
         ShadowValue(double, float, double, bool);
         Value getJsonValue();

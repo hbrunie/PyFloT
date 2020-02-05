@@ -1,7 +1,10 @@
 #include <ShadowValue.hpp>
-unsigned long ShadowValue::__index = 0;
+unsigned long ShadowValue::__globalCounter = 0;
 ShadowValue::ShadowValue(double dp, float sp, double argument, bool spBoolean) :
-    __doubleP(dp), __singleP((double)sp), __argument(argument),__spBoolean(spBoolean){}
+    __doubleP(dp), __singleP((double)sp), __argument(argument),__spBoolean(spBoolean){
+   __index = __globalCounter++;
+    }
+
 Value ShadowValue::getJsonValue(){
     Value v;
     double dp = __doubleP;
@@ -9,7 +12,7 @@ Value ShadowValue::getJsonValue(){
     bool spBoolean = __spBoolean;
     double argument = __argument;
     v["arg"] = argument;
-    v["index"] = __index++;
+    v["index"] = __index;
     v["singlePrecision"] = spBoolean;
     v["double"] = dp;
     v["single"] = sp;
