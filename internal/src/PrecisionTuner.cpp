@@ -32,7 +32,7 @@ void PrecisionTuner::checkPrecisionTunerMode(){
     char * envVarString = getenv(PRECISION_TUNER_MODE.c_str());
     __mode = APPLYING_PROF;
     if((NULL != envVarString)
-       && (strcmp("APPLYING_STRAT",envVarString) == 0))
+            && (strcmp("APPLYING_STRAT",envVarString) == 0))
         __mode = APPLYING_STRAT;
 }
 
@@ -151,17 +151,17 @@ double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, fl
             // TODO: make it more generic
             // PeleC everything in lower but specific region (compKc)
             {
-            singlePrecisionProfiling = __specificRegion ? false : true;
-            if(singlePrecisionProfiling)
-                __totalReduced += 1;
-            ShadowValue shadowValue(fres, dres, value, singlePrecisionProfiling);
-            __profile->applyProfiling(btVec, label, shadowValue);
+                singlePrecisionProfiling = __specificRegion ? false : true;
+                if(singlePrecisionProfiling)
+                    __totalReduced += 1;
+                ShadowValue shadowValue(fres, dres, value, singlePrecisionProfiling);
+                __profile->applyProfiling(btVec, label, shadowValue);
             }
             break;
         default:
             {
-            cerr << "PrecisionTuner ERROR: no __mode chosen" << endl;
-            exit(-1);
+                cerr << "PrecisionTuner ERROR: no __mode chosen" << endl;
+                exit(-1);
             }
             break;
     }
