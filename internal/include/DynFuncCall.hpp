@@ -54,7 +54,7 @@ class DynFuncCall
         DynFuncCall(vector<void*>);
         // dynamic HashKey, used in applyProfiling
         DynFuncCall(vector<void*>, uintptr_t);
-        DynFuncCall(vector<void*>, uintptr_t, ShadowValue);
+        DynFuncCall(vector<void*>, uintptr_t, ShadowValue&);
         // static
         DynFuncCall(vector<void*>, string);
         // static
@@ -67,7 +67,7 @@ class DynFuncCall
         void updateStrategyBacktrace();
         bool applyStrategyDynCount();
         bool applyStrategyBacktrace();
-        void applyProfiling(ShadowValue);
+        void applyProfiling(ShadowValue&);
         void dumpStack();
         friend ostream& operator<<(ostream& os, const DynFuncCall& cd);
         friend ostream& operator<<(ostream& os, const set<string>& s);

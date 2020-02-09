@@ -179,7 +179,7 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
 
 /* Compute hash and add or update DynamicHashMap
 */
-void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue sv){
+void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &sv){
 #ifndef USE_LABEL
     //TODO: more efficient to change hashMap with key string?
     uintptr_t dynHashKey = __dynHashKey(btVec);

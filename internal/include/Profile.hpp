@@ -58,7 +58,7 @@ class Profile{
         ~Profile();
         Profile(bool);
         bool applyStrategy(vector<void*> & btVec, string label);
-        void applyProfiling(vector<void*> & btVec, string label, ShadowValue sv);
+        void applyProfiling(vector<void*> & btVec, string label, ShadowValue &sv);
         void dumpJson();
 };
 #endif //Profile_H

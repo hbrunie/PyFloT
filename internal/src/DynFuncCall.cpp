@@ -103,7 +103,7 @@ DynFuncCall::DynFuncCall(vector<void*>  btVec, uintptr_t dynHashKey) : DynFuncCa
     __dynHashKey = dynHashKey;
 }
 
-DynFuncCall::DynFuncCall(vector<void*>  btVec, uintptr_t dynHashKey, ShadowValue sv) : DynFuncCall(btVec, dynHashKey){
+DynFuncCall::DynFuncCall(vector<void*>  btVec, uintptr_t dynHashKey, ShadowValue &sv) : DynFuncCall(btVec, dynHashKey){
     DEBUGG("sv","Pushing Back: " << sv);
     __shadowValues.push_back(sv);
     DEBUGG("sv",string("Vector: ") << __shadowValues);
@@ -144,7 +144,7 @@ ostream& operator<<(ostream& os, const DynFuncCall& dfc){
 
 vector<void*> DynFuncCall::getBtVector(){return __btVec;}
 
-void DynFuncCall::applyProfiling(ShadowValue sv){
+void DynFuncCall::applyProfiling(ShadowValue &sv){
     __dyncount ++;
     DEBUGG("sv","Pushing Back: " << sv);
     __shadowValues.push_back(sv);
