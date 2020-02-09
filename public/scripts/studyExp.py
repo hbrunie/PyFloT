@@ -29,24 +29,34 @@ def fatTail(l):
 
 def dumpStatistics(arglist):
     "Dump stats using different python package. Comment what not wanted"
-    print("Use statistics ",stats.describe(arglist)) ## from statistics
+    #print("Use statistics ",stats.describe(arglist)) ## from statistics
     print("Use numpy ","mean({:.4E}) median({:.4E}) stdev({:.4E}) min({:.4E}) max({:.4E})".format(np.mean(arglist), np.median(arglist), np.std(arglist), min(arglist), max(arglist))) ## from numpy
-    print("Use statistics and numpy ","mean({:.4E}) median({:.4E}) stdev({:.4E}) min({:.4E}) max({:.4E}) skew({:.4E}) fat_tail({:.4E}) kurtosis({:.4E})".format(np.mean(arglist), np.median(arglist), np.std(arglist), min(arglist), max(arglist), skew(arglist), fatTail(arglist), kurtosis(arglist))) ## from numpy + statistics
+    #print("Use statistics and numpy ","mean({:.4E}) median({:.4E}) stdev({:.4E}) min({:.4E}) max({:.4E}) skew({:.4E}) fat_tail({:.4E}) kurtosis({:.4E})".format(np.mean(arglist), np.median(arglist), np.std(arglist), min(arglist), max(arglist), skew(arglist), fatTail(arglist), kurtosis(arglist))) ## from numpy + statistics
 
 
-def plotDfFigure(df, x, y, colorId, title, xlabel, ylabel, scalefactor, xlim, ylim, symlog=True, Format="png"):
+def plotDfFigure(output, df, x, y, colorId, title, xlabel, ylabel, scalefactor, xlim, ylim,
+        symlog=True, Format="png", xtickOff = False):
     "Plot figure with DataFrame of pdande"
     #fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True)
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
     ax1 = df.plot.scatter(x=x,y=y,c=df.Color)
     ax1.set(xlim=xlim,ylim=ylim)
     if symlog:
         ax1.set_yscale('symlog',linthreshy=1e-25)
     size = plt.gcf().get_size_inches()
-    plt.legend(handles=[mpatches.Patch(color=COLORS[callSiteId], label=f'call site{callSiteId}') for callSiteId in range(9)])
-    plt.savefig(f'plotDfScatter.{Format}')
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    if xtickOff:
+        plt.tick_params(
+        axis='y',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        left=False,      # ticks along the bottom edge are off
+        right=False,         # ticks along the top edge are off
+        labelleft=False) # labels along the bottom edge are off
+
+    plt.subplots_adjust(right=0.4)
+    plt.legend(handles=[mpatches.Patch(color=COLORS[callSiteId], label=f'Dynamic backtrace from comp_Kc {callSiteId%3}/3') for callSiteId in range(3*6+8,3*6+8+3)], loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.savefig(f'plotDfScatter-{output}.{Format}')
 
 def plotFigure(arglist, fname, identity, appName, source, 
         boxplot = False,
@@ -92,23 +102,43 @@ def alist(icss, s, i):
 
 COLORS = ["blue", "orange", "green","red", "purple", "brown", "pink", "gray", "olive", "cyan"]
 TABCOLORS = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
+##[6, 6, 6, 8, 3, 7, 7, 7, 3]
+COLORS=["#AED6F1","#85C1E9","#5DADE2","#3498DB","#2E86C1","#2874A6",
+        "#F8C471","#F5B041","#F39C12","#D68910","#B9770E","#7E5109",
+        "#7DCEA0","#52BE80","#27AE60","#229954","#1E8449","#196F3D",
+        "#F5B7B1","#F1948A","#EC7063","#E74C3C","#CB4335","#B03A2E","#943126","#78281F",
+        "#BB8FCE","#8E44AD","#6C3483",
+        "#E59866", "#DC7633", "#D35400", "#BA4A00", "#A04000", "#873600", "#6E2C00",
+        "#EFA7EF", "#EE8FEE", "#E865E8", "#E44CE4","#DA31DA","#D526D5","#C31AC3",
+        "#D5D5D5", "#C0C0C0","#A5A5A5","#929292","#808080","#666666","#494949",
+        "#829C47","#728C37","#5D7624"
+        ]
+TABCOLORS = COLORS
 
-def treatCallSite(icss ,ID):
-    """ Treat on call site
+def pdDynamicCalls(fname):
+    """ Treat dynamic calls
     """
-    df = pd.DataFrame.from_dict(icss[ID]["ShadowValues"], orient='columns')
-    df["CallStack"] =f"cs{ID}" 
-    color_dict[f"cs{ID}"] = COLORS[ID]
-    if ID== 4:
-        df["absErr"] = df["absErr"].fillna(1e31)
-    df0 = df0.append(df)
-    df1 = df1.append(df.loc[df.absErr >= 10])
-    dumpStatistics(alist(icss,ID))
-
-    print(ID,len(alist(icss,ID)),len([x for x in alist(icss,ID) if x > (M - 1000) ]))
-
-    m = min(m,min(alist(icss, "absErr", ID)))
-    M = max(M, max(alist(icss, "absErr", ID)))
+    with open(fname,"r") as inf:
+        ## Load JSON file
+        d = json.load(inf)
+        ## Extract all DYNAMIC call sites: depending on profiling (if depth == 1 --> STATIC call sites)
+        icss = d["IndependantCallStacks"]
+        ## generate DataFrame from JSON dictionary of all call sites
+        dfList = []
+        minList = []
+        maxList = []
+        staticID = 0
+        staticCallSiteTmp = "None"
+        dynamicPathPerCallSite = []
+        ## CallStack goes from [3:-2]
+        for ics in icss:
+            if staticCallSiteTmp != ics["CallStack"][3]:
+                dynamicPathPerCallSite.append(0)
+                staticCallSiteTmp = ics["CallStack"][3]
+                staticID += 1
+            ics["CallSite"] = staticID
+            dynamicPathPerCallSite[-1] += 1
+        print(staticID, dynamicPathPerCallSite, sum(dynamicPathPerCallSite))
 
 def pdTreatFile(fname,appName, output):
     with open(fname,"r") as inf:
@@ -120,27 +150,44 @@ def pdTreatFile(fname,appName, output):
         icss = d["IndependantCallStacks"]
         ## generate DataFrame from JSON dictionary of all call sites
         dfList = []
-        minList = [] 
-        maxList = [] 
+        minList = []
+        maxList = []
+        def my_map_func(l):
+            if len(l) < 2:
+                return 0
+            double = l[0]
+            arg = l[1]
+            EPSILON = 1e-25
+            if abs(double) < EPSILON:
+                return 0.
+            elif arg > 90:
+                return 0.
+            else:
+                print(arg,double)
+                exit(-1)
         for i in range(0,len(icss)):
             dfList.append(pd.DataFrame.from_dict(icss[i]["ShadowValues"], orient='columns'))
 
         for i,df in enumerate(dfList):
-            if i== 4:
-                df["absErr"] = df["absErr"].fillna(1e31)
+            df.loc[df.relErr.isnull(), 'relErr'] = df.loc[df.relErr.isnull(), ['double','arg']].apply(my_map_func, axis=1)
+            #df["relErr"] = df["relErr"].fillna(computeRelErr(df["double"],df["single"]),1e-25)
             ## ReName the callStack for clear display
-            df["CallStack"] ="cs{i}" 
+            df["CallStack"] ="cs{i}"
             ## Attribute color to call site 0
             #color_dict["cs{i}"] = TABCOLORS[i]
             #df["Color"] = COLORS[i]
-            df["Color"] = TABCOLORS[i]
+            #df["absErr"] = [1]*len(df["absErr"])
+            df["Color"] = TABCOLORS[i%len(TABCOLORS)]
             ## Extract min/max values (absErr) from call site 4
             minList.append(min(alist(icss, "absErr", i)))
             maxList.append(max(alist(icss, "absErr", i)))
             ## TODO deal with the different order of magnitude
             #df = df.loc[df.absErr >= 10]
 
-            #dumpStatistics(alist(icss,i))
+            print("relErr")
+            dumpStatistics(df['relErr'].tolist())
+            print("absErr")
+            dumpStatistics(df['absErr'].tolist())
             #print(i,len(alist(icss,i)),len([x for x in alist(icss,i) if x > (M - 1000) ]))
 
         ## Merge all df in one
@@ -164,13 +211,19 @@ def pdTreatFile(fname,appName, output):
         xmin = min(df0["index"])
         xmax = max(df0["index"])
 
-        title = "Single precision exponential calls relative to double precision error\nagainst time in Premixed Flame Regression Test from PeleC code.\nTest was run in serial on Haswell (Cori)."
-        xlabel = "Ordered by execution order"
-        ylabel ="Relative Error (|DPvalue - SPvalue| / |SPvalue|)"
-        scalefactor = 2
+        #title = "Single precision exponential calls relative to double precision error\nagainst time in Premixed Flame Regression Test from PeleC code.\nTest was run in serial on Haswell (Cori)."
+        title = "Call order."
+        title = ""
+        xlabel = "Order of execution at runtime."
+        #ylabel ="Relative Error (|DPvalue - SPvalue| / |SPvalue|)"
+        ylabel =""
+        scalefactor = 1
         xlim = (xmin,xmax)
-        ylim = (-1e-25,1e35)
-        plotDfFigure(df0, "index", "absErr", 4, title, xlabel, ylabel, scalefactor, xlim, ylim)
+        xlim = (66800,67200)
+        #ylim = (-1e-25,1e35)
+        #ylim = (0,4)
+        plotDfFigure(output, df0, "index", "absErr", 4, title, xlabel,
+                ylabel, scalefactor, xlim, ylim, symlog=True, Format="png", xtickOff=False)
 
 def treatFile(fname,appName, output):
     with open(fname,"r") as inf:
@@ -240,5 +293,5 @@ def treatFile(fname,appName, output):
 args = parse()
 appName = args.appName
 for fname,output in zip(args.jsondata,args.outputfile):
-    #treatFile(fname,appName,output) 
     pdTreatFile(fname,appName,output)
+    #pdDynamicCalls(fname)
