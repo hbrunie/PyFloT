@@ -21,5 +21,8 @@ libprecisiontuning.so: $(OBJECTS)
 ../utils/Debug.o:
 	make all -C ../utils/
 
-clean:
+cleanutils:
+	make clean -C ../utils/
+
+clean: cleanutils
 	rm -f *.o
