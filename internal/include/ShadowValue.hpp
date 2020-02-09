@@ -16,6 +16,7 @@ class ShadowValue{
     public:
         ShadowValue(double, float, double, bool);
         Value getJsonValue();
+        string getCSVformat();
         friend ostream& operator<<(ostream& os, const ShadowValue& sv);
         friend ostream& operator<<(ostream& os, const vector<ShadowValue>& sv);
 };

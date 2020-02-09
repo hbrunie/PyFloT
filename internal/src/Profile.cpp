@@ -28,6 +28,7 @@ using namespace Json;
 const string Profile::DUMP_JSON_PROFILING_FILE     = "PRECISION_TUNER_DUMPJSON";
 // Applying strategy mode
 const string Profile::DUMP_JSON_STRATSRESULTS_FILE = "PRECISION_TUNER_DUMPJSON";
+const string Profile::DUMP_CSV_PROFILING_FILE      = "PRECISION_TUNER_DUMPCSV";
 const string Profile::READ_JSON_PROFILE_STRAT_FILE = "PRECISION_TUNER_READJSON";
 const string Profile::BACKTRACE_LIST               = "BACKTRACE_LIST";
 
@@ -35,8 +36,10 @@ const string Profile::JSON_TOTALCALLSTACKS_KEY  = "TotalCallStacks";
 const string Profile::JSON_TOTALDYNCOUNT_KEY    = "CallsCount";
 const string Profile::JSON_MAIN_LIST            = "IndependantCallStacks";
 const string Profile::JSON_HASHKEY_KEY          = "HashKey";
+const string Profile::JSON_CSV_FILENAME         = "CSVFileName";
 
 const string Profile::DEFAULT_READ_JSON_STRAT_FILE       = "readJsonProfileStrat.json";
+const string Profile::DEFAULT_DUMP_CSV_PROF_FILE         = "dumpCSVdynCallSite";
 const string Profile::DEFAULT_DUMP_JSON_PROF_FILE        = "dumpProfile.json";
 const string Profile::DEFAULT_DUMP_JSON_STRATRESULT_FILE = "dumpJsonStratResults.json";
 const string Profile::DEFAULT_BACKTRACE_LIST             = "BackraceList.txt";
@@ -202,7 +205,8 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
         /* Dump all statichash key in FILE for use by backtraceStrategy on
          * other executions.
          * */
-        ofstream f = writeFile(BACKTRACE_LIST,DEFAULT_BACKTRACE_LIST);
+        //TODO bad name, not JSON file
+        ofstream f = writeJSONFile(BACKTRACE_LIST,DEFAULT_BACKTRACE_LIST);
         f << staticHashKey << endl;
         /* The element is necessarily not in StaticHashMap either,
          * Because static and dynamic HashMap are "identical" */
@@ -218,8 +222,13 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
     __totalDynCount++;
 }
 
+void Profile::dumpJsonPlusCSV(){
+    __dumpReducedJsonPermanentHashMap();
+    __dumpCSVdynamicCalls();
+}
+
 void Profile::dumpJson(){
-    __dumpJsonPermanentHashMap();
+    __dumpFullJsonPermanentHashMap();
 }
 
 void Profile::__displayBacktraceStaticMap(){
@@ -239,27 +248,54 @@ void Profile::__displayBacktraceDynMap(){
     }
 }
 
-void Profile::__dumpJsonPermanentHashMap(){
+void Profile::__dumpCSVdynamicCalls(){
+    ofstream dumpFile;
+    unsigned int index = 0;
+    string fileName;
+    for (auto it = __backtraceStaticMap.begin(); it != __backtraceStaticMap.end(); ++it){
+        dumpFile = writeCSVFile(DUMP_CSV_PROFILING_FILE,
+                DEFAULT_DUMP_CSV_PROF_FILE, index++);
+        shared_ptr<DynFuncCall>value = it->second;
+        dumpFile << value->getCSVformat() << endl;;
+    }
+}
+
+void Profile::__dumpFullJsonPermanentHashMap(){
+    __dumpJsonPermanentHashMap(false);
+}
+void Profile::__dumpReducedJsonPermanentHashMap(){
+    __dumpJsonPermanentHashMap(true);
+}
+
+void Profile::__dumpJsonPermanentHashMap(bool dumpReduced){
     DEBUGINFO("STARTING");
     Value jsonDictionary;
     Value jsonDynFuncCallsList;
     Value jsonTotalCallStacks = (UInt)__totalCallStacks;
     jsonDictionary[JSON_TOTALCALLSTACKS_KEY] = jsonTotalCallStacks;
+    unsigned int index = 0;
     for (auto it = __backtraceStaticMap.begin(); it != __backtraceStaticMap.end(); ++it){
         string key = it->first;
         shared_ptr<DynFuncCall>value = it->second;
         Value statHashKey(key);
-        Value jsonDynFuncCall = value->getJsonValue();
+        Value jsonDynFuncCall;
+        if(dumpReduced)
+            jsonDynFuncCall = value->getReducedJsonValue();
+        else
+            jsonDynFuncCall = value->getFullJsonValue();
         jsonDynFuncCall[JSON_HASHKEY_KEY] = statHashKey;
+        // TODO CSV fileName should take into account envVar like dumpCSV...
+        jsonDynFuncCall[JSON_CSV_FILENAME] =
+            string("dumpCSVdynCallSite-") + to_string(index++) + string(".csv");
         jsonDynFuncCallsList.append(jsonDynFuncCall);
     }
     jsonDictionary[JSON_MAIN_LIST] = jsonDynFuncCallsList;
     DEBUGINFO("JSON Dict: " << endl << jsonDictionary);
     ofstream dumpFile;
     if(__mode)
-        dumpFile = writeFile(DUMP_JSON_PROFILING_FILE, DEFAULT_DUMP_JSON_PROF_FILE);
+        dumpFile = writeJSONFile(DUMP_JSON_PROFILING_FILE, DEFAULT_DUMP_JSON_PROF_FILE);
     else
-        dumpFile = writeFile(DUMP_JSON_STRATSRESULTS_FILE, DEFAULT_DUMP_JSON_STRATRESULT_FILE);
+        dumpFile = writeJSONFile(DUMP_JSON_STRATSRESULTS_FILE, DEFAULT_DUMP_JSON_STRATRESULT_FILE);
     dumpFile << jsonDictionary << endl;;
     DEBUGINFO("ENDING");
 }

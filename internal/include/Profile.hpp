@@ -25,21 +25,29 @@ class Profile{
         /// PRIVATE Functions
         //TODO: factorize this in our own HashMap object implementing JSon stuff
         void __buildProfiledDataFromJsonFile();
-        void __dumpJsonPermanentHashMap();
+        void __dumpCSVdynamicCalls();
+        void __dumpJsonPermanentHashMap(bool);
+        // 2 following are calling previous one
+        void __dumpReducedJsonPermanentHashMap();
+        void __dumpFullJsonPermanentHashMap();
+        // Debug functions
         void __displayBacktraceDynMap();
         void __displayBacktraceStaticMap();
+        // TODO
         uintptr_t __dynHashKey(vector<void*> btVec);
         string __staticHashKey(vector<void*> btVec);
         // JSON FILE ENV VARS
         static const string DUMP_JSON_STRATSRESULTS_FILE;
         static const string READ_JSON_PROFILE_STRAT_FILE;
         static const string DUMP_JSON_PROFILING_FILE;
+        static const string DUMP_CSV_PROFILING_FILE;
 
         static const string BACKTRACE_LIST;
         static const string DEFAULT_BACKTRACE_LIST;
 
         static const string DEFAULT_READ_JSON_STRAT_FILE;
         static const string DEFAULT_DUMP_JSON_PROF_FILE;
+        static const string DEFAULT_DUMP_CSV_PROF_FILE;
         static const string DEFAULT_DUMP_JSON_STRATRESULT_FILE;
         /// JSON Keys
         // List of all the call stack dictionnaries
@@ -50,6 +58,7 @@ class Profile{
         // LOWERED Dynamic calls count
         static const string JSON_TOTALCALLSTACKS_KEY;
         static const string JSON_HASHKEY_KEY;
+        static const string JSON_CSV_FILENAME;
         bool singlePrecision(vector<void*> & btVec, string label);
         void updateHashMap(DynFuncCall &);
         void writeBacktraceKeyFile(string);
@@ -60,5 +69,6 @@ class Profile{
         bool applyStrategy(vector<void*> & btVec, string label);
         void applyProfiling(vector<void*> & btVec, string label, ShadowValue &sv);
         void dumpJson();
+        void dumpJsonPlusCSV();
 };
 #endif //Profile_H

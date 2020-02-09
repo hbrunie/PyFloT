@@ -47,11 +47,15 @@ PrecisionTuner::PrecisionTuner(){
 
 static long long __totalReduced = 0;
 static long long total = 0;
+
 PrecisionTuner::~PrecisionTuner(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << __FUNCTION__ << __mode << endl;);
     cerr << "RATIO REDUCED: " << (double)__totalReduced / (double)total << endl;
-    __profile->dumpJson();
+    if(getenv("PTUNER_GETFULLJSON"))
+        __profile->dumpJson();
+    else
+        __profile->dumpJsonPlusCSV();
     delete(__profile);
 }
 

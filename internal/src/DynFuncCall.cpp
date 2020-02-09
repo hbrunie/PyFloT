@@ -204,7 +204,23 @@ bool DynFuncCall::applyStrategyDynCount(){
     return false;
 }
 
-Value DynFuncCall::getJsonValue(){
+string DynFuncCall::getCSVformat(){
+    /* For each ShadowValue: index arg double single absErr relErr singlePrecBool */
+    string result = "";
+    for(unsigned int i=0; i<__shadowValues.size(); i++)
+        result +=  __shadowValues[i].getCSVformat() + "\n";
+    return result;
+}
+
+Value DynFuncCall::getReducedJsonValue(){
+    return getJsonValue(true);
+}
+
+Value DynFuncCall::getFullJsonValue(){
+    return getJsonValue(false);
+}
+
+Value DynFuncCall::getJsonValue(bool dumpReduced){
     DEBUGINFO("STARTING");
     Value v;
     Value dyncount((UInt)__dyncount);
@@ -221,9 +237,11 @@ Value DynFuncCall::getJsonValue(){
     v[JSON_LOWERBOUND_KEY] = lowerBound;
     v[JSON_UPPERBOUND_KEY] = upperBound;
 
-    for(unsigned int i=0; i<__shadowValues.size(); i++)
-        shadowValues.append(__shadowValues[i].getJsonValue());
-    v["ShadowValues"] = shadowValues;
+    if(!dumpReduced){
+        for(unsigned int i=0; i<__shadowValues.size(); i++)
+            shadowValues.append(__shadowValues[i].getJsonValue());
+        v["ShadowValues"] = shadowValues;
+    }
 
     void** sym_array = (void**) malloc(sizeof(void*)*__btVec.size());
     for(unsigned int i =0; i< __btVec.size();i++){

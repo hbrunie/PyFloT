@@ -5,6 +5,16 @@ ShadowValue::ShadowValue(double dp, float sp, double argument, bool spBoolean) :
    __index = __globalCounter++;
     }
 
+string ShadowValue::getCSVformat(){
+    return to_string(__index) + " "
+        + to_string(__argument) + " "
+        + to_string(__doubleP) + " "
+        + to_string(__singleP) + " "
+        + to_string(abs(__doubleP - __singleP)) + " "
+        + to_string(abs(__doubleP - __singleP)/__doubleP) + " "
+        + to_string(__spBoolean);
+}
+
 Value ShadowValue::getJsonValue(){
     Value v;
     double dp = __doubleP;

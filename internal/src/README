@@ -1,4 +1,9 @@
 Tool use plan:
+PTUNER_GETFULLJSON=TRUE
+--> dump everything in JSON
+otherwise,
+JSON + CSV
+
 Python script:
   Execute once for profiling: DUMPJSONPROFILINGFILE=/path/to/profile.json
   Analyse the trace: develop strategies
