@@ -140,7 +140,16 @@ def pdDynamicCalls(fname):
             dynamicPathPerCallSite[-1] += 1
         print(staticID, dynamicPathPerCallSite, sum(dynamicPathPerCallSite))
 
-def pdTreatFile(fname,appName, output):
+import os
+
+#USE ONLY ONE OF THESE:
+
+#os.environ["MODIN_ENGINE"] = "dask"  # Modin will use Dask
+os.environ["MODIN_ENGINE"] = "ray"  # Modin will use Ray
+
+import modin.pandas as pd
+
+def pdTreatFile(fname,appName, output, csv=False):
     with open(fname,"r") as inf:
         ## Load JSON file
         d = json.load(inf)
@@ -166,7 +175,13 @@ def pdTreatFile(fname,appName, output):
                 print(arg,double)
                 exit(-1)
         for i in range(0,len(icss)):
-            dfList.append(pd.DataFrame.from_dict(icss[i]["ShadowValues"], orient='columns'))
+            if csv:
+                colnames = ["index","arg","double","single","absErr","relErr","spBoolean"]
+                dfList.append(pd.read_csv(icss[i]["CSVFileName"],names=colnames, header=None))
+            else:
+                dfList.append(pd.DataFrame.from_dict(icss[i]["ShadowValues"], orient='columns'))
+        for i,df in enumerate(dfList):
+            df.to_feather(f"dfToFeather-{i}.feather")
 
         for i,df in enumerate(dfList):
             df.loc[df.relErr.isnull(), 'relErr'] = df.loc[df.relErr.isnull(), ['double','arg']].apply(my_map_func, axis=1)
@@ -293,5 +308,5 @@ def treatFile(fname,appName, output):
 args = parse()
 appName = args.appName
 for fname,output in zip(args.jsondata,args.outputfile):
-    pdTreatFile(fname,appName,output)
+    pdTreatFile(fname,appName,output,csv=True)
     #pdDynamicCalls(fname)
