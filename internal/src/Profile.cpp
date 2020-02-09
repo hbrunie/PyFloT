@@ -191,7 +191,7 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
     auto dynHashKeyIte = __backtraceDynamicMap.find(dynHashKey);
     /* Can not find the element in Dynamic Hash Map */
     if(dynHashKeyIte == __backtraceDynamicMap.end()) {
-        dfc = make_shared<DynFuncCall>(btVec, dynHashKey, sv);
+        dfc = make_shared<DynFuncCall>(btVec, dynHashKey);
         __backtraceDynamicMap[dynHashKey] = dfc;
         /* Update Static HashMap */
 #ifndef USE_LABEL
