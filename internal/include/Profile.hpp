@@ -40,6 +40,7 @@ class Profile{
         static const string DUMP_JSON_STRATSRESULTS_FILE;
         static const string READ_JSON_PROFILE_STRAT_FILE;
         static const string DUMP_JSON_PROFILING_FILE;
+        static const string DUMP_DIR;
         static const string DUMP_CSV_PROFILING_FILE;
 
         static const string BACKTRACE_LIST;
@@ -47,6 +48,7 @@ class Profile{
 
         static const string DEFAULT_READ_JSON_STRAT_FILE;
         static const string DEFAULT_DUMP_JSON_PROF_FILE;
+        static const string DEFAULT_DUMPDIR;
         static const string DEFAULT_DUMP_CSV_PROF_FILE;
         static const string DEFAULT_DUMP_JSON_STRATRESULT_FILE;
         /// JSON Keys

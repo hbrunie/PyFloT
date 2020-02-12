@@ -9,18 +9,19 @@
 //        return true;
 //    return false;
 //}
+using namespace std;
 
-ofstream writeFile(string envName, string defaultFile, int csvIndex);
+ofstream writeFile(string envName, string defaultFile, string dumpDir,string defaultDir, int csvIndex);
 
-ofstream writeJSONFile(string envName, string defaultFile){
-    return writeFile(envName, defaultFile, -1);
+ofstream writeJSONFile(string envName, string defaultFile, string dumpDir,string defaultDir){
+    return writeFile(envName, defaultFile, dumpDir, defaultDir, -1);
 }
 
-ofstream writeCSVFile(string envName, string defaultFile, int index){
-    return writeFile(envName, defaultFile, index);
+ofstream writeCSVFile(string envName, string defaultFile,string dumpDir,string defaultDir, int index){
+    return writeFile(envName, defaultFile, dumpDir, defaultDir, index);
 }
 
-ofstream writeFile(string envName, string defaultFile, int csvIndex){
+ofstream writeFile(string envName, string defaultFile,string dumpDir, string defaultDir, int csvIndex){
     try{
         char * envVarString = getenv(envName.c_str());
         string file;
@@ -31,7 +32,12 @@ ofstream writeFile(string envName, string defaultFile, int csvIndex){
         DEBUGINFO("File2write: " << file);
         if(csvIndex > -1)//dumpCSV
             file = file + string("-") + to_string(csvIndex) + string(".csv");
-
+        char * dumpDirectory = getenv(dumpDir.c_str());
+        if(NULL != dumpDirectory){
+            file = string(dumpDirectory)+string("/")+file;
+        }else{
+            file = defaultDir+file;
+        }
         ofstream f(file, ios_base::app | ios_base::out);
         if(!f){
             std::cerr << "ERROR: Cannot open "<< file << " !" << std::endl;
