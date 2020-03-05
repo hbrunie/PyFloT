@@ -34,9 +34,11 @@ void PrecisionTuner::checkPrecisionTunerMode(){
     if((NULL != envVarString)
             && (strcmp("APPLYING_STRAT",envVarString) == 0))
         __mode = APPLYING_STRAT;
+    DEBUG("info",cerr << "ENDING" << __FUNCTION__ << endl;);
 }
 
 PrecisionTuner::PrecisionTuner(){
+    DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
 #ifndef NDEBUG
     debugtypeOption(getenv("DEBUG"));
 #endif
@@ -152,12 +154,7 @@ double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, fl
             singlePrecision = __profile->applyStrategy(btVec, label);
             break;
         case APPLYING_PROF:
-            // TODO: make it more generic
-            // PeleC everything in lower but specific region (compKc)
             {
-                singlePrecisionProfiling = __specificRegion ? false : true;
-                if(singlePrecisionProfiling)
-                    __totalReduced += 1;
                 ShadowValue shadowValue(fres, dres, value, singlePrecisionProfiling);
                 __profile->applyProfiling(btVec, label, shadowValue);
             }

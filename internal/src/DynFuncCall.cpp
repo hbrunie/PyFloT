@@ -163,6 +163,11 @@ void DynFuncCall::updateStrategyBacktraceList(){
     }
     DEBUG("backstrat",cerr << backtraceToLower << endl;);
 }
+
+// Check if this Dynamic Call is inside Hashmap
+// containing all dynamic calls which MUST be executed in single precision.
+// Do this once: when building Profile (for strategy).
+// For next executions: use bool __bactraceStrat.
 void DynFuncCall::updateStrategyBacktrace(){
     DEBUGINFO("backtraceToLower " << backtraceToLower);
     auto ite = backtraceToLower.find(__statHashKey);
@@ -177,6 +182,7 @@ void DynFuncCall::updateStrategyBacktrace(){
 bool DynFuncCall::applyStrategyBacktrace(){
     DEBUGINFO("backtraceStrat?(" << __backtraceStrat << ")");
     this->__dyncount ++;
+    // Check if this dynamic call MUST be done in reduced precision
     if(__backtraceStrat){
         this->__loweredCount++;
         return true;

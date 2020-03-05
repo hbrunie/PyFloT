@@ -305,13 +305,9 @@ void Profile::__dumpJsonPermanentHashMap(bool dumpReduced){
     DEBUGINFO("ENDING");
 }
 
+// Applying Strategy
+// Read JSON strategy file and fill hashmap.
 void Profile::__buildProfiledDataFromJsonFile(){
-    /*TODO: Find a different name for callStack the object
-      containing number of calls, its call stack addresses and lowered count.
-      Because it is the name as the call stack, which is the list of virtual addresses.
-      Can not be Dynamic Function call. It is in between DynFuncCall and Static function call site.
-      Maybe Dynamic Function Call Site? Containing ASVR dependent and ASVR independent.
-      */
     DEBUGINFO("STARTING");
     Value jsonDictionary;
     ifstream readProf = readFile(READ_JSON_PROFILE_STRAT_FILE, DEFAULT_READ_JSON_STRAT_FILE);
