@@ -77,7 +77,8 @@ string Profile::__staticHashKey(vector<void*> btVec){
     string statHashKey;
     string tmpHash;
     // Choosing level: ONE <= size <= btVec.size();
-    uint64_t size = ONE;//Higher for deeper analysis
+    //uint64_t size = btVec.size();//Higher for deeper analysis
+    uint64_t size = std::min(btVec.size(),(long unsigned int )(ONE+16));//Higher for deeper analysis
     void ** btpointer = &btVec[0];
     char ** symbols = backtrace_symbols(btpointer, size);
     unsigned int cnt = 0;
@@ -125,7 +126,8 @@ uintptr_t Profile::__dynHashKey(vector<void*> btVec){
     uintptr_t dynHashKey = 0;
     uint64_t cnt = 0;
     // Choosing level: ONE <= size <= btVec.size();
-    uint64_t size = ONE;//Higher for deeper analysis
+    //uint64_t size = btVec.size();//Higher for deeper analysis
+    uint64_t size = ONE+16;//Higher for deeper analysis
     for(auto it = btVec.begin(); it != btVec.end() && cnt < size; it++){
         void *ip = *it;
         assert(NULL != ip);
