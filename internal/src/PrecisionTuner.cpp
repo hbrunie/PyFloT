@@ -25,7 +25,7 @@ struct gotcha_binding_t wrap_actions [] = {
 
 using namespace std;
 
-const unsigned int PrecisionTuner::MAXSTACKSIZE   = 500;
+const unsigned int PrecisionTuner::MAXSTACKSIZE   = 1024;
 const string PrecisionTuner::PRECISION_TUNER_MODE = "PRECISION_TUNER_MODE";
 
 void PrecisionTuner::checkPrecisionTunerMode(){
