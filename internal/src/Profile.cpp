@@ -142,6 +142,7 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
     //compute hash
 #ifndef USE_LABEL
     //TODO: more efficient to change hashMap with key string?
+    //TODO create a class callstack with string and btVec
     uintptr_t dynHashKey = __dynHashKey(btVec);
     UNUSED(label);
 #else
@@ -151,27 +152,38 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
     shared_ptr<DynFuncCall> dfc;
     DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__ << " " << dfc << endl);
     DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__<<  " Static map " << endl;
-            __displayBacktraceStaticMap(););
+          __displayBacktraceStaticMap(););
     // if exist or not go on perm HashMap
     auto hashKeyIte = __backtraceDynamicMap.find(dynHashKey);
     if(hashKeyIte == __backtraceDynamicMap.end()){
+        // Current call stack seen for FIRST time
 #ifndef USE_LABEL
         string staticHashKey = __staticHashKey(btVec);
 #else
         string staticHashKey = label;
 #endif
-        DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " staticHashKey:" <<
-                staticHashKey << endl);
+        DEBUG("dfc",cerr << __FUNCTION__
+               << ":" << __LINE__<< " staticHashKey:"
+               << staticHashKey << endl);
+
         auto stathashKeyIte = __backtraceStaticMap.find(staticHashKey);
         if(stathashKeyIte == __backtraceStaticMap.end()){
-            cerr << __FUNCTION__ << ":" << __LINE__ << " ERROR staticHashKey:" << staticHashKey << endl;
-            exit(-1);
+            // Current call stack not in static map:
+            // It was not encountered during profiling.
+            cerr << __FUNCTION__ << ":" << __LINE__ << " staticHashKey:" << staticHashKey
+                << " encountered for first time." << endl;
+            // DFC did not exist: create it.
+            // TODO: profile it?
+            dfc = make_shared<DynFuncCall>(btVec, dynHashKey);
+            __backtraceStaticMap[staticHashKey] = dfc;
+        }else{
+            // DFC already exists
+            dfc = __backtraceStaticMap[staticHashKey];
+            dfc->updateStrategyBacktrace();
         }
-        dfc = __backtraceStaticMap[staticHashKey];
-        dfc->updateStrategyBacktrace();
-        DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " " << dfc << endl);
         __backtraceDynamicMap[dynHashKey] = dfc;
     }else{
+        // Current call stack already encountered
         dfc = __backtraceDynamicMap[dynHashKey];
         DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " " << dfc << endl);
     }
@@ -239,6 +251,7 @@ void Profile::__displayBacktraceStaticMap(){
     for (auto it = __backtraceStaticMap.begin(); it != __backtraceStaticMap.end(); it++){
         string key = it->first;
         shared_ptr<DynFuncCall>value = it->second;
+        cerr << *value << endl;
         DEBUG("info",cerr << *value << endl;);
     }
 }
