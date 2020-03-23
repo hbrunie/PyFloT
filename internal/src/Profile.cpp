@@ -39,12 +39,12 @@ const string Profile::JSON_MAIN_LIST            = "IndependantCallStacks";
 const string Profile::JSON_HASHKEY_KEY          = "HashKey";
 const string Profile::JSON_CSV_FILENAME         = "CSVFileName";
 
-const string Profile::DEFAULT_READ_JSON_STRAT_FILE       = "readJsonProfileStrat.json";
+const string Profile::DEFAULT_READ_JSON_STRAT_FILE       = "dumpProfile.json";
 const string Profile::DEFAULT_DUMP_CSV_PROF_FILE         = "dumpCSVdynCallSite";
 const string Profile::DEFAULT_DUMP_JSON_PROF_FILE        = "dumpProfile.json";
 const string Profile::DEFAULT_DUMPDIR                    = "./";
 const string Profile::DEFAULT_DUMP_JSON_STRATRESULT_FILE = "dumpJsonStratResults.json";
-const string Profile::DEFAULT_BACKTRACE_LIST             = "BackraceList.txt";
+const string Profile::DEFAULT_BACKTRACE_LIST             = "BacktraceList.txt";
 
 uintptr_t hashLabel(string label){
     uintptr_t key = 0;
@@ -296,8 +296,8 @@ void Profile::__dumpJsonPermanentHashMap(bool dumpReduced){
     DEBUGINFO("JSON Dict: " << endl << jsonDictionary);
     ofstream dumpFile;
     if(__mode == 0)//Applying prof is private to Precision TUner ...
-        dumpFile = writeJSONFile(DUMP_JSON_PROFILING_FILE, DEFAULT_DUMP_JSON_PROF_FILE
-                , DUMP_DIR, DEFAULT_DUMPDIR);
+        dumpFile = writeJSONFile(DUMP_JSON_PROFILING_FILE,
+                DEFAULT_DUMP_JSON_PROF_FILE, DUMP_DIR, DEFAULT_DUMPDIR);
     else
         dumpFile = writeJSONFile(DUMP_JSON_STRATSRESULTS_FILE, DEFAULT_DUMP_JSON_STRATRESULT_FILE
                 , DUMP_DIR, DEFAULT_DUMPDIR);
