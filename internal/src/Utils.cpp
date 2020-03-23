@@ -40,7 +40,7 @@ ofstream writeFile(string envName, string defaultFile,string dumpDir, string def
         }
         ofstream f(file, ios_base::app | ios_base::out);
         if(!f){
-            std::cerr << "ERROR: Cannot open "<< file << " !" << std::endl;
+            std::cerr << "WRITE ERROR: Cannot open "<< file << " !" << std::endl;
             exit(1);
         }
         return f;
@@ -55,11 +55,6 @@ ifstream readFile(string envName, string defaultFile){
     try{
         char * envVarString = getenv(envName.c_str());
         string file;
-    //std::ifstream infile(fileAbsPath, std::ifstream::binary);
-    //if(!stream_check(infile)){
-    //    cerr << __FUNCTION__ << " wrong path for file: " << fileAbsPath << endl;
-    //    exit(-1);
-    //}
         if(NULL == envVarString)
             file = defaultFile;
         else
@@ -67,7 +62,8 @@ ifstream readFile(string envName, string defaultFile){
         DEBUGINFO("File2read: " << file);
         ifstream f(file);
         if(!f){
-            std::cerr << "ERROR: Cannot open "<< file << " !" << std::endl;
+            std::cerr << "READ ERROR: Cannot open "<< file << " !"
+                <<" envName: "<< envName << std::endl;
             exit(1);
         }
         return f;
