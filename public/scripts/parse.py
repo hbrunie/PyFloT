@@ -1,4 +1,5 @@
 import argparse
+import os
 import configparser
 import sys
 def get_config(confPath):
@@ -31,6 +32,7 @@ def parse():
     args, remaining_argv = conf_parser.parse_known_args()
 
     if args.conf_file:
+        assert os.path.exists(args.conf_file)
         config = get_config([args.conf_file])
         defaults.update(dict(config.items("Defaults")))
 
