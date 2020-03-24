@@ -43,7 +43,7 @@ int unSetInRegion(const char * label){
     return labels.unSetInRegion(label);
 }
 
-set<string> DynFuncCall::backtraceToLower = set<string>();
+list<string> DynFuncCall::backtraceToLower = list<string>();
 
 DynFuncCall::DynFuncCall(){
     DEBUGINFO("STARTING");
@@ -123,6 +123,13 @@ DynFuncCall::DynFuncCall(vector<void*> btVec, uint32_t profiledDyncount, bool lo
     __loweredCount = lowered ? 1 : 0;
 }
 
+ostream& operator<<(ostream& os, const list<string>& s){
+    os << "List: " << endl;
+    for (auto it=s.begin(); it != s.end(); ++it)
+                os << ' ' << *it << endl;
+    return os;
+}
+
 ostream& operator<<(ostream& os, const set<string>& s){
     for (auto it=s.begin(); it != s.end(); ++it)
                 os << ' ' << *it << endl;
@@ -159,9 +166,19 @@ void DynFuncCall::updateStrategyBacktraceList(){
 
     string line;
     while (getline(f,line)){
-        backtraceToLower.insert(line);
+        //backtraceToLower.insert(line);
+        backtraceToLower.push_back(line);
     }
     DEBUG("backstrat",cerr << backtraceToLower << endl;);
+}
+
+bool findString(list<string> strList, string s){
+    bool found = false;
+    for (auto it=strList.begin(); it != strList.end(); ++it){
+        if (s.find(*it) != string::npos)
+            return true;
+    }
+    return found;
 }
 
 // Check if this Dynamic Call is inside Hashmap
@@ -169,14 +186,12 @@ void DynFuncCall::updateStrategyBacktraceList(){
 // Do this once: when building Profile (for strategy).
 // For next executions: use bool __bactraceStrat.
 void DynFuncCall::updateStrategyBacktrace(){
-    DEBUGINFO("backtraceToLower " << backtraceToLower);
-    auto ite = backtraceToLower.find(__statHashKey);
+    bool found = findString(backtraceToLower, __statHashKey);//.find(__statHashKey);
     // Look for backtrace in strategy to lower
-    if(ite == backtraceToLower.end())
-        __backtraceStrat = false;
-    else
+    if(found)
         __backtraceStrat = true;
-    DEBUGINFO("toLower?"<< __backtraceStrat);
+    else
+        __backtraceStrat = false;
 }
 
 bool DynFuncCall::applyStrategyBacktrace(){

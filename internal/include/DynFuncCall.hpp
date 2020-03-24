@@ -44,7 +44,7 @@ class DynFuncCall
         vector<ShadowValue> __shadowValues;
         string __statHashKey;
         list<struct FloatSet> __stratMultiSet;
-        static set<string> backtraceToLower;
+        static list<string> backtraceToLower;
         void displaySet();
         Value getJsonValue(bool);
     public:
@@ -74,6 +74,7 @@ class DynFuncCall
         void dumpStack();
         friend ostream& operator<<(ostream& os, const DynFuncCall& cd);
         friend ostream& operator<<(ostream& os, const set<string>& s);
+        friend ostream& operator<<(ostream& os, const list<string>& s);
         friend ostream& operator<<(ostream& os, const vector<ShadowValue>& v);
 };
 #endif // DynFuncCall_H
