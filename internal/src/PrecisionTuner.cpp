@@ -61,6 +61,17 @@ PrecisionTuner::~PrecisionTuner(){
     delete(__profile);
 }
 
+/* Definition of specific code region by end-user in analyzed program */
+bool __specificRegion = false;
+void PTunerEnterSpecificRegion(){
+    __specificRegion=true;
+}
+
+void unsetNO(){
+    __specificRegion = false;
+}
+
+/* Intercept math function with 2 arguments */
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, float), double (*func)(double, double),
         double value, double parameter, string label){
     float fvalue, fparameter, fres;
@@ -78,15 +89,7 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
     return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
 }
 
-bool __specificRegion = false;
-void PTunerEnterSpecificRegion(){
-    __specificRegion=true;
-}
-
-void unsetNO(){
-    __specificRegion = false;
-}
-
+/* Intercept math function with 1 arguments */
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double),
         double value, string label){
     double dres;
