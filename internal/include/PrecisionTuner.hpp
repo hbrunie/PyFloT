@@ -21,9 +21,13 @@ class PrecisionTuner
         enum MODE __mode;
         void checkPrecisionTunerMode();
         /* Profiling */
-        Profile * __profile;
-        double __overloading_function(vector<void*> &btVec, string s, float fres, double dres, double value, string label);
+        Profile *     __profile;
+        double        __overloading_function(vector<void*> &btVec, string s, float fres,
+                                 double dres, double value, string label, double timeStamp);
         vector<void*> __getContextHashBacktrace();
+        /* TimeStamp computation */
+        double getTimeStamp();
+        void   initTSClock();
 
         static const unsigned int MAXSTACKSIZE;
         /* JSON values and sections keys */
@@ -34,8 +38,9 @@ class PrecisionTuner
     public:
         PrecisionTuner();
         ~PrecisionTuner();
-        double overloading_function(string s, float (*sp_func) (float, float), double (*func)(double, double), 
-                double value, double parameter, string label);
-        double overloading_function(string s, float (*sp_func) (float), double (*func)(double), double value, string label);
+        double overloading_function(string s, float (*sp_func) (float, float),
+                double (*func)(double, double), double value, double parameter, string label);
+        double overloading_function(string s, float (*sp_func) (float), double (*func)(double),
+                double value, string label);
 };
 #endif // PrecisionTuner_H

@@ -1,8 +1,13 @@
 #include <cassert>
+#include <chrono>
 #include <cstdlib>
-#include <iomanip>
 #include <execinfo.h>
+#include <iomanip>
+#include <iostream>
 #include <math.h>
+
+using namespace std;
+using namespace chrono;
 
 #include "Debug.hpp"
 #include "PrecisionTuner.hpp"
@@ -43,6 +48,7 @@ PrecisionTuner::PrecisionTuner(){
     debugtypeOption(getenv("DEBUG"));
 #endif
     CHECK_POS(gotcha_wrap(wrap_actions, 2, "PrecisionTuner"), "gotcha_wrap");
+    initTSClock();
     checkPrecisionTunerMode();
     __profile  = new Profile(__mode == APPLYING_STRAT);
 }
@@ -71,6 +77,22 @@ void unsetNO(){
     __specificRegion = false;
 }
 
+/* Timeserie builder function(s) */
+steady_clock::time_point __startTS;
+void PrecisionTuner::initTSClock(){
+     __startTS = steady_clock::now();
+}
+
+/* Returns timeStamp (double) in milliseconds */
+double PrecisionTuner::getTimeStamp(){
+    double r;
+    long int dur;
+    steady_clock::time_point stop = steady_clock::now();
+    dur = duration_cast<nanoseconds> (stop - __startTS).count();
+    r = ((double) dur) / 1000.;
+    return r;
+}
+
 /* Intercept math function with 2 arguments */
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, float), double (*func)(double, double),
         double value, double parameter, string label){
@@ -79,6 +101,7 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
 
     fvalue = (float)value;
     fparameter = (float)parameter;
+    double timeStamp = getTimeStamp();
 #ifndef USE_LABEL
     vector<void*> btVec = __getContextHashBacktrace();
 #else
@@ -86,7 +109,7 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
 #endif
     fres = (double) sp_func(fvalue, fparameter);
     dres = func(value, parameter);
-    return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
+    return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label, timeStamp);
 }
 
 /* Intercept math function with 1 arguments */
@@ -99,6 +122,7 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
     UNUSED(func);
 
     fvalue = (float)value;
+    double timeStamp = getTimeStamp();
 
 #ifndef USE_LABEL
     vector<void*> btVec = __getContextHashBacktrace();
@@ -119,7 +143,7 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
             << " s(" <<s << ") "
             << "label (" << label << ")"
             <<endl;);
-    return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label);
+    return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label, timeStamp);
 }
 
 /*** PRIVATE FUNCTIONS ***/
@@ -141,8 +165,8 @@ vector<void*> PrecisionTuner::__getContextHashBacktrace() {
     return btVec;
 }
 
-double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, float fres, double dres,
-        double value, string label){
+double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s,
+        float fres, double dres, double value, string label, double timeStamp){
     bool singlePrecision, singlePrecisionProfiling;
     double res;
 #ifdef NDEBUG
@@ -158,7 +182,7 @@ double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s, fl
             break;
         case APPLYING_PROF:
             {
-                ShadowValue shadowValue(fres, dres, value, singlePrecisionProfiling);
+                ShadowValue shadowValue(fres, dres, value, singlePrecisionProfiling, timeStamp);
                 __profile->applyProfiling(btVec, label, shadowValue);
             }
             break;

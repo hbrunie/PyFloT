@@ -2,11 +2,18 @@
 unsigned long ShadowValue::__globalCounter = 0;
 ShadowValue::ShadowValue(double dp, float sp, double argument, bool spBoolean) :
     __doubleP(dp), __singleP((double)sp), __argument(argument),__spBoolean(spBoolean){
-   __index = __globalCounter++;
-    }
+    __index = __globalCounter++;
+    __timeStamp = 0.;
+}
+
+ShadowValue::ShadowValue(double dp, float sp, double argument, bool spBoolean, double timeStamp) :
+    ShadowValue(dp, sp, argument, spBoolean){
+    __timeStamp = timeStamp;
+}
 
 string ShadowValue::getCSVformat(){
     return to_string(__index) + " "
+        + to_string(__timeStamp) + " "
         + to_string(__argument) + " "
         + to_string(__doubleP) + " "
         + to_string(__singleP) + " "
@@ -21,7 +28,9 @@ Value ShadowValue::getJsonValue(){
     double sp = __singleP;
     bool spBoolean = __spBoolean;
     double argument = __argument;
+    double timeStamp = __timeStamp;
     v["arg"] = argument;
+    v["ts"] = timeStamp;
     v["index"] = __index;
     v["singlePrecision"] = spBoolean;
     v["double"] = dp;
@@ -36,6 +45,7 @@ ostream& operator<<(ostream& os, const ShadowValue& sv){
         << " Argument: "<< sv.__argument
         << " Single Precision: "<< sv.__singleP
         << " Single(true)OrDouble(false)? " << sv.__spBoolean
+        << " TS: " << sv.__timeStamp
         << endl;
     return os;
 }
