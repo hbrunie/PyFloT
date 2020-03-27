@@ -272,9 +272,11 @@ void Profile::__dumpCSVdynamicCalls(){
     string fileName;
     for (auto it = __backtraceStaticMap.begin(); it != __backtraceStaticMap.end(); ++it){
         dumpFile = writeCSVFile(DUMP_CSV_PROFILING_FILE,
-                DEFAULT_DUMP_CSV_PROF_FILE, DUMP_DIR, DEFAULT_DUMPDIR, index++);
+                DEFAULT_DUMP_CSV_PROF_FILE, DUMP_DIR, DEFAULT_DUMPDIR, index);
         shared_ptr<DynFuncCall>value = it->second;
-        dumpFile << value->getCSVformat() << endl;;
+        dumpFile << "index timeStamp argument doubleP singleP absErr relErr spBoolean callSite" << endl;
+        dumpFile << value->getCSVformat(index) << endl;;
+        index++;
     }
 }
 

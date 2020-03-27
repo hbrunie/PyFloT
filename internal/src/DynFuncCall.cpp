@@ -225,11 +225,11 @@ bool DynFuncCall::applyStrategyDynCount(){
     return false;
 }
 
-string DynFuncCall::getCSVformat(){
+string DynFuncCall::getCSVformat(int callSiteIndex){
     /* For each ShadowValue: index arg double single absErr relErr singlePrecBool */
     string result = "";
     for(unsigned int i=0; i<__shadowValues.size(); i++)
-        result +=  __shadowValues[i].getCSVformat() + "\n";
+        result +=  __shadowValues[i].getCSVformat() + " " + to_string(callSiteIndex) + "\n";
     return result;
 }
 

@@ -64,7 +64,7 @@ class DynFuncCall
         DynFuncCall(vector<void*>, uint32_t, bool);
         Value getReducedJsonValue();
         Value getFullJsonValue();
-        string getCSVformat();
+        string getCSVformat(int);
         vector<void*> getBtVector();
         void updateStrategyBacktraceList();
         void updateStrategyBacktrace();
