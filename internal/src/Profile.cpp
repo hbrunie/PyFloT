@@ -299,12 +299,12 @@ void Profile::__dumpJsonPermanentHashMap(bool dumpReduced){
         shared_ptr<DynFuncCall>value = it->second;
         Value statHashKey(key);
         Value jsonDynFuncCall;
+        //Reduced in JSON, rest of data in CSV
         if(dumpReduced)
             jsonDynFuncCall = value->getReducedJsonValue();
         else
             jsonDynFuncCall = value->getFullJsonValue();
         jsonDynFuncCall[JSON_HASHKEY_KEY] = statHashKey;
-        // TODO CSV fileName should take into account envVar like dumpCSV...
         jsonDynFuncCall[JSON_CSV_FILENAME] =
             string("dumpCSVdynCallSite-") + to_string(index++) + string(".csv");
         jsonDynFuncCallsList.append(jsonDynFuncCall);
