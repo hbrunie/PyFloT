@@ -90,7 +90,7 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, level):
     ## List of all subset strategies
     CsubsetList = []
     ## For possible size of subset composing strategies
-    for n in range(2,len(callsName)+1):
+    for n in range(1,len(callsName)+1):
         ## Compute the subsets
         subsets = findsubsets(snames, n)
         ## For each subset, create a strategy file
@@ -103,6 +103,15 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, level):
             CsubsetList.append(Csubset)
     ## Sort subsets list with score
     CsubsetList.sort(key=lambda x: x[1], reverse=True)
+    ## Remove all list elements after first individual encountered
+    eltCounter = 0
+    for e in CsubsetList:
+        ## len of subset
+        if len(e[0]) == 1:
+            eltCounter += 1
+            break
+        eltCounter += 1
+    CsubsetList = list(CsubsetList[0:eltCounter])
     os.system(f"mkdir -p {stratDir}")
     rank = 0
     CsubsetListFiles = []
@@ -190,6 +199,30 @@ def checkFile(dynCallsd):
                 else:
                     already.add(l)
 
+def createStratFiles(stratDir, jsonFile, static=True):
+    if static:
+        createStratFiles
+
+def createStratFilesDynamic(stratDir, jsonFile):
+    """ Static: level1
+        Create strategy files, for each individual static call sites
+    """
+    global profile
+    os.system(f"mkdir -p {stratDir}")
+
+    with open(jsonFile, 'r') as json_file:
+        profile = json.load(json_file)
+    staticCalls,dynCalls = updateProfile(profile)
+    stratList = [(x["name"],x["HashKey"]) for x in dynCalls]
+    n = len(stratList)
+    assert n>1## at least two individual dynamic call sites
+    for (name, key) in stratList:
+        with open(stratDir+f"strat-{name}.txt", 'a') as ouf:
+            ouf.write(key+"\n")
+    print(f"{n} files created.")
+    ## Return list of names
+    return stratList
+
 def createStratFilesLvl1(stratDir, jsonFile):
     """ Static: level1
         Create strategy files, for each individual static call sites
@@ -263,15 +296,15 @@ def execApplication(binary, args, stratDir, stratList, level, multiSite=False):
 
 def execApplicationMultiSiteLvl1(binary, args, stratDir, stratList):
     """ stratList is a list of tuple (name,hashKeys)
-        In case of multiSite, hashKeys is a list
-        Otherwise is just a single hashkey
+        GOAL: Returns best multisite solution, if not return best individual solution
     """
-    global globalBestName
     cmd = f"{binary} {args}"
     validNames = []
     validHashKeys = []
     updateEnv()
-    for (name,hashKey) in stratList:
+    ## Go through [0:n-1] in list
+    ## Because last element is best valid individual
+    for (name,hashKey) in stratList[:-1]:
         valid = runApp(cmd, stratDir, name)
         if valid:
             return ([name],hashKey)
@@ -300,3 +333,19 @@ def  execApplicationIndividualLvl1(binary, args, stratDir, stratList):
             bestScore = score
     print("BEST individidual",globalBestName)
     return (validNames,validHashKeys)
+
+def execApplicationMultiSiteLvl1(binary, args, stratDir, stratList):
+    """ stratList is a list of tuple (name,hashKeys)
+        GOAL: Returns best multisite solution, if not return best individual solution
+    """
+    cmd = f"{binary} {args}"
+    validNames = []
+    validHashKeys = []
+    updateEnv()
+    ## Go through [0:n-1] in list
+    ## Because last element is best valid individual
+    for (name,hashKey) in stratList[:-1]:
+        valid = runApp(cmd, stratDir, name)
+        if valid:
+            return (name,hashKey)
+    return stratList[-1]
