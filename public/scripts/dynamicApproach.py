@@ -1,19 +1,20 @@
 from generateStrat import execApplication
-from generateStrat import createStratFilesLvl1
-from generateStrat import createStratFilesLvl2
-from generateStrat import createStratFilesMultiSite
-from generateStrat import execApplicationIndividualLvl1
-from generateStrat import execApplicationMultiSiteLvl1
+from generateStrat import createStratFilesDynamic
+from generateStrat import createStratFilesMultiSiteDynamic
+from generateStrat import execApplication
+from generateStrat import execApplicationMultiSite
+from generateStrat import display
+from generateStrat import getVerbose
 
 ## 2 levels
-binary = "./test3Exp"
-args = ""
+binary = "/global/cscratch1/sd/hbrunie/applications/AMReX-Combustion/PeleC/Exec/RegTests/PMF/PeleC1d.gnu.haswell.ex"
+args = "inputs-1d-regt max_step=1"
 ## Level 1 --> Static calls
 ## First pruning based on Individual Reduced Precision
 
-verbose = 3
+verbose = getVerbose()
 
-readJsonProfileFile=".pyflot/profile/profile.json"
+readJsonProfileFile=".pyflot-1ite/profile.json"
 
 ## Dynamic Calls (Full CallStack)
 ## Same approach, prune based on Individual Reduced Precision (BFS: Mike Lam)
@@ -22,19 +23,22 @@ toTestList = createStratFilesDynamic(stratDir, readJsonProfileFile)
 if verbose>2:
     print("Level2 Individual: ToTest name list: ", [x[0] for x in toTestList])
 ## Get the successful inidividual static call sites
-validList = execApplication(binary, args, stratDir,
-        toTestList, 2)
+validList = execApplication(binary, args, stratDir, toTestList)
 if verbose>2:
     print("Level2, Valid name list of individual-site dynamic call sites: ", validList[0])
 
 ## Then merge with strategies sorted by performance impact
 ## Be aware: static calls strategy from level 1 is still used here.
-toTestList = createStratFilesMultiSite(stratDir,
-        readJsonProfileFile, validList,2)
-if verbose>2:
-    print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
+toTestList = createStratFilesMultiSiteDynamic(stratDir,
+        readJsonProfileFile, validList)
+while toTestList:
+    if verbose>2:
+        print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
 
-validList = execApplication(binary, args, stratDir,
-        toTestList, 2, multiSite=True)
-if verbose>2:
-    print("Level2, Valid Name list of multi-site dynamic call sites:", validList[0])
+    validList = execApplicationMultiSite(binary, args, stratDir, toTestList)
+    if verbose>2:
+        print("Level2, Valid Name list of multi-site dynamic call sites:", validList[0])
+    toTestList = createStratFilesMultiSiteDynamic(stratDir,
+            readJsonProfileFile, validList)
+
+display()
