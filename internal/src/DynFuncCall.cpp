@@ -18,17 +18,19 @@
 using namespace std;
 using namespace Json;
 
-const string DynFuncCall::JSON_CALLSTACK_ADDR_LIST_KEY = "CallStack";
-const string DynFuncCall::JSON_CALLSCOUNT_KEY          = "CallsCount";
-const string DynFuncCall::JSON_LABELS_KEY              = "Labels";
-const string DynFuncCall::JSON_LOWERCOUNT_KEY          = "LowerCount";
-const string DynFuncCall::JSON_LOWERBOUND_KEY          = "LowerBound";
-const string DynFuncCall::JSON_UPPERBOUND_KEY          = "UpperBound";
+const string DynFuncCall::JSON_CALLSTACK_ADDR_LIST_KEY       = "CallStack";
+const string DynFuncCall::JSON_CALLSTACK_FILELINENO_LIST_KEY = "Addr2lineCallStack";
+const string DynFuncCall::JSON_CALLSCOUNT_KEY                = "CallsCount";
+const string DynFuncCall::JSON_LABELS_KEY                    = "Labels";
+const string DynFuncCall::JSON_LOWERCOUNT_KEY                = "LowerCount";
+const string DynFuncCall::JSON_LOWERBOUND_KEY                = "LowerBound";
+const string DynFuncCall::JSON_UPPERBOUND_KEY                = "UpperBound";
 
 int setInRegion(string label){
     Labels labels;
     return labels.setInRegion(label);
 }
+
 int unSetInRegion(string label){
     Labels labels;
     return labels.unSetInRegion(label);
@@ -38,6 +40,7 @@ int setInRegion(const char * label){
     Labels labels;
     return labels.setInRegion(label);
 }
+
 int unSetInRegion(const char * label){
     Labels labels;
     return labels.unSetInRegion(label);
@@ -264,18 +267,20 @@ Value DynFuncCall::getJsonValue(bool dumpReduced){
         v["ShadowValues"] = shadowValues;
     }
 
-    void** sym_array = (void**) malloc(sizeof(void*)*__btVec.size());
+    void** btArray = (void**) malloc(sizeof(void*)*__btVec.size());
     for(unsigned int i =0; i< __btVec.size();i++){
-        sym_array[i] = __btVec[i];
+        btArray[i] = __btVec[i];
     }
-    char ** char_array = backtrace_symbols((void* const*)sym_array, __btVec.size());
-    free(sym_array);
+    char ** btSymsArray = backtrace_symbols((void* const*)btArray, __btVec.size());
+    free(btArray);
     for(unsigned int i =0; i< __btVec.size();i++){
         String s(char_array[i]);
         Value sym = s;
         btVec.append(sym);
+        //btVecFileLineno.append(addr2lineBacktrace(targetExe, char_array, __btVec.size()));
     }
     v[JSON_CALLSTACK_ADDR_LIST_KEY] = btVec;
+    //v[JSON_CALLSTACK_FILELINENO_LIST_KEY] = btVecFileLineno;
     DEBUGINFO("ENDING");
     return v;
 }

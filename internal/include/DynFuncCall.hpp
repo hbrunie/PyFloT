@@ -27,6 +27,8 @@ class DynFuncCall
         static const string JSON_CALLSCOUNT_KEY;
         // List of Hexadecimal virtual addresses
         static const string JSON_CALLSTACK_ADDR_LIST_KEY;
+        // List of File name and line no from virtual addresses (addr2line)
+        static const string JSON_CALLSTACK_FILELINENO_LIST_KEY;
         // LOWERED Dynamic calls count
         static const string JSON_LABELS_KEY;
         static const string JSON_LOWERCOUNT_KEY;
