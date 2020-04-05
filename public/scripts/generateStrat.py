@@ -17,6 +17,7 @@ totalDynCalls = 0
 totalStatCalls = 0
 
 outputFile = "pmfOutputFile-4check"
+dumpDirectory ="./.pyflot-1ite/"
 
 def display():
     global ratioSP
@@ -48,7 +49,7 @@ def updateProfile(profile):
     count = 0
     for cs in dynCalls:
         count += 1
-        cs["name"] = f"dynCS-{count}"
+        cs["name"] = f"-{count}"
         key = ""
         ## Build Static Key with 4 backtrace lvl
         for callstack in  cs["CallStack"][:maxlvl]:
@@ -124,17 +125,40 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
             create one stratFile per combination. Each combination
             is a subset of the set of individuals
     """
+    def generateStratFiles(CsubsetList):
+        rank = 0
+        CsubsetListFiles = []
+        staticName = "dynamic"
+        if static:
+            staticName = "static"
+        for csub in CsubsetList:
+            rank += 1
+            name = f"multiSite-{staticName}-r{rank}"
+            for n in csub[0]:
+                name += f"-{n}"
+            f = f"strat-{name}.txt"
+            ## csub ((name,name,), CallsCount)
+            keys = getKeys(csub[0], static)
+            CsubsetListFiles.append((name, keys, csub[1],csub[2]))
+            if verbose>2:
+                print(f"Creation of file: {f}")
+            with open(stratDir+f, 'a') as ouf:
+                for key in keys:
+                    ouf.write(key+"\n")
+        return CsubsetListFiles
+
     def findsubsets(s, n):
         return list(itertools.combinations(s, n))
-    ## List of all subset strategies
-    CsubsetList = []
     ## For possible size of subset composing strategies
+    print(validNameHashKeyList)
     callsName = validNameHashKeyList[0]
     snames = set(callsName)
     os.system(f"mkdir -p {stratDir}")
     lenCallsName = len(callsName)
     print(f"Do createStratFilesMultiSiteDynamic {lenCallsName}")
-    for n in range(1,lenCallsName+1):
+    for n in range(lenCallsName,0,-1):
+        ## List of all subset strategies
+        CsubsetList = []
         ## Compute the subsets
         print(f"n: {n}, do findsubsets")
         subsets = findsubsets(snames, n)
@@ -150,41 +174,24 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
             ## Append tuple subset,score to the list
             CsubsetList.append(Csubset)
         print(f"For each subsets({lensubsets}) DONE")
-    print(f"createStratFilesMultiSiteDynamic {lenCallsName} DONE")
-    ## Sort subsets list with score
-    CsubsetList.sort(key=lambda x: x[1], reverse=True)
-    ## Remove all list elements after first individual encountered
-    ## Idea is to keep best individual in case all multisite don't work
-    eltCounter = 0
-    for e in CsubsetList:
-        ## len of subset
-        if len(e[0]) == 1:
+        print(f"createStratFilesMultiSiteDynamic {lenCallsName} DONE")
+        ## Sort subsets list with score
+        CsubsetList.sort(key=lambda x: x[1], reverse=True)
+        ## Remove all list elements after first individual encountered
+        ## Idea is to keep best individual in case all multisite don't work
+        eltCounter = 0
+        for e in CsubsetList:
+            ## len of subset
+            if len(e[0]) == 1:
+                eltCounter += 1
+                break
             eltCounter += 1
-            break
-        eltCounter += 1
-    CsubsetList = list(CsubsetList[0:eltCounter])
-    ## Generating strategy files
-    rank = 0
-    CsubsetListFiles = []
-    staticName = "dynamic"
-    if static:
-        staticName = "static"
-    for csub in CsubsetList:
-        rank += 1
-        name = f"multiSite-{staticName}-r{rank}"
-        for n in csub[0]:
-            name += f"-{n}"
-        f = f"strat-{name}.txt"
-        ## csub ((name,name,), CallsCount)
-        keys = getKeys(csub[0], static)
-        CsubsetListFiles.append((name, keys, csub[1],csub[2]))
-        if verbose>2:
-            print(f"Creation of file: {f}")
-        with open(stratDir+f, 'a') as ouf:
-            for key in keys:
-                ouf.write(key+"\n")
-    ## Return list of performance ordered subset names
-    return CsubsetListFiles
+        CsubsetList = list(CsubsetList[0:eltCounter])
+        ## Generating strategy files
+        CsubsetListFiles = generateStratFiles(CsubsetList)
+        ## Return list of performance ordered subset names
+        yield CsubsetListFiles
+    return []
 
 def createStratFilesDynamicAfterStatic(stratDir, jsonFile, validNameHashKeyList):
     """ Hierarchical approach.
@@ -303,6 +310,7 @@ def checkPMF(f):
     return False
 
 def runCheckScript(f):
+    #return checkTest3Exp()
     return checkPMF(f)
 
 def runApp(cmd, stratDir, name):
@@ -321,10 +329,10 @@ def runApp(cmd, stratDir, name):
     return valid
 
 def updateEnv():
-    resultsDir = "./.pyflot/results/"
+    resultsDir = dumpDirectory +"./results/"
     procenv = {}
     ##TODO: use script arguments
-    procenv["PRECISION_TUNER_READJSON"] = "./.pyflot-1ite/profile.json"
+    procenv["PRECISION_TUNER_READJSON"] = dumpDirectory + "./profile.json"
     procenv["PRECISION_TUNER_DUMPCSV"] = "./whocares.csv"
     procenv["PRECISION_TUNER_OUTPUT_DIRECTORY"] = resultsDir
     procenv["PRECISION_TUNER_MODE"] = "APPLYING_STRAT"
@@ -343,12 +351,7 @@ def __execApplication(binary, args, stratDir, stratList, multiSite=False):
     validNames = []
     validHashKeys = []
     updateEnv()
-    if multiSite:
-        ## Go through [0:n-1] in list
-        ## Because last element is best valid individual
-        _stratList = stratList[:-1]
-    else:
-        _stratList = stratList
+    _stratList = stratList
     for (name, hashKey, dynCallsCount, statCallsCount) in _stratList:
         valid = runApp(cmd, stratDir, name)
         if valid:
@@ -359,13 +362,8 @@ def __execApplication(binary, args, stratDir, stratList, multiSite=False):
             else:
                 validNames.append(name)
                 validHashKeys.append(hashKey)
-    ## Choose best individual
     if multiSite:
-        elt = stratList[-1]
-        dynCallsSP += elt[2]
-        ## Only one because it is not multi site: best individual
-        statCallsSP += 1
-        return ([elt[0]],elt[1])
+        return []
     else:
         return (validNames,validHashKeys)
 
