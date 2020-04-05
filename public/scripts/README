@@ -1,0 +1,38 @@
+OLDVERSION
+**********
+DataStrategy.py
+    different subset to decompose search space
+Envvars.py
+    Environment variables definition
+    Execute program function
+Profiling.py
+    Profiling code
+Strategy.py
+    Applyging strategy, creating strategy files
+__init__.py
+parse.py
+script.py
+studyExp.py
+
+NEWVERSION
+**********
+staticApproach.py
+dynamicApproach.py
+generalApproach.py
+generateStrat.py
+
+OTHER
+*****
+other
+ - backup.py
+ - execStrat.py
+ - init.py
+ - reducedPrecisionHeuristic.py
+ - studyExp.backup.py
+ - config.py
+    Example of configuration parser
+
+
+tools
+ - readAllJson.py
+ - tree.py
