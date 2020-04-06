@@ -7,7 +7,7 @@ using namespace std;
 using namespace Json;
 
 class Profile{
-    private: 
+    private:
         bool __mode;
         // Function return addresses, sensible to
         // LINUX Address space layout randomization (ASLR)
@@ -45,6 +45,7 @@ class Profile{
 
         static const string BACKTRACE_LIST;
         static const string DEFAULT_BACKTRACE_LIST;
+        static const char * TARGET_EXE_FILENAME;
 
         static const string DEFAULT_READ_JSON_STRAT_FILE;
         static const string DEFAULT_DUMP_JSON_PROF_FILE;

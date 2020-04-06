@@ -1,7 +1,6 @@
-
 include ../../make.def
 SOURCES=PrecisionTuner.cpp overloading.cpp Profile.cpp DynFuncCall.cpp Labels.cpp Utils.cpp ShadowValue.cpp
-OBJECTS=Profile.o PrecisionTuner.o DynFuncCall.o overloading.o Labels.o Utils.o ShadowValue.o ../utils/Debug.o
+OBJECTS=Backtrace.o Profile.o PrecisionTuner.o DynFuncCall.o overloading.o Labels.o Utils.o ShadowValue.o ../utils/Debug.o
 GOTCHALIB=-L ../../external-deps/install/lib64/ -lgotcha -Wl,-rpath, /global/cscratch1/sd/hbrunie/tools/precisiontuning/external-deps/install/lib64/
 GOTCHAINC=-I ../../external-deps/install/include/
 PTLabels= -I ../../public/include/

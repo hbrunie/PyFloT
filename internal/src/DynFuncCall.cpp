@@ -14,6 +14,7 @@
 #include "Debug.hpp"
 #include "PrecisionTuner.hpp"
 #include "Utils.hpp"
+#include "Backtrace.hpp"
 
 using namespace std;
 using namespace Json;
@@ -236,15 +237,15 @@ string DynFuncCall::getCSVformat(int callSiteIndex){
     return result;
 }
 
-Value DynFuncCall::getReducedJsonValue(){
-    return getJsonValue(true);
+Value DynFuncCall::getReducedJsonValue(char * targetExe){
+    return getJsonValue(targetExe, true);
 }
 
-Value DynFuncCall::getFullJsonValue(){
-    return getJsonValue(false);
+Value DynFuncCall::getFullJsonValue(char * targetExe){
+    return getJsonValue(targetExe, false);
 }
 
-Value DynFuncCall::getJsonValue(bool dumpReduced){
+Value DynFuncCall::getJsonValue(char * targetExe, bool dumpReduced){
     DEBUGINFO("STARTING");
     Value v;
     Value dyncount((UInt)__dyncount);
@@ -252,6 +253,7 @@ Value DynFuncCall::getJsonValue(bool dumpReduced){
     Value lowerBound((UInt)__lowerBound);
     Value upperBound((UInt)__upperBound);
     Value btVec;
+    Value btVecFileLineno;
     Value shadowValues;
 
     v[JSON_LABELS_KEY] = labels.getJsonValue();
@@ -274,13 +276,13 @@ Value DynFuncCall::getJsonValue(bool dumpReduced){
     char ** btSymsArray = backtrace_symbols((void* const*)btArray, __btVec.size());
     free(btArray);
     for(unsigned int i =0; i< __btVec.size();i++){
-        String s(char_array[i]);
+        String s(btSymsArray[i]);
         Value sym = s;
         btVec.append(sym);
-        //btVecFileLineno.append(addr2lineBacktrace(targetExe, char_array, __btVec.size()));
+        btVecFileLineno.append(addr2lineBacktrace(targetExe, s));
     }
     v[JSON_CALLSTACK_ADDR_LIST_KEY] = btVec;
-    //v[JSON_CALLSTACK_FILELINENO_LIST_KEY] = btVecFileLineno;
+    v[JSON_CALLSTACK_FILELINENO_LIST_KEY] = btVecFileLineno;
     DEBUGINFO("ENDING");
     return v;
 }

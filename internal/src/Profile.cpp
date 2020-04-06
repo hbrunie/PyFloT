@@ -32,6 +32,7 @@ const string Profile::DUMP_JSON_STRATSRESULTS_FILE = "PRECISION_TUNER_DUMPJSON";
 const string Profile::DUMP_CSV_PROFILING_FILE      = "PRECISION_TUNER_DUMPCSV";
 const string Profile::READ_JSON_PROFILE_STRAT_FILE = "PRECISION_TUNER_READJSON";
 const string Profile::BACKTRACE_LIST               = "BACKTRACE_LIST";
+const char * Profile::TARGET_EXE_FILENAME          = "TARGET_FILENAME";
 
 const string Profile::JSON_TOTALCALLSTACKS_KEY  = "TotalCallStacks";
 const string Profile::JSON_TOTALDYNCOUNT_KEY    = "CallsCount";
@@ -289,6 +290,8 @@ void Profile::__dumpReducedJsonPermanentHashMap(){
 
 void Profile::__dumpJsonPermanentHashMap(bool dumpReduced){
     DEBUGINFO("STARTING");
+    char * targetExe = getenv(TARGET_EXE_FILENAME);
+    assert(NULL != targetExe);
     Value jsonDictionary;
     Value jsonDynFuncCallsList;
     Value jsonTotalCallStacks = (UInt)__totalCallStacks;
@@ -301,9 +304,9 @@ void Profile::__dumpJsonPermanentHashMap(bool dumpReduced){
         Value jsonDynFuncCall;
         //Reduced in JSON, rest of data in CSV
         if(dumpReduced)
-            jsonDynFuncCall = value->getReducedJsonValue();
+            jsonDynFuncCall = value->getReducedJsonValue(targetExe);
         else
-            jsonDynFuncCall = value->getFullJsonValue();
+            jsonDynFuncCall = value->getFullJsonValue(targetExe);
         jsonDynFuncCall[JSON_HASHKEY_KEY] = statHashKey;
         jsonDynFuncCall[JSON_CSV_FILENAME] =
             string("dumpCSVdynCallSite-") + to_string(index++) + string(".csv");
