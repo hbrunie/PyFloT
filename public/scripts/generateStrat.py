@@ -333,10 +333,11 @@ def runApp(cmd, stratDir, name, checkText):
         print(f"BacktraceListFile ({backtrace}) Valid? {valid}")
     return valid
 
-def updateEnv(dumpDirectory, profileFile):
+def updateEnv(dumpDirectory, profileFile, binary):
     resultsDir = dumpDirectory +"./results/"
     procenv = {}
     ##TODO: use script arguments
+    procenv["TARGET_FILENAME"] = binary
     procenv["PRECISION_TUNER_READJSON"] = dumpDirectory + profileFile
     procenv["PRECISION_TUNER_DUMPCSV"] = "./whocares.csv"
     procenv["PRECISION_TUNER_OUTPUT_DIRECTORY"] = resultsDir
@@ -355,7 +356,7 @@ def __execApplication(binary, args, stratDir, stratList, checkText, dumpDirector
     cmd = f"{binary} {args}"
     validNames = []
     validHashKeys = []
-    updateEnv(dumpDirectory, profileFile)
+    updateEnv(dumpDirectory, profileFile, binary)
     _stratList = stratList
     for (name, hashKey, dynCallsCount, statCallsCount) in _stratList:
         valid = runApp(cmd, stratDir, name, checkText)

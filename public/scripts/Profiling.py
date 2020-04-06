@@ -40,6 +40,7 @@ class Profiling(Envvars):
         procenv[self._ENVVAR_PTUNERDUMPPROF] = self.__dumpJsonProfileFile
         procenv[self._ENVVAR_OMPNUMTHREADS] = "1"
         procenv[self._ENVVAR_DUMPDIR] = self.__directory
+        procenv[self._ENVVAR_BINARY] = self.__binary
         os.system("mkdir -p {}".format(self.__directory))
         #procenv["PRECISION_TUNER_DEBUG"] = ""
         command = []
