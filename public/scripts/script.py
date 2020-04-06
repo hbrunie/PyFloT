@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import sys
 
-from parse import parse
+from parse import parseProfiling
 from Profiling import Profiling
 
-args = parse()
+args = parseProfiling()
 dontExecApp4Profile = args.onlyGenStrat or args.onlyApplyingStrat
 profile = Profiling(args, dontExecApp4Profile)
 if args.onlyProfile:

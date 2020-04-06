@@ -17,7 +17,6 @@ totalDynCalls = 0
 totalStatCalls = 0
 
 outputFile = "pmfOutputFile-4check"
-dumpDirectory ="./.pyflot-1ite/"
 
 def display():
     global ratioSP
@@ -46,10 +45,11 @@ def updateProfile(profile):
     profile["StaticCalls"] = staticCalls
     profile["StaticCallsd"] = staticCallsd
     maxlvl = 4 #16
-    count = 0
+    statCount = 0
+    dynCount = 0
     for cs in dynCalls:
-        count += 1
-        cs["name"] = f"-{count}"
+        cs["dynname"] = f"Dyn-{dynCount}"
+        dynCount += 1
         key = ""
         ## Build Static Key with 4 backtrace lvl
         for callstack in  cs["CallStack"][:maxlvl]:
@@ -62,51 +62,57 @@ def updateProfile(profile):
             scs = staticCallsd[key]
             scs["CallsCount"] += cs["CallsCount"]
             totalDynCalls += cs["CallsCount"]
+            statCountMinusOne = statCount - 1
+            cs["statname"] = f"statCS-{statCountMinusOne}"
         ## If not already in dict
         ## Add to dict and update name/hashKey/CallsCount
         ## Append to staticCalls list
         else:
             ##Copy of Dynamic Call dictionnary into the staticCall one
+            cs["statname"] = f"statCS-{statCount}"
             staticCallsd[key] = cs.copy()
             scs = staticCallsd[key]
             scs["HashKey"] = key
             ##Change dynCall name for static one, in copy
-            scs["name"] = f"statCS-{count}"
             ##Update StatCall callsCount with dynamic one, in copy
             totalDynCalls += cs["CallsCount"]
             totalStatCalls += 1
             staticCalls.append(scs)
+            statCount += 1
     if verbose > 1:
-        print("Profile: ",[(x["name"],x["CallsCount"]) for x in staticCalls])
-        print("Profile: ",[(x["name"],x["CallsCount"]) for x in dynCalls])
+        print("Profile: ",[(x["statname"],x["dynname"],x["CallsCount"]) for x in staticCalls])
+        print("Profile: ",[(x["statname"],x["dynname"],x["CallsCount"]) for x in dynCalls])
     return (staticCalls,dynCalls)
 
 
 
 from itertools import permutations
 import itertools
-def getCountCalls(subset, static):
+def getCount(subset, static, computeCalls=True):
+    keys = []
     cc = 0
     if static:
         calls = profile["StaticCalls"]
+        name = "statname"
     else:
         calls = profile["IndependantCallStacks"]
-    for dc in calls:
-        if dc["name"] in subset:
-            cc += dc["CallsCount"]
-    return cc
+        name = "dynname"
+    for call in calls:
+        if call[name] in subset:
+            if computeCalls:
+                cc += call["CallsCount"]
+            else:
+                keys.append(call["HashKey"])
+    if computeCalls:
+        return cc
+    else:
+        return keys
 
-def getKeys(csub, static):
-    keys = []
-    if static:
-        calls = profile["StaticCalls"]
-    else:
-        calls = profile["IndependantCallStacks"]
-    for ics in calls:
-        n = ics["name"]
-        if n in csub:
-            keys.append(ics["HashKey"])
-    return keys
+def getCountCalls(subset, static):
+    return getCount(subset, static, True)
+
+def getKeys(subset, static):
+    return getCount(subset, static, False)
 
 def createStratFilesMultiSiteStatic(stratDir, jsonFile, validNameHashKeyList):
     return createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, True)
@@ -228,8 +234,7 @@ def createStratFilesDynamicAfterStatic(stratDir, jsonFile, validNameHashKeyList)
                     break
             if add:
                 res.append(x)
-        return [(x["name"],x["HashKey"]) for x in res]
-    global bestIndividual
+        return [(x["dynname"],x["HashKey"]) for x in res]
     os.system(f"mkdir -p {stratDir}")
     stratList = []
     stratList = getStratList(jsonFile, validNameHashKeyList)
@@ -277,9 +282,9 @@ def createStratFiles(stratDir, jsonFile, static):
         profile = json.load(json_file)
     staticCalls,dynCalls = updateProfile(profile)
     if static:
-        stratList = [(x["name"],x["HashKey"],x["CallsCount"], 1) for x in staticCalls]
+        stratList = [(x["statname"],x["HashKey"],x["CallsCount"], 1) for x in staticCalls]
     else:
-        stratList = [(x["name"],x["HashKey"],x["CallsCount"], 0) for x in dynCalls]
+        stratList = [(x["dynname"],x["HashKey"],x["CallsCount"], 0) for x in dynCalls]
     n = len(stratList)
     assert n>1## at least two individual dynamic call sites
     for (name, key, dynCallsCount, statCallsCount) in stratList:
@@ -300,20 +305,20 @@ def checkTest3Exp():
         checkCount +=1
         return False
 
-def checkPMF(f):
+def checkPMF(f, checkText):
     ## Check PMF result
-    res = "AMReX (20.01-36-gfee20d598e0a-dirty) finalized"
+    res = checkText
     with open(f, "r") as inf:
         for l in inf.readlines():
             if res in l:
                 return True
     return False
 
-def runCheckScript(f):
+def runCheckScript(f, checkText):
     #return checkTest3Exp()
-    return checkPMF(f)
+    return checkPMF(f, checkText)
 
-def runApp(cmd, stratDir, name):
+def runApp(cmd, stratDir, name, checkText):
     global nbTrials
     global outputFile
     nbTrials += 1
@@ -323,16 +328,16 @@ def runApp(cmd, stratDir, name):
     os.environ["BACKTRACE_LIST"] = backtrace
     os.environ["PRECISION_TUNER_DUMPJSON"] = f"./dumpResults-{name}.json"
     os.system(cmd + f" >> {outputFileLocal}")
-    valid = runCheckScript(outputFileLocal)
+    valid = runCheckScript(outputFileLocal, checkText)
     if verbose>2:
         print(f"BacktraceListFile ({backtrace}) Valid? {valid}")
     return valid
 
-def updateEnv():
+def updateEnv(dumpDirectory, profileFile):
     resultsDir = dumpDirectory +"./results/"
     procenv = {}
     ##TODO: use script arguments
-    procenv["PRECISION_TUNER_READJSON"] = dumpDirectory + "./profile.json"
+    procenv["PRECISION_TUNER_READJSON"] = dumpDirectory + profileFile
     procenv["PRECISION_TUNER_DUMPCSV"] = "./whocares.csv"
     procenv["PRECISION_TUNER_OUTPUT_DIRECTORY"] = resultsDir
     procenv["PRECISION_TUNER_MODE"] = "APPLYING_STRAT"
@@ -340,7 +345,7 @@ def updateEnv():
     for var,value in procenv.items():
         os.environ[var] = value
 
-def __execApplication(binary, args, stratDir, stratList, multiSite=False):
+def __execApplication(binary, args, stratDir, stratList, checkText, dumpDirectory, profileFile, multiSite):
     """ stratList is a list of tuple (name,hashKeys)
         In case of multiSite, hashKeys is a list
         Otherwise is just a single hashkey
@@ -350,10 +355,10 @@ def __execApplication(binary, args, stratDir, stratList, multiSite=False):
     cmd = f"{binary} {args}"
     validNames = []
     validHashKeys = []
-    updateEnv()
+    updateEnv(dumpDirectory, profileFile)
     _stratList = stratList
     for (name, hashKey, dynCallsCount, statCallsCount) in _stratList:
-        valid = runApp(cmd, stratDir, name)
+        valid = runApp(cmd, stratDir, name, checkText)
         if valid:
             if multiSite:
                 dynCallsSP += dynCallsCount
@@ -367,15 +372,15 @@ def __execApplication(binary, args, stratDir, stratList, multiSite=False):
     else:
         return (validNames,validHashKeys)
 
-def execApplication(binary, args, stratDir, stratList):#, multiSite=False):
+def execApplication(binary, args, stratDir, stratList, checkText, dumpDirectory, profileFile):
     """ stratList is a list of tuple (name,hashKeys)
         In case of multiSite, hashKeys is a list
         Otherwise is just a single hashkey
     """
-    return __execApplication(binary,args,stratDir,stratList,False)
+    return __execApplication(binary, args, stratDir, stratList, checkText, dumpDirectory, profileFile, False)
 
-def execApplicationMultiSite(binary, args, stratDir, stratList):
+def execApplicationMultiSite(binary, args, stratDir, stratList, checkText, dumpDirectory, profileFile):
     """ stratList is a list of tuple (name,hashKeys)
         GOAL: Returns best multisite solution, if not return best individual solution
     """
-    return __execApplication(binary,args,stratDir,stratList,True)
+    return __execApplication(binary,args,stratDir,stratList, checkText, dumpDirectory, profileFile, True)

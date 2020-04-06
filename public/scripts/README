@@ -21,6 +21,48 @@ dynamicApproach.py
 generalApproach.py
 generateStrat.py
 
+*****************
+Using New Version
+*****************
+
+profile.cf
+*********
+[Defaults]
+  binary:/path/to/targetExecution.exe
+  ptunerdir:/path/to/dump/directory (.pyflot)
+  profilefile:profile.json
+  onlyProfile:True
+*********
+
+static.cf
+*********
+[Defaults]
+  binary:/path/to/targetExecution.exe
+  dumpdir:/path/to/dump/directory (.pyflot)
+  profilefile:profile.json
+  verif_text:AMReX (20.01-36-gfee20d598e0a-dirty) finalized
+  param:inputs-1d-regt max_step=10
+*********
+
+dynamic.cf
+*********
+[Defaults]
+  binary:/path/to/targetExecution.exe
+  dumpdir:/path/to/dump/directory (.pyflot)
+  profilefile:profile.json
+  verif_text:AMReX (20.01-36-gfee20d598e0a-dirty) finalized
+  param:inputs-1d-regt max_step=10
+*********
+
+Profiling target application
+    /path/to/pyflot/public/scripts/script.py -c profile.cf
+
+Applying static approach
+    python /path/to/pyflot/public/scripts/staticApproach.py -c static.cf
+
+Applying dynamic approach
+    python /path/to/pyflot/public/scripts/dynamicApproach.py -c dynamic.cf
+
 OTHER
 *****
 other

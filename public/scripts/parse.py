@@ -11,14 +11,9 @@ def get_config(confPath):
     except Exception as e:
          log.error(e)
 
-def parse():
+def parse(defaults):
     """ Parse config file, update with command line arguments
     """
-    # defaults arguments
-    defaults = { "profilefile":"profile.json" , "verif_text":"VERIFICATION SUCCESSFUL",
-            "param":"","outputfile":"stdoutAndstderr", "movePLTdir":False, "onlyProfile":False,
-            "onlyGenStrat":False, "onlyApplyingStrat":False, "execAllStrat":False,
-            "ptunerdir":"./"}
     # Parse any conf_file specification
     conf_parser = argparse.ArgumentParser(
         description=__doc__, # printed with -h/--help
@@ -42,7 +37,15 @@ def parse():
         parents=[conf_parser]
         )
     parser.set_defaults(**defaults)
+    return parser,remaining_argv
 
+def parseProfiling():
+    # defaults arguments
+    defaults = { "profilefile":"profile.json" , "verif_text":"VERIFICATION SUCCESSFUL",
+            "param":"","outputfile":"stdoutAndstderr", "movePLTdir":False, "onlyProfile":False,
+            "onlyGenStrat":False, "onlyApplyingStrat":False, "execAllStrat":False,
+            "ptunerdir":"./"}
+    parser,remaining_argv = parse(defaults)
     parser.add_argument("--binary", help="""binary file absolute or relative path:
                         DONT FORGET ./ if in same directory!""")
 
@@ -93,3 +96,31 @@ def parse():
     args = parser.parse_args(remaining_argv)
     assert args.binary, "binary absolute path is required"
     return args
+
+def parseStatic():
+    # defaults arguments
+    defaults = { "profilefile":"profile.json" , "verif_text":"AMReX (20.01-36-gfee20d598e0a-dirty) finalized",
+                 "param":"", "dumpdir":"./"}
+    parser,remaining_argv = parse(defaults)
+    parser.add_argument("--binary", help="""binary file absolute or relative path:
+                        DONT FORGET ./ if in same directory!""")
+
+    parser.add_argument("--profilefile",
+    help="""Profile phase dumps the JSON into profilefile into outputdir,
+    Applying strat phase read into to create strat files.""")
+
+    parser.add_argument("--dumpdir",
+            help="directory absolute path for all files generated and read by tool analysis")
+
+    parser.add_argument("--param", help="""This is for precising one application
+                        parameter absolute or relative path.
+                        (ex: ./inputs-2d-regt). Several arguments
+                        should be written in between quotes: \"arg1 arg2 ...\" """)
+
+
+    args = parser.parse_args(remaining_argv)
+    assert args.binary, "binary absolute path is required"
+    return args
+
+def parseDynamic():
+    return parseStatic()
