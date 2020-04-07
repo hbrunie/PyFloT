@@ -111,10 +111,15 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
     dres = func(value, parameter);
     return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label, timeStamp);
 }
-
+static bool once = true;
 /* Intercept math function with 1 arguments */
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double),
         double value, string label){
+#ifndef NDEBUG
+    if (once)
+        debugtypeOption(getenv("DEBUG"));
+    once = false;
+#endif
     double dres;
     float fvalue, fres;
     UNUSED(sp_func);
