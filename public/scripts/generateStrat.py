@@ -318,7 +318,7 @@ def runCheckScript(f, checkText):
     #return checkTest3Exp()
     return checkPMF(f, checkText)
 
-def runApp(cmd, stratDir, name, checkText):
+def runApp(cmd, stratDir, name, checkText, envStr):
     global nbTrials
     global outputFile
     nbTrials += 1
@@ -326,7 +326,10 @@ def runApp(cmd, stratDir, name, checkText):
     ## File name Should be same as in generateStrat.py
     backtrace = f"{stratDir}/strat-{name}.txt"
     os.environ["BACKTRACE_LIST"] = backtrace
+    print(f"BACKTRACE_LIST={backtrace}")
     os.environ["PRECISION_TUNER_DUMPJSON"] = f"./dumpResults-{name}.json"
+    print(f"{envStr} PRECISION_TUNER_DUMPJSON="+f"./dumpResults-{name}.json")
+    print(cmd)
     os.system(cmd + f" >> {outputFileLocal}")
     valid = runCheckScript(outputFileLocal, checkText)
     if verbose>2:
@@ -343,8 +346,19 @@ def updateEnv(dumpDirectory, profileFile, binary):
     procenv["PRECISION_TUNER_OUTPUT_DIRECTORY"] = resultsDir
     procenv["PRECISION_TUNER_MODE"] = "APPLYING_STRAT"
     os.system(f"mkdir -p {resultsDir}")
+    envStr = "TARGET_FILENAME="
+    envStr += binary
+    envStr += " PRECISION_TUNER_READJSON="
+    envStr += dumpDirectory
+    envStr += profileFile
+    envStr += " PRECISION_TUNER_DUMPCSV="
+    envStr += "./whocares.csv"
+    envStr += " PRECISION_TUNER_OUTPUT_DIRECTORY="
+    envStr += resultsDir
+    envStr += " PRECISION_TUNER_MODE=APPLYING_STRAT"
     for var,value in procenv.items():
         os.environ[var] = value
+    return envStr
 
 def __execApplication(binary, args, stratDir, stratList, checkText, dumpDirectory, profileFile, multiSite):
     """ stratList is a list of tuple (name,hashKeys)
@@ -356,10 +370,10 @@ def __execApplication(binary, args, stratDir, stratList, checkText, dumpDirector
     cmd = f"{binary} {args}"
     validNames = []
     validHashKeys = []
-    updateEnv(dumpDirectory, profileFile, binary)
+    envStr = updateEnv(dumpDirectory, profileFile, binary)
     _stratList = stratList
     for (name, hashKey, dynCallsCount, statCallsCount) in _stratList:
-        valid = runApp(cmd, stratDir, name, checkText)
+        valid = runApp(cmd, stratDir, name, checkText,envStr)
         if valid:
             if multiSite:
                 dynCallsSP += dynCallsCount

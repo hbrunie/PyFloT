@@ -48,9 +48,9 @@ class Profiling(Envvars):
             self._ENVVAR_PTUNERDUMPPROF, procenv[self._ENVVAR_PTUNERDUMPPROF]))
         #procenv["PRECISION_TUNER_DEBUG"] = ""
         command = []
-        command.append(self.__binary+" " +self.__param)
+        command.append(self.__binary + " " + self.__param)
         print("PROFILING Command: ",command)
-        outputfile = self.__outputFile+"_profile.txt"
+        outputfile = self.__outputFile + "_profile.txt"
         out = self.execute(command,outputfile,procenv)
 
     def developStrategy(self, stratfiles):
