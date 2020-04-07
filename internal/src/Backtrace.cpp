@@ -38,7 +38,7 @@ string addr2lineBacktrace(char * targetExecutable, string bt_sym) {
     return r;
 }
 
-vector<string> addr2lineBacktraceVec(char * targetExecutable, char ** bt_syms, size_t bt_size) {
+vector<string> addr2lineBacktraceVec(std::string targetExecutable, vector<string> bt_syms, size_t bt_size) {
     regex re("\\[(.+)\\]");
     string execPath = string(targetExecutable);
     string addrs = "";
@@ -58,6 +58,28 @@ vector<string> addr2lineBacktraceVec(char * targetExecutable, char ** bt_syms, s
     while (getline(ss, token, '\n')) {
         strVec.push_back(token);
     }
-    free(bt_syms);
+    return strVec;
+}
+
+vector<string> addr2lineBacktraceCharArray(char * targetExecutable, char ** bt_syms, size_t bt_size) {
+    regex re("\\[(.+)\\]");
+    string execPath = string(targetExecutable);
+    string addrs = "";
+    vector<string> strVec;
+    for (size_t i = 1; i < bt_size; i++) {
+        std::string sym = bt_syms[i];
+        std::smatch ms;
+        if (std::regex_search(sym, ms, re)) {
+            std::string m = ms[1];
+            addrs += " " + m;
+        }
+    }
+    //string r = sh("addr2line -e " + execPath + " -f -C " + addrs);
+    string r = sh("addr2line -e " + execPath + " " + addrs);
+    stringstream ss(r);
+    string token;
+    while (getline(ss, token, '\n')) {
+        strVec.push_back(token);
+    }
     return strVec;
 }

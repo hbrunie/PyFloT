@@ -73,8 +73,10 @@ Profile::Profile(bool mode) : __mode(mode){//True --> ApplyingStrat
  * User can define the level of callstack he wants to use for
  * defining the DynamicCallSite.
  * By default the level is 1: only the source code function call is taken into account.
+ * TODO: make it choosable at runtime (envvar)
+ * TODO: make it have an impact on execution time: replace backtrace and backtrace_symbols by custom backtrace.
  */
-string Profile::__staticHashKey(vector<void*> btVec){
+struct statHashKey_t Profile::__staticHashKey(vector<void*> btVec){
     string statHashKey;
     string tmpHash;
     // Choosing level: ONE <= size <= btVec.size();
@@ -119,7 +121,8 @@ string Profile::__staticHashKey(vector<void*> btVec){
     }
     DEBUG("statickey",cerr << __FUNCTION__ << ":" << __LINE__
             << " staticHashKey: " << statHashKey << endl;);
-    return statHashKey;
+    struct statHashKey_t statHashKey_s = {symbols, statHashKey, size};
+    return statHashKey_s;
 }
 
 uintptr_t Profile::__dynHashKey(vector<void*> btVec){
@@ -161,7 +164,8 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
     if(hashKeyIte == __backtraceDynamicMap.end()){
         // Current call stack seen for FIRST time
 #ifndef USE_LABEL
-        string staticHashKey = __staticHashKey(btVec);
+        struct statHashKey_t shk = __staticHashKey(btVec);
+        string staticHashKey = shk.hashKey;
 #else
         string staticHashKey = label;
 #endif
@@ -184,6 +188,8 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
             dfc = __backtraceStaticMap[staticHashKey];
             dfc->updateStrategyBacktrace();
         }
+        //Fill DynFuncCall instance __btSymbolsVec attribute
+        dfc->updateBtSymbols(shk.sym, shk.size);
         __backtraceDynamicMap[dynHashKey] = dfc;
     }else{
         // Current call stack already encountered
@@ -215,7 +221,8 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
         __backtraceDynamicMap[dynHashKey] = dfc;
         /* Update Static HashMap */
 #ifndef USE_LABEL
-        string staticHashKey = __staticHashKey(btVec);
+        struct statHashKey_t shk = __staticHashKey(btVec);
+        string staticHashKey = shk.hashKey;
 #else
         string staticHashKey = label;
 #endif

@@ -36,6 +36,7 @@ class DynFuncCall
         static const string JSON_UPPERBOUND_KEY;
         vector<void*> __btVec;
         vector<void*> __staticBtVec;
+        vector<string> __btSymbolsVec;
         bool __backtraceStrat;
         unsigned long __loweredCount;
         unsigned int __lowerBound;
@@ -70,10 +71,12 @@ class DynFuncCall
         vector<void*> getBtVector();
         void updateStrategyBacktraceList();
         void updateStrategyBacktrace();
+        void updateBtSymbols(char **, int);
         bool applyStrategyDynCount();
         bool applyStrategyBacktrace();
         void applyProfiling(ShadowValue&);
         void dumpStack();
+        vector<string> getAddr2lineBacktraceVec(string);
         friend ostream& operator<<(ostream& os, const DynFuncCall& cd);
         friend ostream& operator<<(ostream& os, const set<string>& s);
         friend ostream& operator<<(ostream& os, const list<string>& s);

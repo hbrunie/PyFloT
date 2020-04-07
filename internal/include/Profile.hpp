@@ -6,6 +6,12 @@
 using namespace std;
 using namespace Json;
 
+struct statHashKey_t {
+    char ** sym;
+    string hashKey;
+    uint64_t size;
+};
+
 class Profile{
     private:
         bool __mode;
@@ -35,7 +41,7 @@ class Profile{
         void __displayBacktraceStaticMap();
         // TODO
         uintptr_t __dynHashKey(vector<void*> btVec);
-        string __staticHashKey(vector<void*> btVec);
+        struct statHashKey_t __staticHashKey(vector<void*> btVec);
         // JSON FILE ENV VARS
         static const string DUMP_JSON_STRATSRESULTS_FILE;
         static const string READ_JSON_PROFILE_STRAT_FILE;

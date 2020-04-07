@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -198,6 +199,16 @@ void DynFuncCall::updateStrategyBacktrace(){
         __backtraceStrat = false;
 }
 
+void DynFuncCall::updateBtSymbols(char ** symbols, int size){
+    for(int i=0; i<size; i++){
+        __btSymbolsVec.push_back(string(symbols[i]));
+    }
+}
+
+vector<string> DynFuncCall::getAddr2lineBacktraceVec(string targetExe){
+    return addr2lineBacktraceVec(targetExe, __btSymbolsVec, __btSymbolsVec.size());
+}
+
 bool DynFuncCall::applyStrategyBacktrace(){
     DEBUGINFO("backtraceStrat?(" << __backtraceStrat << ")");
     this->__dyncount ++;
@@ -268,18 +279,14 @@ Value DynFuncCall::getJsonValue(char * targetExe, bool dumpReduced){
             shadowValues.append(__shadowValues[i].getJsonValue());
         v["ShadowValues"] = shadowValues;
     }
-
-    void** btArray = (void**) malloc(sizeof(void*)*__btVec.size());
-    for(unsigned int i =0; i< __btVec.size();i++){
-        btArray[i] = __btVec[i];
-    }
-    char ** btSymsArray = backtrace_symbols((void* const*)btArray, __btVec.size());
-    free(btArray);
-    for(unsigned int i =0; i< __btVec.size();i++){
-        String s(btSymsArray[i]);
-        Value sym = s;
+    vector<string> addr2lineVector = addr2lineBacktraceVec(targetExe, __btSymbolsVec,
+            __btSymbolsVec.size());
+    assert(addr2lineVector.size() == __btSymbolsVec.size());
+    for(long unsigned i = 0; i < addr2lineVector.size(); i++){
+        Value sym = __btSymbolsVec[i];
+        Value addr2lineSym = addr2lineVector[i];
         btVec.append(sym);
-        btVecFileLineno.append(addr2lineBacktrace(targetExe, s));
+        btVecFileLineno.append(addr2lineSym);
     }
     v[JSON_CALLSTACK_ADDR_LIST_KEY] = btVec;
     v[JSON_CALLSTACK_FILELINENO_LIST_KEY] = btVecFileLineno;
