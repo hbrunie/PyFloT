@@ -226,6 +226,7 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
 #else
         string staticHashKey = label;
 #endif
+        dfc->updateBtSymbols(shk.sym, shk.size);
         /* Dump all statichash key in FILE for use by backtraceStrategy on
          * other executions.
          * */
