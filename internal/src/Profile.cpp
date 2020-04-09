@@ -227,13 +227,6 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
         string staticHashKey = label;
 #endif
         dfc->updateBtSymbols(shk.sym, shk.size);
-        /* Dump all statichash key in FILE for use by backtraceStrategy on
-         * other executions.
-         * */
-        //TODO bad name, not JSON file
-        ofstream f = writeJSONFile(BACKTRACE_LIST,DEFAULT_BACKTRACE_LIST,
-                DUMP_DIR, DEFAULT_DUMPDIR);
-        f << staticHashKey << endl;
         /* The element is necessarily not in StaticHashMap either,
          * Because static and dynamic HashMap are "identical" */
         __backtraceStaticMap[staticHashKey] = dfc;
