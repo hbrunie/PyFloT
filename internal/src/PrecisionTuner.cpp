@@ -53,13 +53,9 @@ PrecisionTuner::PrecisionTuner(){
     __profile  = new Profile(__mode == APPLYING_STRAT);
 }
 
-static long long __totalReduced = 0;
-static long long total = 0;
-
 PrecisionTuner::~PrecisionTuner(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << __FUNCTION__ << __mode << endl;);
-    cerr << "RATIO REDUCED: " << (double)__totalReduced / (double)total << endl;
     if(getenv("PTUNER_GETFULLJSON"))
         __profile->dumpJson();
     else
@@ -101,7 +97,11 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
 
     fvalue = (float)value;
     fparameter = (float)parameter;
+#ifndef USE_TIMESTAMP
+    double timeStamp = 0.0;
+#else
     double timeStamp = getTimeStamp();
+#endif
 #ifndef USE_LABEL
     vector<void*> btVec = __getContextHashBacktrace();
 #else
@@ -136,7 +136,6 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
     vector<void*> btVec;
 #endif
     //TODO: generic wrapper, not just exp (add argument with handler from gotcha?)
-    total ++;
     exp_ptr wrappee_exp = (exp_ptr) gotcha_get_wrappee(wrappee_exp_handle); // get my wrappee from Gotcha
     dres = wrappee_exp(value);
 
