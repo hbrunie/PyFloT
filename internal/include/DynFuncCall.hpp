@@ -14,6 +14,12 @@
 using namespace std;
 using namespace Json;
 
+struct statHashKey_t {
+    char ** sym;
+    string hashKey;
+    uint64_t size;
+};
+
 struct FloatSet{
     float low;
     float high;
@@ -71,7 +77,7 @@ class DynFuncCall
         vector<void*> getBtVector();
         void updateStrategyBacktraceList();
         void updateStrategyBacktrace();
-        void updateBtSymbols(char **, int);
+        void updateBtSymbols(struct statHashKey_t&);
         bool applyStrategyDynCount();
         bool applyStrategyBacktrace();
         void applyProfiling(ShadowValue&);

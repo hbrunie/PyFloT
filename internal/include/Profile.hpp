@@ -6,12 +6,6 @@
 using namespace std;
 using namespace Json;
 
-struct statHashKey_t {
-    char ** sym;
-    string hashKey;
-    uint64_t size;
-};
-
 class Profile{
     private:
         bool __mode;

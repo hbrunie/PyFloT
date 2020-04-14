@@ -13,6 +13,7 @@
 #include <json/json.h>
 #include <math.h>
 
+#include "Backtrace.hpp"
 #include "Debug.hpp"
 #include "Profile.hpp"
 #include "ShadowValue.hpp"
@@ -84,18 +85,18 @@ struct statHashKey_t Profile::__staticHashKey(vector<void*> btVec){
     uint64_t size = std::min(btVec.size(),(long unsigned int )(ONE+16));//Higher for deeper analysis
     void ** btpointer = &btVec[0];
     char ** symbols = backtrace_symbols(btpointer, size);
-    unsigned int cnt = 0;
+    // Starting at 3 because backtrace inside PyFloT is not useful.
+    unsigned int cnt = 3;
     char * tmp = symbols[cnt];
     while(NULL != tmp && cnt < size){
         string backtraceSymbols(tmp);
         DEBUG("statickey",cerr << "backtraceSymbols: " << backtraceSymbols << endl ;);
 #ifndef MAC_OS
         // /path/to/libprecisiontuning.so(Mangl_D2_FUncName+0x2e) [0x2aaaaacf5ede]
-        regex regex("[-_a-zA-Z/.0-9]+\\(([a-zA-Z_0-9]+)\\+([xa-f0-9]+)\\)\\s\\[0x[a-f0-9]+\\]$");
+        regex regex("[-_a-zA-Z/.0-9]+\\(([a-zA-Z_0-9]+)\\+([xa-f0-9]+)\\)\\s\\[(0x[a-f0-9]+)\\]$");
         smatch m;
         regex_match(backtraceSymbols, m, regex);
-        statHashKey += m[1];
-        statHashKey += m[2];
+        statHashKey += m[3];
         DEBUG("statickey", cerr << "Function: " << m[1] << endl;);
         DEBUG("statickey", cerr << "?main: " << (m[1].compare("main")==0) << endl;);
         if(m[1].compare("main")==0)
@@ -128,18 +129,12 @@ struct statHashKey_t Profile::__staticHashKey(vector<void*> btVec){
 uintptr_t Profile::__dynHashKey(vector<void*> btVec){
     //TODO: factorize dynHashKey and staticHashKey code, always same size?
     uintptr_t dynHashKey = 0;
-    uint64_t cnt = 0;
-    // Choosing level: ONE <= size <= btVec.size();
-    //uint64_t size = btVec.size();//Higher for deeper analysis
-    uint64_t size = ONE+16;//Higher for deeper analysis
-    for(auto it = btVec.begin(); it != btVec.end() && cnt < size; it++){
+    // Starting at 3 because backtrace inside PyFloT is not useful.
+    for(auto it = (3+btVec.begin()); it != btVec.end(); it++){
         void *ip = *it;
         assert(NULL != ip);
         assert( (dynHashKey+ (uintptr_t) ip) <numeric_limits<uintptr_t>::max());
-        DEBUG("dynHashKey",cerr << __FUNCTION__ << ":" << __LINE__ << dynHashKey
-                << " " << cnt << "/" << ONE << " " << (uintptr_t) ip << endl;);
         dynHashKey += (uintptr_t) ip;
-        cnt++;
     }
     return dynHashKey;
 }
@@ -189,7 +184,7 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
             dfc->updateStrategyBacktrace();
         }
         //Fill DynFuncCall instance __btSymbolsVec attribute
-        dfc->updateBtSymbols(shk.sym, shk.size);
+        dfc->updateBtSymbols(shk);
         __backtraceDynamicMap[dynHashKey] = dfc;
     }else{
         // Current call stack already encountered
@@ -198,6 +193,15 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
     }
     // Then compare currentDyncount with set
     bool res = dfc->applyStrategyBacktrace();
+    //static unsigned long resCount = 0;
+    //if(res && (resCount > 1000 )){
+    //    auto vec = dfc->getAddr2lineBacktraceVec("./PeleC1d.gnu.haswell.ex");
+    //    for(auto it=vec.begin() ; it !=vec.end(); it++ )
+    //        cerr <<  *it << endl;
+
+    //    resCount = 0;
+    //}
+    //resCount++;
     DEBUG("dfc",cerr << __FUNCTION__ << ":" << __LINE__<< " " << dfc << endl);
     DEBUG("key",cerr << __FUNCTION__ << ":" << __LINE__<< " Dynamic map " << endl;__displayBacktraceDynMap(););
     return res;
@@ -226,7 +230,7 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
 #else
         string staticHashKey = label;
 #endif
-        dfc->updateBtSymbols(shk.sym, shk.size);
+        dfc->updateBtSymbols(shk);
         /* The element is necessarily not in StaticHashMap either,
          * Because static and dynamic HashMap are "identical" */
         __backtraceStaticMap[staticHashKey] = dfc;

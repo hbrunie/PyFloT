@@ -43,7 +43,7 @@ vector<string> addr2lineBacktraceVec(std::string targetExecutable, vector<string
     string execPath = string(targetExecutable);
     string addrs = "";
     vector<string> strVec;
-    for (size_t i = 1; i < bt_size; i++) {
+    for (size_t i = 0; i < bt_size; i++) {
         std::string sym = bt_syms[i];
         std::smatch ms;
         if (std::regex_search(sym, ms, re)) {

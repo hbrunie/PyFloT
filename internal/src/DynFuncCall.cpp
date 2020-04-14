@@ -12,10 +12,10 @@
 
 #include <PT_Labels.hpp>
 
+#include "Backtrace.hpp"
 #include "Debug.hpp"
 #include "PrecisionTuner.hpp"
 #include "Utils.hpp"
-#include "Backtrace.hpp"
 
 using namespace std;
 using namespace Json;
@@ -199,8 +199,12 @@ void DynFuncCall::updateStrategyBacktrace(){
         __backtraceStrat = false;
 }
 
-void DynFuncCall::updateBtSymbols(char ** symbols, int size){
-    for(int i=0; i<size; i++){
+void DynFuncCall::updateBtSymbols(struct statHashKey_t &shk){
+    char ** symbols = shk.sym;
+    int size = shk.size;
+    __statHashKey = shk.hashKey;
+    // Starting at 3 because backtrace inside PyFloT is not useful.
+    for(int i=3; i<size; i++){
         __btSymbolsVec.push_back(string(symbols[i]));
     }
 }
