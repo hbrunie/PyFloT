@@ -19,7 +19,7 @@ params   = args.param
 binary   = args.binary
 dumpdir = args.dumpdir
 profileFile = args.profilefile
-stratDir = dumpdir + "/strats/static/"
+stratDir = dumpdir + "/strats/dynamic/"
 readJsonProfileFile = dumpdir + profileFile
 checkText2Find = args.verif_text
 
