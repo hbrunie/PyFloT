@@ -97,6 +97,23 @@ def parseProfiling():
     assert args.binary, "binary absolute path is required"
     return args
 
+def parseMergeCSVintoTrace():
+    defaults = {"directory":"./profile/", "dumpdir":"./", "check":False}
+    parser,remaining_argv = parse(defaults)
+
+    parser.add_argument("--directory",
+            help="directory absolute path containing all csv files to merge.")
+
+    parser.add_argument("--dumpdir",
+            help="directory absolute path to dump the merged trace.")
+
+    parser.add_argument("--check",
+    help="Check if missing any indexes",
+    action='store_true')
+
+    args = parser.parse_args(remaining_argv)
+    return args
+
 def parseStatic():
     # defaults arguments
     defaults = { "profilefile":"profile.json" , "verif_text":"AMReX (20.01-36-gfee20d598e0a-dirty) finalized",
