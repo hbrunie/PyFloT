@@ -10,40 +10,38 @@ from generateStrat import display
 from generateStrat import getVerbose
 
 ## Parsing arguments
-args = parseStatic()
-
-## 2 levels
-#binary = "/global/cscratch1/sd/hbrunie/applications/AMReX-Combustion/PeleC/Exec/RegTests/PMF/PeleC1d.gnu.haswell.ex"
-#args = "inputs-1d-regt max_step=1"
-params   = args.param
-binary   = args.binary
-dumpdir = args.dumpdir
-profileFile = args.profilefile
-stratDir = dumpdir + "/strats/static/"
-readJsonProfileFile = dumpdir + profileFile
+args           = parseStatic()
+params         = args.param
+binary         = args.binary
+dumpdir        = args.dumpdir
+profileFile    = args.profilefile
 checkText2Find = args.verif_text
-
+## Composed constants
+stratDir            = dumpdir + "/strats/static/"
+readJsonProfileFile = dumpdir + profileFile
+## get verbose level from generateStrat.py
 verbose = getVerbose()
 
-##No order in names --> individual
+## Individual analysis (BFS inspired from Mike Lam papers)
 toTestList = createStratFilesStatic(stratDir,readJsonProfileFile)
 if verbose >2:
     print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
-## Get the successful inidividual static call sites
+## Get the successful individual static call sites
 validList = execApplication(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
 if verbose>2:
     print("Level1, Valid name list of individual-site static call sites: ", validList[0])
 
 ## For all remaining Static Calls
-## Sort all strategies per performance impact (names),
+## Sort all strategies per performance impact,
 ## start trying them from the most to the less impact.
-##Extract only names
 toTestListGen = createStratFilesMultiSiteStatic(stratDir,readJsonProfileFile,validList)
-toStop = True
 if verbose>2:
     print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
 
 ## Execute the application on generated strategy files
+## Generate strategies choosing k among n.
+## Analyze k-strategies before generating strategies for the next k.
+toStop = True
 while toStop:
     try:
         toTestList = next(toTestListGen)
@@ -57,6 +55,7 @@ while toStop:
     if verbose>2:
         if len(validList)>0:
             print("Level2, Valid Name list of multi-site static call sites:", validList[0])
+    ## valid type configuration found. Stop the search.
     if len(validList)>0:
         display()
         exit(0)
