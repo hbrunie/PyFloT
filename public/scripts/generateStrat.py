@@ -82,6 +82,15 @@ def updateProfile(profile):
     return (staticCalls,dynCalls)
 
 
+def getHashKeysFromIndex(ind,jsonFile):
+    global profile
+    with open(jsonFile, 'r') as json_file:
+        profile = json.load(json_file)
+    staticCalls,dynCalls = updateProfile(profile)
+    hashKeys = []
+    for i in ind:
+        hashKeys.append(dynCalls[i]["HashKey"])
+    return hashKeys
 
 from itertools import permutations
 import itertools
