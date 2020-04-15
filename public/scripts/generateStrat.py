@@ -17,6 +17,7 @@ totalDynCalls = 0
 totalStatCalls = 0
 
 outputFile = "pmfOutputFile-4check"
+fileKey = 0
 
 def display():
     global ratioSP
@@ -31,32 +32,28 @@ def display():
         print(f"totalDynCalls: {totalDynCalls}")
         print(f"totalStatCalls: {totalStatCalls}")
 
-def getDynCalls(k):
-    return 0
-
 def updateProfile(profile):
     global totalDynCalls
     global totalStatCalls
-    #regex = "[-_a-zA-Z/.0-9]+\\([a-zA-Z_0-9+]*\\)\\s\\[(0x[a-f0-9]+)\\]"
-    regex = "([a-zA-Z_0-9]+)\\+([a-f0-9x]+)"
+    regex = "[-_a-zA-Z/.0-9]+\\([a-zA-Z_0-9+]*\\)\\s\\[(0x[a-f0-9]+)\\]"
     dynCalls = profile["IndependantCallStacks"]
     staticCalls = []
     staticCallsd = {}
     profile["StaticCalls"] = staticCalls
     profile["StaticCallsd"] = staticCallsd
-    maxlvl = 4 #16
+    staticmaxlvl = 1
     statCount = 0
     dynCount = 0
     for cs in dynCalls:
-        cs["dynname"] = f"Dyn-{dynCount}"
+        cs["dynname"] = f"D-{dynCount}"
         dynCount += 1
         key = ""
         ## Build Static Key with 4 backtrace lvl
-        for callstack in  cs["CallStack"][:maxlvl]:
+        for callstack in  cs["CallStack"][:staticmaxlvl]:
             m = re.search(regex, callstack)
             if not m:
                 break
-            key += m.group(1) + m.group(2)
+            key += m.group(1)#m.group(1) + m.group(2)
         ## If already in dict update CallsCount
         if staticCallsd.get(key):
             scs = staticCallsd[key]
@@ -132,6 +129,7 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
             is a subset of the set of individuals
     """
     def generateStratFiles(CsubsetList):
+        global fileKey
         rank = 0
         CsubsetListFiles = []
         staticName = "dynamic"
@@ -140,8 +138,8 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
         for csub in CsubsetList:
             rank += 1
             name = f"multiSite-{staticName}-r{rank}"
-            for n in csub[0]:
-                name += f"-{n}"
+            name += f"-k{fileKey}"
+            fileKey += 1
             f = f"strat-{name}.txt"
             ## csub ((name,name,), CallsCount)
             keys = getKeys(csub[0], static)
@@ -156,22 +154,17 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
     def findsubsets(s, n):
         return list(itertools.combinations(s, n))
     ## For possible size of subset composing strategies
-    print(validNameHashKeyList)
     callsName = validNameHashKeyList[0]
     snames = set(callsName)
     os.system(f"mkdir -p {stratDir}")
     lenCallsName = len(callsName)
-    print(f"Do createStratFilesMultiSiteDynamic {lenCallsName}")
     for n in range(lenCallsName,0,-1):
         ## List of all subset strategies
         CsubsetList = []
         ## Compute the subsets
-        print(f"n: {n}, do findsubsets")
         subsets = findsubsets(snames, n)
-        print(f"n: {n}, findsubsets done")
         lensubsets = len(subsets)
         ## For each subset, create a strategy file
-        print(f"do For each subsets({lensubsets})")
         for subset in subsets:
             ## Build subset name from all component
             #name = "_".join(list(subset))
@@ -179,8 +172,6 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
             Csubset = (subset, getCountCalls(subset, static),n)
             ## Append tuple subset,score to the list
             CsubsetList.append(Csubset)
-        print(f"For each subsets({lensubsets}) DONE")
-        print(f"createStratFilesMultiSiteDynamic {lenCallsName} DONE")
         ## Sort subsets list with score
         CsubsetList.sort(key=lambda x: x[1], reverse=True)
         ## Remove all list elements after first individual encountered
@@ -322,14 +313,16 @@ def runApp(cmd, stratDir, name, checkText, envStr):
     global nbTrials
     global outputFile
     nbTrials += 1
-    outputFileLocal = outputFile + f"-{nbTrials}.dat"
+    outputFileLocal = stratDir + outputFile + f"-{nbTrials}.dat"
     ## File name Should be same as in generateStrat.py
     backtrace = f"{stratDir}/strat-{name}.txt"
     os.environ["BACKTRACE_LIST"] = backtrace
-    print(f"BACKTRACE_LIST={backtrace}")
+    if verbose>3:
+        print(f"BACKTRACE_LIST={backtrace}")
     os.environ["PRECISION_TUNER_DUMPJSON"] = f"./dumpResults-{name}.json"
-    print(f"{envStr} PRECISION_TUNER_DUMPJSON="+f"./dumpResults-{name}.json")
-    print(cmd)
+    if verbose>3:
+        print(f"{envStr} PRECISION_TUNER_DUMPJSON="+f"./dumpResults-{name}.json")
+        print(cmd)
     os.system(cmd + f" >> {outputFileLocal}")
     valid = runCheckScript(outputFileLocal, checkText)
     if verbose>2:
