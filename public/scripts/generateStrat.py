@@ -4,7 +4,7 @@ import re
 
 profile = {}
 globalBestName = None
-verbose = 0
+verbose = 3
 def getVerbose():
     return verbose
 
@@ -74,6 +74,7 @@ def updateProfile(profile, usebtsym = False):
         m = re.search(btsymbolreg, cs["CallStack"][0])
         assert(m)
         statickey = m.group(1)
+        btSymStaticKey = statickey
         if not usebtsym:
             statickey = addr2lineStaticKey
         ## Dynamic addr2line identification
@@ -90,6 +91,7 @@ def updateProfile(profile, usebtsym = False):
         ##dynamic identification
         cs["dynname"] = f"D-{dynCount}"
         cs["dynid"] = dynCount
+        cs["BtSymStaticKey"] = btSymStaticKey
         dynCount += 1
         ## If already in dict update CallsCount
         if staticCallsd.get(statickey):
@@ -135,7 +137,11 @@ def getHashKeysFromIndex(ind,jsonFile):
 
 from itertools import permutations
 import itertools
+
 def getCount(subset, static, computeCalls=True):
+    """ subset is a set of names ...
+        #TODO USE id ! integer.
+    """
     keys = []
     cc = 0
     if static:
@@ -170,11 +176,6 @@ def createStratFilesMultiSiteDynamic(stratDir, jsonFile, validNameHashKeyList):
 def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
     """  validNameHashKeyList
         --> COUPLE of 2 lists: (nameList, keyList)
-        If static
-            create one stratFile per combination. Each combination
-            is a subset of the set of individuals
-        else (dynamic)
-            Take into account strategy found with StaticMultiSite
             create one stratFile per combination. Each combination
             is a subset of the set of individuals
     """
@@ -309,6 +310,72 @@ def checkFile(dynCallsd):
                 if l not in already:
                     already.add(l)
 
+def getClusterHashKeys(cluster,static):
+    """ Cluster is a list of integer
+        Each integer is either the static call id
+        Or the dynamic call id (not yet implemented).
+    """
+    return getClusterInfo(cluster, static, False)
+
+def getClusterCallsCount(cluster, static):
+    """ Cluster is a list of integer
+        Each integer is either the static call id
+        Or the dynamic call id (not yet implemented).
+    """
+    return getClusterInfo(cluster, static, True)
+
+def getClusterInfo(cluster, static, computeCallsCount):
+    """ Cluster is a list of integer
+        Each integer is either the static call id
+        Or the dynamic call id (not yet implemented).
+        if computeCallsCount, return callsCount
+        else return hashKeys list
+    """
+    callsCount = 0
+    hashKeys = []
+    if static:
+        calls = profile["StaticCalls"]
+        name = "statid"
+        hashKeyLabel = "BtSymStaticKey"
+    else:
+        calls = profile["IndependantCallStacks"]
+        name = "dynid"
+        ##TODO: replace HashKey by Full HashKey everywhere?
+        hashKeyLabel = "HashKey"
+    ##TODO: replace with dictionnary use?
+    for call in calls:
+        if call[name] in cluster:
+            if computeCallsCount:
+                callsCount += call["CallsCount"]
+            else:
+                hashKeys.append(call[hashKeyLabel])
+    if computeCallsCount:
+        return callsCount
+    else:
+        return hashKeys
+
+def createStratFilesStaticCluster(stratDir, clusters, depth):
+    stratList = []
+    counter = 0
+    os.system(f"mkdir -p {stratDir}")
+    for cluster in clusters:
+        ##build cluster name
+        name = f"depth-{depth}-cluster-{counter}"
+        counter += 1
+        ##not just one hashKey: several calls ..TODO
+        hashKeyList = getClusterHashKeys(cluster, static=True)
+        ##TODO: implement function
+        CallsCount = getClusterCallsCount(cluster, static=True)
+        stratList.append((name,hashKeyList,CallsCount,len(cluster)))
+        with open(stratDir+f"strat-{name}.txt", 'a') as ouf:
+            for key in hashKeyList:
+                ouf.write(key+"\n")
+    if verbose>0:
+        n=len(clusters)
+        print(f"{n} files created.")
+    ## Return list of tuples (names, hashKey, CallsCount)
+    return stratList
+
 def createStratFilesStatic(stratDir, jsonFile):
     return createStratFiles(stratDir, jsonFile, True)
 
@@ -337,7 +404,7 @@ def createStratFiles(stratDir, jsonFile, static):
             ouf.write(key+"\n")
     if verbose>0:
         print(f"{n} files created.")
-    ## Return list of names
+    ## Return list of tuples (names, hashKey, CallsCount)
     return stratList
 
 checkCount = 0
@@ -419,6 +486,9 @@ def __execApplication(binary, args, stratDir, stratList, checkText, dumpDirector
     validHashKeys = []
     envStr = updateEnv(dumpDirectory, profileFile, binary)
     _stratList = stratList
+    ##TODO: here we need dynCallsCount and statCallsCount from stratList
+    ## Only because we compute the SCORE of solution.
+    ## SCORE should be computed in separated function elsewhere.
     for (name, hashKey, dynCallsCount, statCallsCount) in _stratList:
         valid = runApp(cmd, stratDir, name, checkText,envStr)
         if valid:
