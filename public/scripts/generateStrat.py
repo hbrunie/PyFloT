@@ -49,7 +49,7 @@ def updateProfileCluster(jsonFile):
 
     return updateProfile(profile)
 
-def updateProfile(profile):
+def updateProfile(profile, usebtsym = False):
     global totalDynCalls
     global totalStatCalls
     global correspondanceDynStatic
@@ -69,12 +69,16 @@ def updateProfile(profile):
         ## addr2line identification
         m = re.search(slocreg, cs["Addr2lineCallStack"][0])
         assert(m)
-        addr2linestaticKey = m.group(0)
+        addr2lineStaticKey = m.group(0)
         ## btsymbol identification
         m = re.search(btsymbolreg, cs["CallStack"][0])
         assert(m)
         statickey = m.group(1)
+        if not usebtsym:
+            statickey = addr2lineStaticKey
         ## Dynamic addr2line identification
+        ##TODO: Unused HashKey
+        addr2lineDynamicKey = ""
         for callstack in  cs["Addr2lineCallStack"]:
             ##addr2line identification
             m = re.search(slocreg, callstack)
@@ -82,7 +86,7 @@ def updateProfile(profile):
             if callstack == "??:0":
                 break
             assert(m)
-            addr2linestaticKey = m.group(0)
+            addr2lineDynamicKey += m.group(0)
         ##dynamic identification
         cs["dynname"] = f"D-{dynCount}"
         cs["dynid"] = dynCount
@@ -283,6 +287,7 @@ def createStratFilesDynamicAfterStatic(stratDir, jsonFile, validNameHashKeyList)
     for (name, key) in stratList:
         with open(stratDir+f"strat-{name}.txt", 'a') as ouf:
             ouf.write(key+"\n")
+            ##TODO: addr2lineStaticKey
             for statickey in validNameHashKeyList[1]:
                 ouf.write(statickey+"\n")
     if verbose>0:
