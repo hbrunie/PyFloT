@@ -6,7 +6,6 @@ from generateStrat import createStratFilesStatic
 from generateStrat import createStratFilesMultiSiteStatic
 from generateStrat import execApplication
 from generateStrat import execApplicationMultiSite
-from generateStrat import display
 from generateStrat import getVerbose
 
 ## Parsing arguments
@@ -47,7 +46,6 @@ while toStop:
         toTestList = next(toTestListGen)
     except StopIteration:
         print("No more strategy to test.")
-        display()
         exit(0)
     if verbose>2:
         print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
@@ -57,7 +55,6 @@ while toStop:
             print("Level2, Valid Name list of multi-site static call sites:", validList[0])
     ## valid type configuration found. Stop the search.
     if len(validList)>0:
-        display()
         exit(0)
 
 

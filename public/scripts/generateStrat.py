@@ -235,7 +235,6 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
         if n == 1:
             ##get existing individual strat file
             print("No MultiStrategy found. Best individual strategy is")
-            display()
             return []
         else:
             CsubsetListFiles = generateStratFiles(CsubsetList)
@@ -513,12 +512,14 @@ def __execApplication(binary, args, stratDir, stratList, checkText, dumpDirector
                 #statCallsSP += statCallsCount
                 dynCallsSP = max(dynCallsSP,dynCallsCount)
                 statCallsSP = max(statCallsSP,statCallsCount)
+                display()
                 return ([name],hashKey)
             else:
                 dynCallsSP = max(dynCallsSP,dynCallsCount)
                 statCallsSP = max(statCallsSP,statCallsCount)
                 validNames.append(name)
                 validHashKeys.append(hashKey)
+            display()
     if multiSite:
         return []
     else:
