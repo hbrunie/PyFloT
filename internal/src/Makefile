@@ -5,6 +5,7 @@ GOTCHALIB=-L ../../external-deps/install/lib64/ -lgotcha -Wl,-rpath, /global/csc
 GOTCHAINC=-I ../../external-deps/install/include/
 PTLabels= -I ../../public/include/
 GOTCHAWARNING=-fpermissive
+OPTION=-DUSE_TIMESTAMP
 
 libprecisiontuning.so: $(OBJECTS)
 	make -C ../utils/
@@ -13,7 +14,7 @@ libprecisiontuning.so: $(OBJECTS)
 	mv $@ $(PTHOME)/public/lib/
 
 %.o:%.cpp
-	$(CXX) $(CXXPTFLAGS) -c $^ -g $(DEBUG) -I. $(INCDIR) $(GCCDYNLIB) $(GOTCHAINC) $(GOTCHAWARNING) $(PTLabels)
+	$(CXX) $(CXXPTFLAGS) -c $^ -g $(DEBUG) -I. $(INCDIR) $(GCCDYNLIB) $(GOTCHAINC) $(GOTCHAWARNING) $(PTLabels) $(OPTION)
 
 #$(CXX) $(CXXPTFLAGS) -c  -g $(DEBUG) $(SOURCES) -I. $(INCDIR) $(GCCDYNLIB) $(GOTCHAINC) $(GOTCHAWARNING) $(PTLabels)
 
