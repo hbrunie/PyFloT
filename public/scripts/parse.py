@@ -115,6 +115,12 @@ def parseMergeCSVintoTrace():
     return args
 
 def parseStatic():
+    parser,remaining_argv = _parseStatic()
+    args = parser.parse_args(remaining_argv)
+    assert args.binary, "binary absolute path is required"
+    return args
+
+def _parseStatic():
     # defaults arguments
     defaults = { "profilefile":"profile.json" , "verif_text":"AMReX (20.01-36-gfee20d598e0a-dirty) finalized",
                  "param":"", "dumpdir":"./"}
@@ -136,7 +142,7 @@ def parseStatic():
     return parser,remaining_argv
 
 def parseStaticWithCluster():
-    parser,remaining_argv = parseStatic()
+    parser,remaining_argv = _parseStatic()
     parser.add_argument("--mergedtracefile",
             help="Use merge CSV into trace file to build clusters.",
             default="mergeCSVintoTrace.trace")
@@ -148,7 +154,7 @@ def parseStaticWithCluster():
     return args
 
 def parseDynamic():
-    parser,remainging_argv = parseStatic()
+    parser,remainging_argv = _parseStatic()
     args = parser.parse_args(remaining_argv)
     assert args.binary, "binary absolute path is required"
     return args
