@@ -34,8 +34,8 @@ def display():
     ratioDynSP = float(dynCallsSP) / float(totalDynCalls)
     if verbose > 0:
         print(f"nbTrials: {nbTrials}")
-        print(f"ratioStatSP: {ratioStatSP}")
-        print(f"ratioDynSP: {ratioDynSP}")
+        print(f"ratioStatSP: {ratioStatSP*100:2.0f}")
+        print(f"ratioDynSP: {ratioDynSP*100:2.0f}")
         print(f"dynCallsSP: {dynCallsSP}")
         print(f"statCallsSP: {statCallsSP}")
         print(f"totalDynCalls: {totalDynCalls}")
@@ -178,6 +178,9 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
         --> COUPLE of 2 lists: (nameList, keyList)
             create one stratFile per combination. Each combination
             is a subset of the set of individuals
+        Generate list of all subset k among n
+        generate it in n-1 steps, each k at a time
+        each list contains all subsets + best individual
     """
     def generateStratFiles(CsubsetList):
         global fileKey
@@ -205,7 +208,11 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
     def findsubsets(s, n):
         return list(itertools.combinations(s, n))
     ## For possible size of subset composing strategies
+    ## E.G. for Cluster:  validNameHashKeyList=(['depth-0-cluster-1'], [['0x5ead72', '0x5e913e']])
+    ## E.G. for non cluster: (['name'], ['0x5ead72', '0x5e913e'])
     callsName = validNameHashKeyList[0]
+    print("DEBUG")
+    ##E.G. snames: {'depth-0-cluster-1'}
     snames = set(callsName)
     os.system(f"mkdir -p {stratDir}")
     lenCallsName = len(callsName)
@@ -214,31 +221,27 @@ def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
         CsubsetList = []
         ## Compute the subsets
         subsets = findsubsets(snames, n)
+        ##E.G. subsets: [('depth-0-cluster-1',)]
         lensubsets = len(subsets)
         ## For each subset, create a strategy file
         for subset in subsets:
-            ## Build subset name from all component
-            #name = "_".join(list(subset))
             ## Compute score: sum of dynCalls count
             Csubset = (subset, getCountCalls(subset, static),n)
             ## Append tuple subset,score to the list
             CsubsetList.append(Csubset)
         ## Sort subsets list with score
         CsubsetList.sort(key=lambda x: x[1], reverse=True)
-        ## Remove all list elements after first individual encountered
-        ## Idea is to keep best individual in case all multisite don't work
-        eltCounter = 0
-        for e in CsubsetList:
-            ## len of subset
-            if len(e[0]) == 1:
-                eltCounter += 1
-                break
-            eltCounter += 1
-        CsubsetList = list(CsubsetList[0:eltCounter])
-        ## Generating strategy files
-        CsubsetListFiles = generateStratFiles(CsubsetList)
+        ## Generating strategy files: do not generate best individual
+        if n == 1:
+            ##get existing individual strat file
+            print("No MultiStrategy found. Best individual strategy is")
+            display()
+            return []
+        else:
+            CsubsetListFiles = generateStratFiles(CsubsetList)
         ## Return list of performance ordered subset names
         yield CsubsetListFiles
+    ## return best individual elts
     return []
 
 def createStratFilesDynamicAfterStatic(stratDir, jsonFile, validNameHashKeyList):
@@ -317,6 +320,15 @@ def getClusterHashKeys(cluster,static):
     """
     return getClusterInfo(cluster, static, False)
 
+def getAddr2lineCluster(cluster):
+    calls = profile["StaticCalls"]
+    addr2line = []
+    for call in calls:
+        if call["statid"] in cluster:
+            addr2line.append(call["Addr2lineCallStack"])
+    return addr2line
+
+
 def getClusterCallsCount(cluster, static):
     """ Cluster is a list of integer
         Each integer is either the static call id
@@ -366,6 +378,8 @@ def createStratFilesStaticCluster(stratDir, clusters, depth):
         hashKeyList = getClusterHashKeys(cluster, static=True)
         ##TODO: implement function
         CallsCount = getClusterCallsCount(cluster, static=True)
+        print(cluster, CallsCount)
+        print(getAddr2lineCluster(cluster))
         stratList.append((name,hashKeyList,CallsCount,len(cluster)))
         with open(stratDir+f"strat-{name}.txt", 'a') as ouf:
             for key in hashKeyList:
@@ -493,10 +507,16 @@ def __execApplication(binary, args, stratDir, stratList, checkText, dumpDirector
         valid = runApp(cmd, stratDir, name, checkText,envStr)
         if valid:
             if multiSite:
-                dynCallsSP += dynCallsCount
-                statCallsSP += statCallsCount
+                ##TODO: why making sum?
+                ## Will it sum over several multisite strat tested, and count the invalid one too?
+                #dynCallsSP += dynCallsCount
+                #statCallsSP += statCallsCount
+                dynCallsSP = max(dynCallsSP,dynCallsCount)
+                statCallsSP = max(statCallsSP,statCallsCount)
                 return ([name],hashKey)
             else:
+                dynCallsSP = max(dynCallsSP,dynCallsCount)
+                statCallsSP = max(statCallsSP,statCallsCount)
                 validNames.append(name)
                 validHashKeys.append(hashKey)
     if multiSite:

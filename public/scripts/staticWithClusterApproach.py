@@ -34,7 +34,6 @@ updateProfileCluster(readJsonProfileFile)
 corr = getCorrStatList()
 (ge, gn) = build_graph(tracefile, corr)
 hierarchy = generate_graph(ge, gn, threshold)
-
 for depth,clusters in enumerate(hierarchy):
     ## Individual analysis (BFS inspired from Mike Lam papers)
     toTestList = createStratFilesStaticCluster(stratDir, clusters, depth)
@@ -60,12 +59,10 @@ for depth,clusters in enumerate(hierarchy):
         try:
             toTestList = next(toTestListGen)
         except StopIteration:
-            print("No more strategy to test.")
-            display()
-            exit(0)
+            print(f"No more strategy to test for depth {depth}.")
+            break
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
-        exit(0)
         validList = execApplicationMultiSite(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
         if verbose>2:
             if len(validList)>0:
@@ -73,4 +70,4 @@ for depth,clusters in enumerate(hierarchy):
         ## valid type configuration found. Stop the search.
         if len(validList)>0:
             display()
-            exit(0)
+display()
