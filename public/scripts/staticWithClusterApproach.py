@@ -32,9 +32,8 @@ verbose = getVerbose()
 ## Generate clusters
 updateProfileCluster(readJsonProfileFile)
 corr = getCorrStatList()
-print(corr)
 (ge, gn) = build_graph(tracefile, corr)
-generate_graph(ge, gn, threshold, corr)
+generate_graph(ge, gn, threshold)
 exit(0)
 
 ## Individual analysis (BFS inspired from Mike Lam papers)
