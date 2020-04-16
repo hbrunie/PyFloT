@@ -410,6 +410,7 @@ def createStratFiles(stratDir, jsonFile, static):
         stratList = [(x["statname"],x["HashKey"],x["CallsCount"], 1) for x in staticCalls]
     else:
         stratList = [(x["dynname"],x["HashKey"],x["CallsCount"], 0) for x in dynCalls]
+    stratList.sort(key=lambda x: x[2], reverse=False)
     n = len(stratList)
     assert n>1## at least two individual dynamic call sites
     for (name, key, dynCallsCount, statCallsCount) in stratList:
