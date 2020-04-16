@@ -4,20 +4,29 @@ import re
 
 profile = {}
 globalBestName = None
-verbose = 3
+verbose = 0
 def getVerbose():
     return verbose
 
-nbTrials = 0
-ratioDynSP = 0.
-ratioStatSP = 0.
-dynCallsSP = 0
-statCallsSP = 0
-totalDynCalls = 0
-totalStatCalls = 0
+correspondanceDynStatic = []
+def getCorrStatList():
+    """ return a list giving the corresopndance between
+        dynamic ID and static ID.
+        This list is filled inside updateProfile.
+        It is useful in communities build_graph and generate_clusters functions.
+    """
+    return correspondanceDynStatic
 
+nbTrials       = 0
+ratioDynSP     = 0.
+ratioStatSP    = 0.
+dynCallsSP     = 0
+statCallsSP    = 0
+totalDynCalls  = 0
+totalStatCalls = 0
+fileKey        = 0
+## TODO: move it into argument parser
 outputFile = "pmfOutputFile-4check"
-fileKey = 0
 
 def display():
     global ratioSP
@@ -32,10 +41,20 @@ def display():
         print(f"totalDynCalls: {totalDynCalls}")
         print(f"totalStatCalls: {totalStatCalls}")
 
+def updateProfileCluster(jsonFile):
+    global profile
+    print(jsonFile)
+    with open(jsonFile, 'r') as json_file:
+        profile = json.load(json_file)
+
+    return updateProfile(profile)
+
 def updateProfile(profile):
     global totalDynCalls
     global totalStatCalls
-    regex = "[-_a-zA-Z/.0-9]+\\([a-zA-Z_0-9+]*\\)\\s\\[(0x[a-f0-9]+)\\]"
+    global correspondanceDynStatic
+    slocreg = "([a-zA-Z0-9._-]+):([0-9]+)"
+    btsymbolreg = "[-_a-zA-Z/.0-9]+\\([a-zA-Z_0-9+]*\\)\\s\\[(0x[a-f0-9]+)\\]"
     dynCalls = profile["IndependantCallStacks"]
     staticCalls = []
     staticCallsd = {}
@@ -45,31 +64,49 @@ def updateProfile(profile):
     statCount = 0
     dynCount = 0
     for cs in dynCalls:
-        cs["dynname"] = f"D-{dynCount}"
-        dynCount += 1
-        key = ""
-        ## Build Static Key with 4 backtrace lvl
-        for callstack in  cs["CallStack"][:staticmaxlvl]:
-            m = re.search(regex, callstack)
-            if not m:
+        ##Building HashKeys: btsymbol and addr2line
+        ## Static
+        ## addr2line identification
+        m = re.search(slocreg, cs["Addr2lineCallStack"][0])
+        assert(m)
+        addr2linestaticKey = m.group(0)
+        ## btsymbol identification
+        m = re.search(btsymbolreg, cs["CallStack"][0])
+        assert(m)
+        statickey = m.group(1)
+        ## Dynamic addr2line identification
+        for callstack in  cs["Addr2lineCallStack"]:
+            ##addr2line identification
+            m = re.search(slocreg, callstack)
+            ## don't treat callstack after main
+            if callstack == "??:0":
                 break
-            key += m.group(1)#m.group(1) + m.group(2)
+            assert(m)
+            addr2linestaticKey = m.group(0)
+        ##dynamic identification
+        cs["dynname"] = f"D-{dynCount}"
+        cs["dynid"] = dynCount
+        dynCount += 1
         ## If already in dict update CallsCount
-        if staticCallsd.get(key):
-            scs = staticCallsd[key]
+        if staticCallsd.get(statickey):
+            scs = staticCallsd[statickey]
             scs["CallsCount"] += cs["CallsCount"]
             totalDynCalls += cs["CallsCount"]
             statCountMinusOne = statCount - 1
             cs["statname"] = f"statCS-{statCountMinusOne}"
+            cs["statid"] = statCountMinusOne
+            correspondanceDynStatic.append(statCountMinusOne)
         ## If not already in dict
         ## Add to dict and update name/hashKey/CallsCount
         ## Append to staticCalls list
         else:
             ##Copy of Dynamic Call dictionnary into the staticCall one
             cs["statname"] = f"statCS-{statCount}"
-            staticCallsd[key] = cs.copy()
-            scs = staticCallsd[key]
-            scs["HashKey"] = key
+            cs["statid"] = statCount
+            correspondanceDynStatic.append(statCount)
+            staticCallsd[statickey] = cs.copy()
+            scs = staticCallsd[statickey]
+            scs["StaticHashKey"] = statickey
             ##Change dynCall name for static one, in copy
             ##Update StatCall callsCount with dynamic one, in copy
             totalDynCalls += cs["CallsCount"]
@@ -254,6 +291,8 @@ def createStratFilesDynamicAfterStatic(stratDir, jsonFile, validNameHashKeyList)
     return stratList
 
 def checkFile(dynCallsd):
+    """ Obsolete
+    """
     backtracelistfile = ".pyflot/profile/BacktraceList.txt"
     already = set()
     with open(backtracelistfile, 'r') as inf:
@@ -280,6 +319,7 @@ def createStratFiles(stratDir, jsonFile, static):
 
     with open(jsonFile, 'r') as json_file:
         profile = json.load(json_file)
+
     staticCalls,dynCalls = updateProfile(profile)
     if static:
         stratList = [(x["statname"],x["HashKey"],x["CallsCount"], 1) for x in staticCalls]
