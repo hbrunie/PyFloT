@@ -133,11 +133,22 @@ def parseStatic():
                         parameter absolute or relative path.
                         (ex: ./inputs-2d-regt). Several arguments
                         should be written in between quotes: \"arg1 arg2 ...\" """)
+    return parser,remaining_argv
 
-
+def parseStaticWithCluster():
+    parser,remaining_argv = parseStatic()
+    parser.add_argument("--mergedtracefile",
+            help="Use merge CSV into trace file to build clusters.",
+            default="mergeCSVintoTrace.trace")
+    parser.add_argument("--threshold",
+            help="Use merge CSV into trace file to build clusters.",
+            default=int(10))
     args = parser.parse_args(remaining_argv)
     assert args.binary, "binary absolute path is required"
     return args
 
 def parseDynamic():
-    return parseStatic()
+    parser,remainging_argv = parseStatic()
+    args = parser.parse_args(remaining_argv)
+    assert args.binary, "binary absolute path is required"
+    return args
