@@ -1,9 +1,10 @@
 import networkx as nx
 from networkx.algorithms import community
 import itertools
+from generateStrat import getVerbose
 
-##loaded from JSON
-profile = {}
+## get verbose level from generateStrat.py
+verbose = getVerbose()
 
 def build_graph(tracefile, staticCorr=None):
     """ Return graph edges. Each node is either a static call site or a full backtrace "dynamic" call.
@@ -71,7 +72,11 @@ def generate_graph(graph_edges, graph_nodes, threshold, max_depth=10):
             G.add_edge(edge[0], edge[1], count=count)
     communities_generator = community.girvan_newman(G)
     depth=0
+    hierarchy = []
     for communities in itertools.islice(communities_generator, max_depth):
         com = tuple(sorted(c) for c in communities)
-        print(f"Delta: {threshold}, Girvan Newman hierarchy depth: {depth} ->",com)
+        hierarchy.append(com)
+        if verbose > 1:
+            print(f"Delta: {threshold}, Girvan Newman hierarchy depth: {depth} ->",com)
         depth += 1
+    return hierarchy
