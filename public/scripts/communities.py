@@ -5,7 +5,7 @@ import itertools
 ##loaded from JSON
 profile = {}
 
-def build_graph(tracefile, static=True):
+def build_graph(tracefile, staticCorr=None):
     """ Return graph edges. Each node is either a static call site or a full backtrace "dynamic" call.
         TODO: Should graph_nodes be a set or a dictionnary?
     """
@@ -15,9 +15,8 @@ def build_graph(tracefile, static=True):
     graph_nodes = set()
     def getVertex(words):
         cur_timestamp = float(words[CSV["index"]])
-        if static:
-            ##TODO use correspondance dynamic to static call site
-            cur_vertix = int(words[CSV["callSite"]])
+        if staticCorr:##static approach
+            cur_vertix = staticCorr[int(words[CSV["callSite"]])]
         else:##dynamic approach
             cur_vertix = int(words[CSV["callSite"]])
         return (cur_timestamp,cur_vertix)
