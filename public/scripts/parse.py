@@ -146,9 +146,17 @@ def parseStaticWithCluster():
     parser.add_argument("--mergedtracefile",
             help="Use merge CSV into trace file to build clusters.",
             default="mergeCSVintoTrace.trace")
+    parser.add_argument("--maxdepth",
+            help="Clustering algorithm are hierarchical: pick a max depth.",
+            default=int(1))
     parser.add_argument("--threshold",
-            help="Use merge CSV into trace file to build clusters.",
+            help="""Clustering algorithm result depend on graph edges,
+            which depends on threshold (delta) for max timstamp difference.""",
             default=int(10))
+    parser.add_argument("--windowSize",
+            help="""Clustering algorithm result depend on graph edges,
+            which depends on window size: how many nodes are allowed to have edges together?""",
+            default=int(1))
     args = parser.parse_args(remaining_argv)
     assert args.binary, "binary absolute path is required"
     return args

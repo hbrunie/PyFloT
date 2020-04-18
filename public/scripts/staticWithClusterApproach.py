@@ -14,25 +14,25 @@ from generateStrat import getCorrStatList
 from communities import build_graph
 from communities import generate_graph
 
-def slocClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold):
-    ## Composed constants
-    stratDir            = dumpdir + "/strats/staticWithClustering/"
-    readJsonProfileFile = dumpdir + profileFile
+def slocClusterBasedBFS(profile, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold,maxdepth,windowSize):
+    resultsDir = dumpdir + "/results/"
+    stratDir   = dumpdir + "/strats/staticWithClustering/"
     ## get verbose level from generateStrat.py
     verbose = getVerbose()
     ## Generate clusters
-    updateProfileCluster(readJsonProfileFile)
     corr = getCorrStatList()
-    (ge, gn) = build_graph(tracefile, corr)
-    hierarchy = generate_graph(ge, gn, threshold)
+    (ge, gn) = build_graph(tracefile, threshold, windowSize, corr)
+    hierarchy = clustering_algorithm(ge, gn, threshold, maxdepth)
     for depth,clusters in enumerate(hierarchy):
+        if depth>maxdepth:
+            break
         ## Individual analysis (BFS inspired from Mike Lam papers)
         toTestList = createStratFilesStaticCluster(stratDir, clusters, depth)
         if verbose >2:
             print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
             print(toTestList)
         ## Get the successful individual static call sites
-        validList = execApplication(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
+        validList = execApplication(binary, params, stratDir, toTestList, checkText2Find, resultsDir, profileFile)
         ## E.g. (['depth-0-cluster-1'], [['0x5ead72', '0x5e913e']])
         if verbose>2:
             print("Level1, Valid name list of individual-site static call sites: ", validList[0])
@@ -40,7 +40,7 @@ def slocClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefi
         ## For all remaining Static Calls
         ## Sort all strategies per performance impact,
         ## start trying them from the most to the less impact.
-        toTestListGen = createStratFilesMultiSiteStatic(stratDir,readJsonProfileFile,validList)
+        toTestListGen = createStratFilesMultiSiteStatic(stratDir,profileFile,validList)
         assert(toTestListGen)
         ## Execute the application on generated strategy files
         ## Generate strategies choosing k among n.
@@ -54,7 +54,7 @@ def slocClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefi
                 break
             if verbose>2:
                 print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
-            validList = execApplicationMultiSite(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
+            validList = execApplicationMultiSite(binary, params, stratDir, toTestList, checkText2Find, resultsDir, profileFile)
             if verbose>2:
                 if len(validList)>0:
                     print("Level2, Valid Name list of multi-site static call sites:", validList[0])
@@ -73,4 +73,8 @@ if __name__ == "__main__":
     checkText2Find = args.verif_text
     tracefile      = dumpdir + args.mergedtracefile
     threshold      = args.threshold
-    slocClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
+    windowSize     = args.windowSize
+    maxdepth       = args.maxdepth
+    profileFile    = dumpdir + profileFile
+    profile = Profile(profileFile)
+    slocClusterBasedBFS(profile, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold,maxdepth,windowSize)

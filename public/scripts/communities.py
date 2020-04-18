@@ -5,14 +5,13 @@ from generateStrat import getVerbose
 
 ## get verbose level from generateStrat.py
 verbose = getVerbose()
+##TODO: class Communities
 
-def build_graph(tracefile, staticCorr=None):
+def build_graph(tracefile, maxWindowSize, staticCorr=None):
     """ Return graph edges. Each node is either a static call site or a full backtrace "dynamic" call.
         TODO: Should graph_nodes be a set or a dictionnary?
     """
     graph_edges = {}
-    #TODO: Should graph_nodes be a set or a dictionnary?
-    #graph_nodes = {}
     graph_nodes = set()
     def getVertex(words):
         cur_timestamp = float(words[CSV["index"]])
@@ -33,35 +32,49 @@ def build_graph(tracefile, staticCorr=None):
         (cur_timestamp,cur_vertix) = getVertex(words)
         last_timestamp = cur_timestamp
         last_vertix = cur_vertix
-        ##TODO
-        #graph_nodes[cur_vertix] = [cur_timestamp]
+        window = [(cur_timestamp, cur_vertix)]
+        insideWindow = 1
         graph_nodes.add(cur_vertix)
         graph_edges[(cur_vertix, cur_vertix)] = [0]
         line = trace_file.readline()
         while line:
             words = line.split()
             (cur_timestamp,cur_vertix) = getVertex(words)
-            if (last_vertix, cur_vertix) in graph_edges:
-                graph_edges[(last_vertix, cur_vertix)].append(cur_timestamp - last_timestamp)
-            else:
-                graph_edges[(last_vertix, cur_vertix)] = [cur_timestamp - last_timestamp]
-            graph_nodes.add(cur_vertix)
-            ##TODO
-            #if cur_vertix in graph_nodes:
-                #graph_nodes[cur_vertix].append(cur_timestamp)
+            assert len(window) <  maxWindowSize+1
+            window.append((cur_timestamp, cur_vertix))
+            assert len(window) <= maxWindowSize+1
+            startWindow = 0
+            ## For all element inside window, check if they violate
+            ## the window range.
+            ## startWindow is the index of the first element inside
+            ## window NOT violating the range constraint
+            for i,x in enumerate(window[:-1]):
+                startWindow = i
+                if  DeltaWindow > (cur_timestamp - x[0]):
+                    break
+            ## Update window accordingly: TODO possible bug
+            window = window[max(startWindow,len(window)-maxWindowSize):]
+            assert len(window) <  maxWindowSize+1
+            for i,x in enumerate(window[:-1]):
+                delta = cur_timestamp - x[0]
+                if (x[1], cur_vertix) in graph_edges:
+                    graph_edges[(x[1], cur_vertix)].append(delta)
+                else:
+                    graph_edges[(x[1], cur_vertix)] = [delta]
+            #if (last_vertix, cur_vertix) in graph_edges:
+            #    graph_edges[(last_vertix, cur_vertix)].append(cur_timestamp - last_timestamp)
             #else:
-                #graph_nodes[cur_vertix] = [cur_timestamp]
-            last_timestamp = cur_timestamp
-            last_vertix = cur_vertix
+            #    graph_edges[(last_vertix, cur_vertix)] = [cur_timestamp - last_timestamp]
+            graph_nodes.add(cur_vertix)
+            #last_timestamp = cur_timestamp
+            #last_vertix = cur_vertix
             line = trace_file.readline()
     return (graph_edges,graph_nodes)
 
-def generate_graph(graph_edges, graph_nodes, threshold, max_depth=10):
+def clustering_algorithm(graph_edges, graph_nodes, threshold, max_depth):
     """ graph_node is a set
-        threshold MUST be a float
         graph_edges is a dictionnary: key is edge, value is list of deltas.
     """
-    ##TODO should graph node be a set or a dictionnary?
     edges_count = {}
     G = nx.DiGraph()
     G.add_nodes_from(list(graph_nodes))

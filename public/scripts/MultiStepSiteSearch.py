@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from parse import parseStaticWithCluster
 
+from updateProfile import updateProfileMultiStepSiteSearch
 from staticApproach import slocBasedBFS
 from staticWithClusterApproach import slocClusterBasedBFS
 from dynamicApproach import backtraceBasedBFS
@@ -15,12 +16,15 @@ checkText2Find = args.verif_text
 tracefile      = args.mergedtracefile
 threshold      = args.threshold
 ## Composed constants
-stratDir            = dumpdir + "/strats/static/"
-readJsonProfileFile = dumpdir + "/" + profileFile
+profileFile = dumpdir + "/" + profileFile
 ## get verbose level from generateStrat.py
 verbose = getVerbose()
 
-slocClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
+## Fill initial type configuration list indexed by backtrace based call site ID
+profile = Profile(profileFile)
+
+##TODO: why need profileFile to apply strategy (libC++)?
+slocClusterBasedBFS(profile, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
 
 slocBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find)
 
