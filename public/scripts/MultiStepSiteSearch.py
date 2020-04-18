@@ -6,6 +6,7 @@ from staticApproach import slocBFS
 from slocCluster import slocClusterBFS
 from dynamicApproach import backtraceBFS
 from backtraceCluster import backtraceClusterBFS
+from Common import getVerbose
 ## Parsing arguments
 args           = parseWithCluster()
 params         = args.param
@@ -15,6 +16,7 @@ profileFile    = args.profilefile
 checkText2Find = args.verif_text
 tracefile      = args.mergedtracefile
 threshold      = args.threshold
+checkTest2Fine = args.verif_text
 ## Composed constants
 profileFile = dumpdir + "/" + profileFile
 ## get verbose level from generateStrat.py
@@ -22,20 +24,20 @@ verbose = getVerbose()
 
 ## Fill initial type configuration list indexed by backtrace based call site ID
 profile = Profile(profileFile)
-initSet = profile.__doublePrecisionSet
+initSet = profile._doublePrecisionSet
 success = set()
 ## S:success F:failure
 S = set()
 F = set()
 ##TODO: why need profileFile to apply strategy (libC++)?
-(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkTest2Find,tracefile,threshold)
+(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkText2Find,tracefile,threshold)
 exit(0)
 success += S
-(S,F) = slocBFS(F, params,binary,dumpdir,profileFile,checkTest2Find)
+(S,F) = slocBFS(F, params,binary,dumpdir,profileFile,checkText2Find)
 success += S
-(S,F) = backtraceClusterBFS(F, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
+(S,F) = backtraceClusterBFS(F, params,binary,dumpdir,profileFile,checkText2Find,tracefile,threshold)
 success += S
-(S,F) = backtraceBFS(F, params,binary,dumpdir,profileFile,checkTest2Find)
+(S,F) = backtraceBFS(F, params,binary,dumpdir,profileFile,checkText2Find)
 success += S
 
 print("Can be converted to single precision: ")

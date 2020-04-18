@@ -1,4 +1,5 @@
-verbose = 3
+import os
+verbose = 5
 def getVerbose():
     return verbose
 
@@ -43,7 +44,7 @@ def runApp(cmd, stratDir, name, checkText, envStr):
         print(f"BacktraceListFile ({backtrace}) Valid? {valid}")
     return valid
 
-def updateEnv(resultsDirectory, profileFile, binary):
+def updateEnv(resultsDir, profileFile, binary):
     procenv = {}
     ##TODO: use script arguments
     procenv["TARGET_FILENAME"] = binary

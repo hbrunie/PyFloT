@@ -1,75 +1,77 @@
+import json
+import re
 class Profile:
     """ Rename it metada? (profile + score)
     """
-    __totalDynCalls           = 0
-    __totalSlocCallSites          = 0
-    __correspondanceBt2SLOC = 0
-    __statCallsSP = 0
-    __dynCallsSP = 0
-    __doublePrecisionSet       = set()
-    __profile                 = {}
-    __nbTrials = 0
+    _totalDynCalls         = 0
+    _totalSlocCallSites    = 0
+    _statCallsSP           = 0
+    _dynCallsSP            = 0
+    _nbTrials              = 0
+    _doublePrecisionSet     = set()
+    _profile               = {}
+    _correspondanceBt2SLOC  = []
     ## double precision 0, single precision 1
-    __typeConfiguration = []
+    _typeConfiguration = []
     ## List indexed by SLOC id,
     ## each element is a set of backtrace ID corresponding to
     ## same SLOC id
-    __slocListOfBtIdSet = []
+    _slocListOfBtIdSet = []
 
     def __init__(self,jsonFile):
-        self.__profileFile = jsonFile
+        self._profileFile = jsonFile
         print(jsonFile)
         with open(jsonFile, 'r') as json_file:
-            self.__profile = json.load(json_file)
-        updateProfile()
-        self.__typeConfiguration = [0] * len(self.__totalDynCalls)
+            self._profile = json.load(json_file)
+        self.updateProfile()
+        self._typeConfiguration = [0] *self._totalDynCalls
         return None
 
     def trialFailure(self):
-        self.__nbTrial += 1
+        self._nbTrial += 1
 
     def mergeBt2SLOC(self, btSet):
-        sloc = set([map(x,self.__correspondanceBt2SLOC) for x in btSet])
+        sloc = set([map(x,self._correspondanceBt2SLOC) for x in btSet])
         return sorted(list(sloc))
 
-    def revertSuccess(spConvertedSet):
+    def revertSuccess(self, spConvertedSet):
         for i in spConvertedSet:
-            self.__typeConfiguration[i] = 0
-        self.__dynCallsSP = self.__typeConfiguration.count(1)
-        self.__statCallsSP = mergeBt2SLOC.count(0)
+            self._typeConfiguration[i] = 0
+        self._dynCallsSP = self._typeConfiguration.count(1)
+        self._statCallsSP = mergeBt2SLOC.count(0)
 
-    def trialSuccess(spConvertedSet):
+    def trialSuccess(self,spConvertedSet):
         for i in spConvertedSet:
-            self.__typeConfiguration[i] = 1
-        self.__dynCallsSP = self.__typeConfiguration.count(1)
-        self.__statCallsSP = mergeBt2SLOC.count(0)
+            self._typeConfiguration[i] = 1
+        self._dynCallsSP = self._typeConfiguration.count(1)
+        self._statCallsSP = mergeBt2SLOC.count(0)
 
     def weight(self, s):
-        return sum(map(s, lambda i: self.__weightPerBtCallSite[i]))
+        return sum(map(s, lambda i: self._weightPerBtCallSite[i]))
 
 
     def display(self):
-        ratioStatSP = float(self.__statCallsSP) / float(self.__totalSlocCallSites)
-        ratioDynSP = float(self.__dynCallsSP) / float(self.__totalDynCalls)
+        ratioStatSP = float(self._statCallsSP) / float(self._totalSlocCallSites)
+        ratioDynSP = float(self._dynCallsSP) / float(self._totalDynCalls)
         if verbose > 0:
-            print(f"nbTrials: {self.__nbTrials}")
+            print(f"nbTrials: {self._nbTrials}")
             print(f"ratioStatSP: {ratioStatSP*100:2.0f}")
             print(f"ratioDynSP: {ratioDynSP*100:2.0f}")
-            print(f"dynCallsSP: {self.__dynCallsSP}")
-            print(f"statCallsSP: {self.__statCallsSP}")
-            print(f"totalDynCalls: {self.__totalDynCalls}")
-            print(f"totalStatCalls: {self.__totalSlocCallSites}")
+            print(f"dynCallsSP: {self._dynCallsSP}")
+            print(f"statCallsSP: {self._statCallsSP}")
+            print(f"totalDynCalls: {self._totalDynCalls}")
+            print(f"totalStatCalls: {self._totalSlocCallSites}")
 
-    def updateProfile(self, profile):
+    def updateProfile(self):
         slocreg = "([a-zA-Z0-9._-]+):([0-9]+)"
-        btCallSitesList = self.__profile["IndependantCallStacks"]
-        self.__doublePrecisionSet = set(range(len(btCallSitesList)))
-        self.__weightPerBtCallSite = []
+        btCallSitesList = self._profile["IndependantCallStacks"]
+        self._doublePrecisionSet = set(range(len(btCallSitesList)))
+        self._weightPerBtCallSite = []
         slocDict = {}
         currentSlocId = 0
         for currentBtId,btCallSite in enumerate(btCallSitesList):
-            self.__totalDynCalls += btCallSite["CallsCount"]
-            self.__weightPerBtCallSite.append(btCallSite["CallsCount"])
+            self._totalDynCalls += btCallSite["CallsCount"]
+            self._weightPerBtCallSite.append(btCallSite["CallsCount"])
             ## Building SLOC HashKeys: addr2line
             m = re.search(slocreg, btCallSite["Addr2lineCallStack"][0])
             assert(m)
@@ -96,16 +98,17 @@ class Profile:
                 ## Update number of dynamic calls done through this SLOC call site
                 slocCallSite["SlocCallsCount"] += btCallSite["CallsCount"]
                 ## update list indexed by SLOC id, containing backtrace Callsite id set
-                __slocListOfBtIdSet[slocCallSite["SlocId"]].add(currentBtId)
-                self.__correspondanceBt2SLOC.append(slocCallSite["SlocId"])
+                self._slocListOfBtIdSet[slocCallSite["SlocId"]].add(currentBtId)
+                self._correspondanceBt2SLOC.append(slocCallSite["SlocId"])
             ## If not already in dict
             else:
-                btCallSite["SlocId"] = self.__totalSlocCallSites
-                self.__correspondanceBt2SLOC.append(self.__totalSlocCallSites)
-                self.__totalSlocCallSites += 1
+                btCallSite["SlocId"] = self._totalSlocCallSites
+                self._correspondanceBt2SLOC.append(self._totalSlocCallSites)
+                self._totalSlocCallSites += 1
                 ## update list of backtrace ID corresponding to same SLOC id
-                __slocListOfBtIdSet.append(set(currentBtId))
+                self._slocListOfBtIdSet.append(set([currentBtId]))
                 ##Copy of Backtrace Call Site into SLOC Call site
                 slocCallSite = btCallSite.copy()
                 slocCallSite["StaticHashKey"] = slocHKey
+                slocCallSite["SlocCallsCount"] = slocCallSite["CallsCount"]
                 slocDict[slocHKey] = slocCallSite
