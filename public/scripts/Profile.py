@@ -4,7 +4,8 @@ class Profile:
     __totalDynCalls           = 0
     __totalStatCalls          = 0
     __correspondanceDynStatic = 0
-    __typeConfiguration       = []
+    ## double precision 'd', single precision 's'
+    __doublePrecisionSet       = set()
     __profile                 = {}
 
     def __init__(self,jsonFile):
@@ -26,6 +27,8 @@ class Profile:
         statCount = 0
         dynCount = 0
         for cs in dynCalls:
+            ##Update search set
+            __doublePrecisionSet.add(dynCount)
             ##Building HashKeys: btsymbol and addr2line
             ## Static
             ## addr2line identification
@@ -84,4 +87,3 @@ class Profile:
         if verbose > 1:
             print("Profile: ",[(x["statname"],x["dynname"],x["CallsCount"]) for x in staticCalls])
             print("Profile: ",[(x["statname"],x["dynname"],x["CallsCount"]) for x in dynCalls])
-        return typeConfiguration

@@ -14,14 +14,19 @@ from generateStrat import getCorrStatList
 from communities import build_graph
 from communities import generate_graph
 
-def slocClusterBasedBFS(profile, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold,maxdepth,windowSize):
+def slocClusterBasedBFS(searchSet, params, binary, dumpdir, profileFile,
+                        checkTest2Find, tracefile, threshold, maxdepth,windowSize):
+    """ Search set contains backtrace based index of call site yet in double precision.
+        Returns the new search set and the set of call site successfully converted to single precision.
+    """
+    spConvertedSet = set()
     resultsDir = dumpdir + "/results/"
     stratDir   = dumpdir + "/strats/staticWithClustering/"
     ## get verbose level from generateStrat.py
     verbose = getVerbose()
     ## Generate clusters
     corr = getCorrStatList()
-    (ge, gn) = build_graph(tracefile, threshold, windowSize, corr)
+    (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
     hierarchy = clustering_algorithm(ge, gn, threshold, maxdepth)
     for depth,clusters in enumerate(hierarchy):
         if depth>maxdepth:
@@ -62,6 +67,7 @@ def slocClusterBasedBFS(profile, params,binary,dumpdir,profileFile,checkTest2Fin
             if len(validList)>0:
                 display()
     display()
+    return (spConvertedSet,searchSet)
 
 if __name__ == "__main__":
     ## Parsing arguments
@@ -77,4 +83,5 @@ if __name__ == "__main__":
     maxdepth       = args.maxdepth
     profileFile    = dumpdir + profileFile
     profile = Profile(profileFile)
-    slocClusterBasedBFS(profile, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold,maxdepth,windowSize)
+    initSet = profile.__doublePrecisionSet
+    slocClusterBasedBFS(initSet, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold,maxdepth,windowSize)
