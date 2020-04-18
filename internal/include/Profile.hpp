@@ -9,7 +9,7 @@ using namespace Json;
 class Profile{
     private:
         bool __mode;
-        // Function return addresses, sensible to
+        // Function return addresses, sensitive to
         // LINUX Address space layout randomization (ASLR)
         // Obtained with **backtrace** function from execinfo.h (or unwind)
         unordered_map<uintptr_t, shared_ptr<DynFuncCall>> __backtraceDynamicMap;
