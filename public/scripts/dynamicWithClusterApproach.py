@@ -1,46 +1,44 @@
 #!/usr/bin/env python3
-from parse import parseStaticWithCluster
+from parse import parseDynamicWithCluster
 
 from generateStrat import execApplication
-from generateStrat import createStratFilesStaticCluster
-from generateStrat import createStratFilesMultiSiteStatic
+from generateStrat import createStratFilesDynamicCluster
+from generateStrat import createStratFilesMultiSiteDynamic
 from generateStrat import execApplication
 from generateStrat import execApplicationMultiSite
 from generateStrat import display
 from generateStrat import getVerbose
 from generateStrat import updateProfileCluster
-from generateStrat import getCorrStatList
 
 from communities import build_graph
 from communities import generate_graph
 
-def slocClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold):
+def backtraceClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold):
     ## Composed constants
-    stratDir            = dumpdir + "/strats/staticWithClustering/"
+    stratDir            = dumpdir + "/strats/backtraceBasedWithClustering/"
     readJsonProfileFile = dumpdir + profileFile
     ## get verbose level from generateStrat.py
     verbose = getVerbose()
     ## Generate clusters
     updateProfileCluster(readJsonProfileFile)
-    corr = getCorrStatList()
-    (ge, gn) = build_graph(tracefile, corr)
+    (ge, gn) = build_graph(tracefile, None)
     hierarchy = generate_graph(ge, gn, threshold)
     for depth,clusters in enumerate(hierarchy):
         ## Individual analysis (BFS inspired from Mike Lam papers)
-        toTestList = createStratFilesStaticCluster(stratDir, clusters, depth)
+        toTestList = createStratFilesDynamicCluster(stratDir, clusters, depth)
         if verbose >2:
             print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
             print(toTestList)
-        ## Get the successful individual static call sites
+        ## Get the successful individual backtrace based call sites
         validList = execApplication(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
         ## E.g. (['depth-0-cluster-1'], [['0x5ead72', '0x5e913e']])
         if verbose>2:
-            print("Level1, Valid name list of individual-site static call sites: ", validList[0])
+            print("Level1, Valid name list of individual-site backtrace based call sites: ", validList[0])
             print(validList)
-        ## For all remaining Static Calls
+        ## For all remaining Backtrace Based Calls
         ## Sort all strategies per performance impact,
         ## start trying them from the most to the less impact.
-        toTestListGen = createStratFilesMultiSiteStatic(stratDir,readJsonProfileFile,validList)
+        toTestListGen = createStratFilesMultiSiteDynamic(stratDir,readJsonProfileFile,validList)
         assert(toTestListGen)
         ## Execute the application on generated strategy files
         ## Generate strategies choosing k among n.
@@ -57,7 +55,7 @@ def slocClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefi
             validList = execApplicationMultiSite(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
             if verbose>2:
                 if len(validList)>0:
-                    print("Level2, Valid Name list of multi-site static call sites:", validList[0])
+                    print("Level2, Valid Name list of multi-site backtrace based call sites:", validList[0])
             ## valid type configuration found. Stop the search.
             if len(validList)>0:
                 display()
@@ -65,7 +63,7 @@ def slocClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefi
 
 if __name__ == "__main__":
     ## Parsing arguments
-    args           = parseStaticWithCluster()
+    args           = parseDynamicWithCluster()
     params         = args.param
     binary         = args.binary
     dumpdir        = args.dumpdir

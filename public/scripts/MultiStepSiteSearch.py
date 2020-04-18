@@ -1,19 +1,10 @@
 #!/usr/bin/env python3
 from parse import parseStaticWithCluster
 
-from generateStrat import execApplication
-from generateStrat import createStratFilesStatic
-from generateStrat import createStratFilesMultiSiteStatic
-from generateStrat import execApplication
-from generateStrat import execApplicationMultiSite
-from generateStrat import display
-from generateStrat import getVerbose
-from generateStrat import updateProfileCluster
-from generateStrat import getCorrStatList
-
-from communities import build_graph
-from communities import generate_graph
-
+from staticApproach import slocBasedBFS
+from staticWithClusterApproach import slocClusterBasedBFS
+from dynamicApproach import backtraceBasedBFS
+from dynamicWithClusterApproach import backtraceClusterBasedBFS
 ## Parsing arguments
 args           = parseStaticWithCluster()
 params         = args.param
@@ -29,36 +20,10 @@ readJsonProfileFile = dumpdir + "/" + profileFile
 ## get verbose level from generateStrat.py
 verbose = getVerbose()
 
-def breadth_first_search()
+slocClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
 
-##SLOC level
-## Generate SLOC based clusters
-updateProfileCluster(readJsonProfileFile)
-corr = getCorrStatList()
-(ge, gn) = build_graph(tracefile, corr)
-clustering_algorithm(ge, gn, threshold)
+slocBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find)
 
-## Individual analysis (BFS inspired from Mike Lam papers)
-toTestList = createStratFilesStaticCluster(stratDir)
-if verbose >2:
-    print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
-## Get the successful individual static call sites
-validList = execApplication(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
-if verbose>2:
-    print("Level1, Valid name list of individual-site static call sites: ", validList[0])
+backtraceClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
 
-## For all remaining Static Calls
-## Sort all strategies per performance impact,
-## start trying them from the most to the less impact.
-toTestListGen = createStratFilesMultiSiteStatic(stratDir,readJsonProfileFile,validList)
-##Use only first depth of clustering
-toTestList = next(toTestListGen)
-if verbose>2:
-    print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
-
-validList = execApplicationMultiSite(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
-if verbose>2:
-    if len(validList)>0:
-        print("Level2, Valid Name list of multi-site static call sites:", validList[0])
-
-toTestList = createStratFilesStatic(stratDir,readJsonProfileFile, validList)
+backtraceBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find)
