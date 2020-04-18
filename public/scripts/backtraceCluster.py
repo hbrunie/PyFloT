@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
-from parse import parseDynamicWithCluster
+from parse import parseWithCluster
 
 from generateStrat import execApplication
-from generateStrat import createStratFilesDynamicCluster
+from generateStrat import createStratFilesCluster
 from generateStrat import createStratFilesMultiSiteDynamic
 from generateStrat import execApplication
 from generateStrat import execApplicationMultiSite
-from generateStrat import display
 from generateStrat import getVerbose
-from generateStrat import updateProfileCluster
 
 from communities import build_graph
-from communities import generate_graph
+from communities import community_algorithm
 
-def backtraceClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold):
+def backtraceClusterBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold):
     ## Composed constants
-    stratDir            = dumpdir + "/strats/backtraceBasedWithClustering/"
+    stratDir            = dumpdir + "/strats/backtraceWithClustering/"
     readJsonProfileFile = dumpdir + profileFile
     ## get verbose level from generateStrat.py
     verbose = getVerbose()
@@ -71,4 +69,4 @@ if __name__ == "__main__":
     checkText2Find = args.verif_text
     tracefile      = dumpdir + args.mergedtracefile
     threshold      = args.threshold
-    slocClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
+    slocClusterBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)

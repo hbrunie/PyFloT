@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-from parse import parseStaticWithCluster
+from parse import parseWithCluster
 
-from updateProfile import updateProfileMultiStepSiteSearch
+from Profile import Profile
 from staticApproach import slocBFS
 from slocCluster import slocClusterBFS
 from dynamicApproach import backtraceBFS
 from backtraceCluster import backtraceClusterBFS
 ## Parsing arguments
-args           = parseStaticWithCluster()
+args           = parseWithCluster()
 params         = args.param
 binary         = args.binary
 dumpdir        = args.dumpdir

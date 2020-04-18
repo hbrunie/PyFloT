@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
-from parse import parseStaticWithCluster
+from parse import parseWithCluster
 
 from Common import execApplication
-from Common import display
+from Profile import Profile
 
-from generateStrat import createStratFilesSLOCcluster
+from generateStrat import createStratFilesCluster
 from generateStrat import createStratFilesMultiSiteStatic
 from generateStrat import execApplication
 from generateStrat import execApplicationMultiSite
 from generateStrat import getVerbose
-from generateStrat import updateProfileCluster
-from generateStrat import getCorrStatList
 
 from communities import build_graph
-from communities import generate_graph
+from communities import community_algorithm
 
 def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
-                   checkTest2Find, tracefile, threshold, maxdepth,windowSize,verbose):
+                   checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=1,verbose=1):
     """ Search set contains backtrace based index of call site yet in double precision.
         Returns the new search set and the set of call site successfully converted to single precision.
     """
@@ -31,12 +29,11 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
     comGen = community_algorithm(ge, gn, threshold, maxdepth)
     for depth,communities in enumerate(itertools.islice(comGen)):
         ## Individual analysis (BFS inspired from Mike Lam papers)
-        toTestList =  createStratFilesSLOCcluster(profile, stratDir, communities, depth)
+        toTestList =  createStratFilesCluster(profile, stratDir, communities, depth)
         if verbose >2:
             print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
             print(toTestList)
         ## Get the successful individual static call sites
-        #validList = execApplication(binary, params, stratDir, toTestList, checkText2Find, resultsDir, profileFile)
         validDic = {}
         for (name, btCallSiteList) in toTestList:
             valid = runApp(cmd, stratDir, name, checkText, envStr)
@@ -74,12 +71,12 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
                 spConvertedSet.extend(btCallSiteList)
                 profile.trialSuccess(spConvertedSet)
                 ## Revert success because we testing individual
-                score.display()
+                profile.display()
                 profile.revertSuccess(spConvertedSet)
                 spConvertedSet = set()
             else:
                 profile.trialFailure()
-                score.display()
+                profile.display()
             if verbose>2:
                 if len(validList)>0:
                     print("Level2, Valid Name list of multi-site static call sites:", validList[0])

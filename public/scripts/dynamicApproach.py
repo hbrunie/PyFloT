@@ -2,7 +2,7 @@
 from parse import parseStatic
 
 from generateStrat import execApplication
-from generateStrat import createStratFilesDynamic
+from generateStrat import createStratFilesIndividuals
 from generateStrat import createStratFilesMultiSiteDynamic
 from generateStrat import execApplication
 from generateStrat import execApplicationMultiSite
@@ -14,7 +14,7 @@ def backtraceBFS(params,binary,dumpdir,profileFile,checkTest2Find):
     readJsonProfileFile = dumpdir + profileFile
     ## Dynamic Calls (Full CallStack)
     ## Same approach, prune based on Individual Reduced Precision (BFS: Mike Lam)
-    toTestList = createStratFilesDynamic(stratDir, readJsonProfileFile)
+    toTestList = createStratFilesIndividuals(stratDir, readJsonProfileFile)
     if verbose>2:
         print("Level2 Individual: ToTest name list: ", [x[0] for x in toTestList])
     ## Get the successful inidividual static call sites
@@ -53,4 +53,4 @@ if __name__ == "__main__":
     profileFile = args.profilefile
     checkText2Find = args.verif_text
     verbose = getVerbose()
-    backtraceBFS(params,binary,dumpdir,profileFile,checkTest2Find,verbose):
+    backtraceBFS(params,binary,dumpdir,profileFile,checkTest2Find,verbose)

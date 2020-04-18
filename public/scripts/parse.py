@@ -141,7 +141,7 @@ def _parseStatic():
                         should be written in between quotes: \"arg1 arg2 ...\" """)
     return parser,remaining_argv
 
-def parseStaticWithCluster():
+def parseWithCluster():
     parser,remaining_argv = _parseStatic()
     parser.add_argument("--mergedtracefile",
             help="Use merge CSV into trace file to build clusters.",

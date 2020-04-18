@@ -2,7 +2,7 @@
 from parse import parseStatic
 
 from generateStrat import execApplication
-from generateStrat import createStratFilesStatic
+from generateStrat import createStratFilesIndividuals
 from generateStrat import createStratFilesMultiSiteStatic
 from generateStrat import execApplication
 from generateStrat import execApplicationMultiSite
@@ -16,11 +16,24 @@ def slocBFS(params,binary,dumpdir,profileFile,checkTest2Find,verbose):
     readJsonProfileFile = dumpdir + profileFile
     cmd = f"{binary} {args}"
     envStr = updateEnv(resultsDirectory, profile.__profileFile, binary)
-    toTestList = createStratFilesStatic(stratDir,readJsonProfileFile)
+    toTestList = createStratFilesIndividuals(profile, stratDir, sloc=True)
     if verbose >2:
         print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
     ## Get the successful individual static call sites
-    validList = execApplication(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
+    #validList = execApplication(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
+    ## Get the successful individual static call sites
+    validDic = {}
+    for (name, btCallSiteList) in toTestList:
+        valid = runApp(cmd, stratDir, name, checkText, envStr)
+        if valid:
+            validDic[name] = btCallSiteList
+            profile.trialSuccess(btCallSiteList)
+            ## Revert success because we testing individual
+            profile.display()
+            profile.revertSuccess(btCallSiteList)
+        else:
+            profile.trialFailure()
+            profile.display()
     if verbose>2:
         print("Level1, Valid name list of individual-site static call sites: ", validList[0])
 
