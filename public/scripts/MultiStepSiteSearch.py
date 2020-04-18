@@ -22,12 +22,21 @@ verbose = getVerbose()
 
 ## Fill initial type configuration list indexed by backtrace based call site ID
 profile = Profile(profileFile)
-
+initSet = profile.__doublePrecisionSet
+success = set()
 ##TODO: why need profileFile to apply strategy (libC++)?
-slocClusterBasedBFS(profile, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
+(S,F) = slocClusterBasedBFS(initSet, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
+success += S
+(S,F) = slocBasedBFS(F, params,binary,dumpdir,profileFile,checkTest2Find)
+success += S
+(S,F) = backtraceClusterBasedBFS(F, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
+success += S
+(S,F) = backtraceBasedBFS(F, params,binary,dumpdir,profileFile,checkTest2Find)
+success += S
 
-slocBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find)
-
-backtraceClusterBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
-
-backtraceBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find)
+print("Can be converted to single precision: ")
+for btInfo in map(profile.getInfoByBtID(), success):
+    print(btInfo)
+print("Must remain in double precision: ")
+for btInfo in map(profile.getInfoByBtID(), F):
+    print(btInfo)
