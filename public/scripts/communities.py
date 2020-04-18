@@ -7,29 +7,37 @@ from generateStrat import getVerbose
 verbose = getVerbose()
 ##TODO: class Communities
 
-def build_graph(tracefile, maxWindowSize, staticCorr=None):
+def build_graph(searchSet, tracefile, maxWindowSize, corrBtSLOC=None):
     """ Return graph edges. Each node is either a static call site or a full backtrace "dynamic" call.
         TODO: Should graph_nodes be a set or a dictionnary?
     """
     graph_edges = {}
     graph_nodes = set()
     def getVertex(words):
-        cur_timestamp = float(words[CSV["index"]])
-        if staticCorr:##static approach
-            cur_vertix = staticCorr[int(words[CSV["callSite"]])]
+        btCallSiteId = int(words[CSV["callSite"]])
+        if btCallSite not in searchSet:
+            return None
+        cur_timestamp = float(words[CSV["timeStamp"]])
+        if corrBtSLOC:##static approach
+            cur_vertix = corrBtSLOC[btCallSiteId]
         else:##dynamic approach
-            cur_vertix = int(words[CSV["callSite"]])
+            cur_vertix = btCallSiteId
         return (cur_timestamp,cur_vertix)
     ##Defined in Profile.cpp:283
     ##index timeStamp argument doubleP singleP absErr relErr spBoolean callSite
     CSV = {"index":0, "timeStamp":1, "argument":2, "doubleP":3, "singleP":4, "absErr":5, "relErr":6, "spBoolean":7, "callSite":8}
     with open(tracefile, 'r') as trace_file:
-        # get rid of the first line
-        line = trace_file.readline()
         # run the loop once
         line = trace_file.readline()
+        # get rid of the first line
+        if "index" in line:
+            line = trace_file.readline()
         words = line.split()
-        (cur_timestamp,cur_vertix) = getVertex(words)
+        v = getVertex(words)
+        ## ignore nodes which are not in search space
+        while not v:
+            v = getVertex(words)
+        (cur_timestamp,cur_vertix) = v
         last_timestamp = cur_timestamp
         last_vertix = cur_vertix
         window = [(cur_timestamp, cur_vertix)]
@@ -39,7 +47,11 @@ def build_graph(tracefile, maxWindowSize, staticCorr=None):
         line = trace_file.readline()
         while line:
             words = line.split()
-            (cur_timestamp,cur_vertix) = getVertex(words)
+            v = getVertex(words)
+            ## ignore nodes which are not in search space
+            while not v:
+                v = getVertex(words)
+            (cur_timestamp,cur_vertix) = v
             assert len(window) <  maxWindowSize+1
             window.append((cur_timestamp, cur_vertix))
             assert len(window) <= maxWindowSize+1
