@@ -1,34 +1,77 @@
 class Profile:
-    """
+    """ Rename it metada? (profile + score)
     """
     __totalDynCalls           = 0
     __totalStatCalls          = 0
-    __correspondanceDynStatic = 0
-    ## double precision 'd', single precision 's'
+    __correspondanceBt2SLOC = 0
+    __statCallsSP = 0
+    __dynCallsSP = 0
     __doublePrecisionSet       = set()
     __profile                 = {}
+    __nbTrials = 0
+    ## double precision 0, single precision 1
+    __typeConfiguration = []
 
     def __init__(self,jsonFile):
+        self.__profileFile = jsonFile
         print(jsonFile)
         with open(jsonFile, 'r') as json_file:
-            __profile = json.load(json_file)
+            self.__profile = json.load(json_file)
         updateProfile()
+        self.__typeConfiguration = [0] * len(self.__totalDynCalls)
         return None
 
-    def updateProfile(profile, usebtsym = False):
+    def trialFailure(self):
+        self.__nbTrial += 1
+
+    def mergeBt2SLOC(self, btSet):
+        sloc = set([map(x,self.__correspondanceBt2SLOC) for x in btSet])
+        return sorted(list(sloc))
+
+    def revertSuccess(spConvertedSet):
+        for i in spConvertedSet:
+            self.__typeConfiguration[i] = 0
+        self.__dynCallsSP = self.__typeConfiguration.count(1)
+        self.__statCallsSP = mergeBt2SLOC.count(0)
+
+    def trialSuccess(spConvertedSet):
+        for i in spConvertedSet:
+            self.__typeConfiguration[i] = 1
+        self.__dynCallsSP = self.__typeConfiguration.count(1)
+        self.__statCallsSP = mergeBt2SLOC.count(0)
+
+    def weight(self, s):
+        return sum(map(s, lambda i: self.__weightPerBtCallSite[i]))
+
+
+    def display(self):
+        ratioStatSP = float(self.__statCallsSP) / float(self.__totalStatCalls)
+        ratioDynSP = float(self.__dynCallsSP) / float(self.__totalDynCalls)
+        if verbose > 0:
+            print(f"nbTrials: {self.__nbTrials}")
+            print(f"ratioStatSP: {ratioStatSP*100:2.0f}")
+            print(f"ratioDynSP: {ratioDynSP*100:2.0f}")
+            print(f"dynCallsSP: {self.__dynCallsSP}")
+            print(f"statCallsSP: {self.__statCallsSP}")
+            print(f"totalDynCalls: {self.__totalDynCalls}")
+            print(f"totalStatCalls: {self.__totalStatCalls}")
+
+    def updateProfile(self, profile, usebtsym = False):
         slocreg = "([a-zA-Z0-9._-]+):([0-9]+)"
         btsymbolreg = "[-_a-zA-Z/.0-9]+\\([a-zA-Z_0-9+]*\\)\\s\\[(0x[a-f0-9]+)\\]"
-        dynCalls = __profile["IndependantCallStacks"]
+        dynCalls = self.__profile["IndependantCallStacks"]
+        self.__weightPerBtCallSite = []
         staticCalls = []
         staticCallsd = {}
-        __profile["StaticCalls"] = staticCalls
-        __profile["StaticCallsd"] = staticCallsd
+        self.__profile["StaticCalls"] = staticCalls
+        self.__profile["StaticCallsd"] = staticCallsd
         staticmaxlvl = 1
         statCount = 0
         dynCount = 0
         for cs in dynCalls:
+            self.__weightPerBtCallSite.append(cs["CallsCount"])
             ##Update search set
-            __doublePrecisionSet.add(dynCount)
+            self.__doublePrecisionSet.add(dynCount)
             ##Building HashKeys: btsymbol and addr2line
             ## Static
             ## addr2line identification
@@ -62,11 +105,11 @@ class Profile:
             if staticCallsd.get(statickey):
                 scs = staticCallsd[statickey]
                 scs["CallsCount"] += cs["CallsCount"]
-                __totalDynCalls += cs["CallsCount"]
+                self.__totalDynCalls += cs["CallsCount"]
                 statCountMinusOne = statCount - 1
                 cs["statname"] = f"statCS-{statCountMinusOne}"
                 cs["statid"] = statCountMinusOne
-                __correspondanceDynStatic.append(statCountMinusOne)
+                self.__correspondanceBt2SLOC.append(statCountMinusOne)
             ## If not already in dict
             ## Add to dict and update name/hashKey/CallsCount
             ## Append to staticCalls list
@@ -74,14 +117,14 @@ class Profile:
                 ##Copy of Dynamic Call dictionnary into the staticCall one
                 cs["statname"] = f"statCS-{statCount}"
                 cs["statid"] = statCount
-                __correspondanceDynStatic.append(statCount)
+                self.__correspondanceBt2SLOC.append(statCount)
                 staticCallsd[statickey] = cs.copy()
                 scs = staticCallsd[statickey]
                 scs["StaticHashKey"] = statickey
                 ##Change dynCall name for static one, in copy
                 ##Update StatCall callsCount with dynamic one, in copy
-                __totalDynCalls += cs["CallsCount"]
-                __totalStatCalls += 1
+                self.__totalDynCalls += cs["CallsCount"]
+                self.__totalStatCalls += 1
                 staticCalls.append(scs)
                 statCount += 1
         if verbose > 1:

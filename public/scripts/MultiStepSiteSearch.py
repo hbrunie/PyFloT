@@ -2,10 +2,10 @@
 from parse import parseStaticWithCluster
 
 from updateProfile import updateProfileMultiStepSiteSearch
-from staticApproach import slocBasedBFS
-from staticWithClusterApproach import slocClusterBasedBFS
-from dynamicApproach import backtraceBasedBFS
-from dynamicWithClusterApproach import backtraceClusterBasedBFS
+from staticApproach import slocBFS
+from slocCluster import slocClusterBFS
+from dynamicApproach import backtraceBFS
+from backtraceCluster import backtraceClusterBFS
 ## Parsing arguments
 args           = parseStaticWithCluster()
 params         = args.param
@@ -24,14 +24,18 @@ verbose = getVerbose()
 profile = Profile(profileFile)
 initSet = profile.__doublePrecisionSet
 success = set()
+## S:success F:failure
+S = set()
+F = set()
 ##TODO: why need profileFile to apply strategy (libC++)?
-(S,F) = slocClusterBasedBFS(initSet, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
+(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkTest2Find,tracefile,threshold)
+exit(0)
 success += S
-(S,F) = slocBasedBFS(F, params,binary,dumpdir,profileFile,checkTest2Find)
+(S,F) = slocBFS(F, params,binary,dumpdir,profileFile,checkTest2Find)
 success += S
-(S,F) = backtraceClusterBasedBFS(F, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
+(S,F) = backtraceClusterBFS(F, params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)
 success += S
-(S,F) = backtraceBasedBFS(F, params,binary,dumpdir,profileFile,checkTest2Find)
+(S,F) = backtraceBFS(F, params,binary,dumpdir,profileFile,checkTest2Find)
 success += S
 
 print("Can be converted to single precision: ")

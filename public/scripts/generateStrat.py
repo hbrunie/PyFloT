@@ -83,6 +83,61 @@ def getCountCalls(subset, static):
 def getKeys(subset, static):
     return getCount(subset, static, False)
 
+def createStratFilesCluster(profile, stratDir, communities, depth):
+    stratList = []
+    os.system(f"mkdir -p {stratDir}")
+    for counter,community in enumerate(communities):
+        ##build community name
+        name = f"depth-{depth}-community-{counter}"
+        stratList.append((name, community))
+        with open(stratDir+f"strat-{name}.txt", 'a') as ouf:
+            profile.getHashKeyList(community)
+            for key in hashKeyList:
+                ouf.write(key+"\n")
+    if verbose>0:
+        n=len(communities)
+        print(f"{n} files created.")
+    ## Return list of tuples (names, community)
+    return stratList
+
+def generateStratFiles(CsubsetList):
+    CsubsetListFiles = []
+    staticName = "dynamic"
+    if static:
+        staticName = "static"
+    for csub in CsubsetList:
+        rank += 1
+        name = f"multiSite-{staticName}-r{rank}"
+        name += f"-k{fileKey}"
+        fileKey += 1
+        f = f"strat-{name}.txt"
+        ## csub ((name,name,), CallsCount)
+        keys = getKeys(csub[0], static)
+        CsubsetListFiles.append((name, keys, csub[1],csub[2]))
+        if verbose>2:
+            print(f"Creation of file: {f}")
+        with open(stratDir+f, 'a') as ouf:
+            for key in keys:
+                ouf.write(key+"\n")
+    return CsubsetListFiles
+
+def createStratFilesMultiSiteStatic(profile, stratDir, jsonFile, validDic):
+    os.system(f"mkdir -p {stratDir}")
+    nameList = validDic.keys()
+    nameSet = set(nameList)
+    for n in range(len(nameList),1,-1):
+        ## List of all subset strategies
+        ## Compute the subsets
+        subsets = findsubsets(nameSet, n)
+        ## Sort subsets list with score
+        subsets.sort(key=lambda x: profile.weight(map(x, lambda y: validDic[y])), reverse=True)
+        CsubsetListFiles = generateStratFiles(CsubsetList)
+        ## Return list of performance ordered subset names
+        yield CsubsetListFiles
+    ## Generating strategy files: do not generate best individual
+    print("No MultiStrategy found. Back to best individual strategy.")
+    return []
+
 def createStratFilesMultiSiteStatic(stratDir, jsonFile, validNameHashKeyList):
     return createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, True)
 
@@ -91,7 +146,7 @@ def createStratFilesMultiSiteDynamic(stratDir, jsonFile, validNameHashKeyList):
 
 def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
     """  validNameHashKeyList
-        --> COUPLE of 2 lists: (nameList, keyList)
+        --> COUPLE of 2 lists: (nameList, BtIdList)
             create one stratFile per combination. Each combination
             is a subset of the set of individuals
         Generate list of all subset k among n

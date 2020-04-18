@@ -83,9 +83,11 @@ def build_graph(searchSet, tracefile, maxWindowSize, corrBtSLOC=None):
             line = trace_file.readline()
     return (graph_edges,graph_nodes)
 
-def clustering_algorithm(graph_edges, graph_nodes, threshold, max_depth):
-    """ graph_node is a set
+def community_algorithm(graph_edges, graph_nodes, threshold, max_depth, corrSLOC2Bt = (lambda x: x)):
+    """ if call by SLOC, fill corrSLOC2Bt
+        graph_node is a set
         graph_edges is a dictionnary: key is edge, value is list of deltas.
+        returns generator of communities in hierarchical order
     """
     edges_count = {}
     G = nx.DiGraph()
@@ -96,12 +98,8 @@ def clustering_algorithm(graph_edges, graph_nodes, threshold, max_depth):
         if count > 0:
             G.add_edge(edge[0], edge[1], count=count)
     communities_generator = community.girvan_newman(G)
-    depth=0
-    hierarchy = []
-    for communities in itertools.islice(communities_generator, max_depth):
-        com = tuple(sorted(c) for c in communities)
-        hierarchy.append(com)
+    for depth,communities in enumerate(itertools.islice(communities_generator, max_depth)):
+        com = tuple(map(corrSLOC2Bt,c) for c in communities)
         if verbose > 1:
             print(f"Delta: {threshold}, Girvan Newman hierarchy depth: {depth} ->",com)
-        depth += 1
-    return hierarchy
+        yield com

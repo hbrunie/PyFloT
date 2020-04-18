@@ -9,10 +9,13 @@ from generateStrat import execApplicationMultiSite
 from generateStrat import getVerbose
 
 ## Individual analysis (BFS inspired from Mike Lam papers)
-def slocBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find):
+def slocBFS(params,binary,dumpdir,profileFile,checkTest2Find,verbose):
     ## Composed constants
     stratDir            = dumpdir + "/strats/static/"
+    resultsDir = dumpdir + "/results/"
     readJsonProfileFile = dumpdir + profileFile
+    cmd = f"{binary} {args}"
+    envStr = updateEnv(resultsDirectory, profile.__profileFile, binary)
     toTestList = createStratFilesStatic(stratDir,readJsonProfileFile)
     if verbose >2:
         print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
@@ -58,4 +61,4 @@ if __name__ == "__main__":
     checkText2Find = args.verif_text
     ## get verbose level from generateStrat.py
     verbose = getVerbose()
-    slocBasedBFS(params,binary,dumpdir,profileFile,checkTest2Find)
+    slocBFS(params,binary,dumpdir,profileFile,checkTest2Find,verbose)
