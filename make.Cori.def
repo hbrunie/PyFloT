@@ -1,19 +1,22 @@
 ### TO BE updated for each new usage ###
 CXX=g++
 OPTIONS=-DNDEBUG
-PTHOME=${SCRATCH}/tools/precisiontuning/
+PTHOME=${HOME}/utils/tools/precisiontuning/
 
 ### should not be modified ###
 
 ##Generic flags
-LIB=-L ${JSONLIBDIR} -ljsoncpp
+JSONLIB=${PTHOME}/external-deps/jsoncpp/build/src/lib_json/  -ljsoncpp
+GOTCHALIB=${PTHOME}/external-deps/install/lib64/ -lgotcha -Wl,-rpath, /global/cscratch1/sd/hbrunie/tools/precisiontuning/external-deps/install/lib64/
+LIB=-L ${JSONLIB} -L ${GOTCHALIB}
 CXXPTFLAGS=-O3 -std=c++11 -Wall -Wextra -g -rdynamic $(OPTIONS)
 
 ## Compile PrecisionTuning framework
-JSONLIBDIR=${PTHOME}/external-deps/jsoncpp/build/src/lib_json/
 JSONINCDIR=${PTHOME}/external-deps/jsoncpp/include/
+GOTCHAINCDIR=${PTHOME}/external-deps/GOTCHA/include/
 CEREALINCDIR=${PTHOME}/external-deps/cereal/include/
-INCDIR= -I $(PTHOME)/internal/utils/ -I $(PTHOME)/internal/include/ -I $(JSONINCDIR) -I. -I$(CEREALINCDIR)
+PTLabels= ${PTHOME}/public/include/
+INCDIR= -I $(PTHOME)/internal/utils/ -I $(PTHOME)/internal/include/ -I $(JSONINCDIR) -I. -I$(CEREALINCDIR) -I$(GOTCHAINCDIR) -I $(PTLabels)
 DYNLIB=-shared -fPIC
 GCCDYNLIB= -fPIC
 
