@@ -13,7 +13,9 @@ ShadowValue::ShadowValue(double dp, float sp, double argument, bool spBoolean, d
 
 string ShadowValue::getCSVformat(){
     return to_string(__index) + " "
+#ifdef USE_TIMESTAMP
         + to_string(__timeStamp) + " "
+#endif
         + to_string(__argument) + " "
         + to_string(__doubleP) + " "
         + to_string(__singleP) + " "

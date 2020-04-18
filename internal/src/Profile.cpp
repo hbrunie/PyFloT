@@ -221,8 +221,6 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
     auto dynHashKeyIte = __backtraceDynamicMap.find(dynHashKey);
     /* Can not find the element in Dynamic Hash Map */
     if(dynHashKeyIte == __backtraceDynamicMap.end()) {
-        dfc = make_shared<DynFuncCall>(btVec, dynHashKey);
-        __backtraceDynamicMap[dynHashKey] = dfc;
         /* Update Static HashMap */
 #ifndef USE_LABEL
         struct statHashKey_t shk = __staticHashKey(btVec);
@@ -230,12 +228,24 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
 #else
         string staticHashKey = label;
 #endif
-        dfc->updateBtSymbols(shk);
-        /* The element is necessarily not in StaticHashMap either,
-         * Because static and dynamic HashMap are "identical" */
-        __backtraceStaticMap[staticHashKey] = dfc;
-        __totalCallStacks += 1;
-        DEBUG("total",cerr << __FUNCTION__ << ":" << __LINE__<< " Total Call Stack " << __totalCallStacks <<endl;);
+        auto statHashKeyIte = __backtraceStaticMap.find(staticHashKey);
+        /* Element can still be in Static backtrace map
+         * Indeed: 2 ASLR sensitive backtraces may correspond to
+         * the same dladdr based backtrace(the missing index bug!).
+         * */
+        if(statHashKeyIte != __backtraceStaticMap.end()) {
+            dfc = __backtraceStaticMap[staticHashKey];
+            assert(dfc);
+            __backtraceDynamicMap[dynHashKey] = dfc;
+        }else{
+            dfc = make_shared<DynFuncCall>(btVec, dynHashKey);
+            __backtraceDynamicMap[dynHashKey] = dfc;
+            dfc->updateBtSymbols(shk);
+            assert(__backtraceStaticMap.end() == __backtraceStaticMap.find(staticHashKey));
+            __backtraceStaticMap[staticHashKey] = dfc;
+            __totalCallStacks += 1;
+            DEBUG("total",cerr << __FUNCTION__ << ":" << __LINE__<< " Total Call Stack " << __totalCallStacks <<endl;);
+        }
     }else{
         // The element is in Dynamic Hash Map
         DEBUG("total",cerr << __FUNCTION__ << ":" << __LINE__<< " Elt already in Dynamic Hash Map " << __totalCallStacks <<endl;);

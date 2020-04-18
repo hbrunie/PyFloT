@@ -111,7 +111,9 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float, f
     dres = func(value, parameter);
     return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label, timeStamp);
 }
+#ifndef NDEBUG
 static bool once = true;
+#endif
 /* Intercept math function with 1 arguments */
 double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double),
         double value, string label){
@@ -127,7 +129,11 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
     UNUSED(func);
 
     fvalue = (float)value;
+#ifndef USE_TIMESTAMP
+    double timeStamp = 0.0;
+#else
     double timeStamp = getTimeStamp();
+#endif
 
 #ifndef USE_LABEL
     vector<void*> btVec = __getContextHashBacktrace();
