@@ -72,21 +72,21 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
     """ Return graph edges. Each node is either a static call site or a full backtrace "dynamic" call.
         TODO: Should graph_nodes be a set or a dictionnary?
     """
-    graph_edges = {}
-    graph_nodes = set()
-    print("build graph, search set",searchSet)
     def getVertex(words):
         btCallSiteId = int(words[CSV["callSite"]])
-        if btCallSiteId not in searchSet:
-            return None
-        cur_timestamp = float(words[CSV["timeStamp"]])
         if corrBtSLOC:##static approach
             cur_vertix = corrBtSLOC[btCallSiteId]
         else:##dynamic approach
             cur_vertix = btCallSiteId
+        if cur_vertix not in searchSet:
+            return None
+        cur_timestamp = float(words[CSV["timeStamp"]])
         return (cur_timestamp,cur_vertix)
     ##Defined in Profile.cpp:283
     ##index timeStamp argument doubleP singleP absErr relErr spBoolean callSite
+    graph_edges = {}
+    graph_nodes = set()
+    print("build graph, search set",searchSet)
     CSV = {"index":0, "timeStamp":1, "argument":2, "doubleP":3, "singleP":4, "absErr":5, "relErr":6, "spBoolean":7, "callSite":8}
     with open(tracefile, 'r') as trace_file:
         # run the loop once
@@ -146,7 +146,7 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
             line = trace_file.readline()
     return (graph_edges,graph_nodes)
 
-def community_algorithm(graph_edges, graph_nodes, threshold, max_depth, corrSLOC2Bt = range(100)):
+def community_algorithm(graph_edges, graph_nodes, threshold, max_depth):
     """ if call by SLOC, fill corrSLOC2Bt
         graph_node is a set
         graph_edges is a dictionnary: key is edge, value is list of deltas.
@@ -165,7 +165,6 @@ def community_algorithm(graph_edges, graph_nodes, threshold, max_depth, corrSLOC
     com = next(communities_generator)
     return com
     #for depth,communities in enumerate(itertools.islice(communities_generator, max_depth)):
-    #    com = tuple(map(corrSLOC2Bt,c) for c in communities)
     #    if verbose > 1:
     #        print(f"Delta: {threshold}, Girvan Newman hierarchy depth: {depth} ->",com)
     #    yield com

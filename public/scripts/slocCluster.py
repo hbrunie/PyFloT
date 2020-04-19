@@ -72,6 +72,7 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
         for (name, btCallSiteList) in toTestList:
+            valid = runAppMockup(btCallSiteList)
             valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
             if valid:
                 spConvertedSet = set(btCallSiteList)

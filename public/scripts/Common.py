@@ -25,13 +25,16 @@ def checkPMF(f, checkText):
 def runCheckScript(f, checkText):
     #return checkTest3Exp()
     return checkPMF(f, checkText)
-
-def runApp(cmd, stratDir, name, checkText, envStr, nbTrials, btCallSiteIdList):
-    ## MOCKUP
+def runAppMockup(cmd, stratDir, name, checkText, envStr, nbTrials, btCallSiteIdList):
+    """ CallSiteId are BT or SLOC?
+    """
+    ## MOCKUP:TODO
     for i in btCallSiteIdList:
         if i in range(50,60):
             return False
     return True
+
+def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
     outputFile = "output"
     outputFileLocal = stratDir + outputFile + f"-{nbTrials}.dat"
     ## File name Should be same as in generateStrat.py
