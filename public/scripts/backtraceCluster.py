@@ -1,67 +1,92 @@
 #!/usr/bin/env python3
 from parse import parseWithCluster
 
-from generateStrat import execApplication
+from Common import runApp
+from Common import updateEnv
+from Common import getVerbose
+
 from generateStrat import createStratFilesCluster
-from generateStrat import createStratFilesMultiSiteDynamic
-from generateStrat import execApplication
-from generateStrat import execApplicationMultiSite
-from generateStrat import getVerbose
+from generateStrat import createStratFilesMultiSite
 
 from communities import build_graph
 from communities import community_algorithm
 
-def backtraceClusterBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold):
+def backtraceClusterBFS(profile, searchSet, params, binary, dumpdir,
+                        checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=2,verbose=1):
+    """ Search set contains backtrace based index of call site yet in double precision.
+        Returns the new search set and the set of call site successfully converted to single precision.
+    """
     ## Composed constants
     stratDir            = dumpdir + "/strats/backtraceWithClustering/"
-    readJsonProfileFile = dumpdir + profileFile
-    ## get verbose level from generateStrat.py
-    verbose = getVerbose()
+    resultsDir = dumpdir + "/results/"
+    tracefile = dumpdir + "/" + tracefile
+    cmd = f"{binary} {params}"
+    envStr = updateEnv(resultsDir, profile._profileFile, binary)
     ## Generate clusters
-    updateProfileCluster(readJsonProfileFile)
-    (ge, gn) = build_graph(tracefile, None)
-    hierarchy = generate_graph(ge, gn, threshold)
-    for depth,clusters in enumerate(hierarchy):
+    (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize)
+    com = community_algorithm(ge, gn, threshold, maxdepth)
         ## Individual analysis (BFS inspired from Mike Lam papers)
-        toTestList = createStratFilesDynamicCluster(stratDir, clusters, depth)
-        if verbose >2:
-            print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
-            print(toTestList)
-        ## Get the successful individual backtrace based call sites
-        validList = execApplication(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
-        ## E.g. (['depth-0-cluster-1'], [['0x5ead72', '0x5e913e']])
+    toTestList =  createStratFilesCluster(profile, stratDir, com, depth=0, sloc=False)
+    if verbose >2:
+        print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
+        print(toTestList)
+    ## Get the successful individual backtrace based call sites
+    validDic = {}
+    for (name, btCallSiteList) in toTestList:
+        valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
+        if valid:
+            validDic[name] = btCallSiteList
+            profile.trialSuccess(btCallSiteList)
+            ## Revert success because we testing individual
+            profile.display()
+            profile.revertSuccess(btCallSiteList)
+        else:
+            profile.trialFailure()
+            profile.display()
+    ## E.g. (['depth-0-cluster-1'], [['0x5ead72', '0x5e913e']])
+    if verbose>2:
+        print("Level1, Valid name list of individual-site static call sites: ", validDic.keys())
+        print("validDic",validDic)
+    ## If no valid individual found no need for multisite, return
+    if len(validDic.keys())<1:
+        return (set(),searchSet)
+    if len(validDic.keys()) < 2:
+        ## take Best individual as solution
+        onlyCorrectIndividual = list(validDic.values())[0]
+        spConvertedSet = set(onlyCorrectIndividual)
+        searchSet = searchSet - spConvertedSet
+        return (spConvertedSet,searchSet)
+    toTestListGen = createStratFilesMultiSiteStatic(profile, stratDir, validDic)
+    assert(toTestListGen)
+    ## Execute the application on generated strategy files
+    ## Generate strategies choosing k among n.
+    ## Analyze k-strategies before generating strategies for the next k.
+    toStop = True
+    while toStop:
+        try:
+            toTestList = next(toTestListGen)
+        except StopIteration:
+            print(f"No more strategy to test for depth {depth}.")
+            break
         if verbose>2:
-            print("Level1, Valid name list of individual-site backtrace based call sites: ", validList[0])
-            print(validList)
-        ## For all remaining Backtrace Based Calls
-        ## Sort all strategies per performance impact,
-        ## start trying them from the most to the less impact.
-        toTestListGen = createStratFilesMultiSiteDynamic(stratDir,readJsonProfileFile,validList)
-        assert(toTestListGen)
-        ## Execute the application on generated strategy files
-        ## Generate strategies choosing k among n.
-        ## Analyze k-strategies before generating strategies for the next k.
-        toStop = True
-        while toStop:
-            try:
-                toTestList = next(toTestListGen)
-            except StopIteration:
-                print(f"No more strategy to test for depth {depth}.")
-                break
-            if verbose>2:
-                print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
-            validList = execApplicationMultiSite(binary, params, stratDir, toTestList, checkText2Find, dumpdir, profileFile)
-            if verbose>2:
-                if len(validList)>0:
-                    print("Level2, Valid Name list of multi-site backtrace based call sites:", validList[0])
-            ## valid type configuration found. Stop the search.
-            if len(validList)>0:
-                display()
-    display()
+            print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
+    for (name, btCallSiteList) in toTestList:
+        valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
+        if valid:
+            spConvertedSet = set(btCallSiteList)
+            profile.trialSuccess(btCallSiteList)
+            ## Revert success because we testing individual
+            searchSet = searchSet - spConvertedSet
+            profile.display()
+            break
+        else:
+            profile.trialFailure()
+            profile.display()
+    return (spConvertedSet,searchSet)
 
 if __name__ == "__main__":
     ## Parsing arguments
-    args           = parseDynamicWithCluster()
+    args           = parseStaticWithCluster()
     params         = args.param
     binary         = args.binary
     dumpdir        = args.dumpdir
@@ -69,4 +94,11 @@ if __name__ == "__main__":
     checkText2Find = args.verif_text
     tracefile      = dumpdir + args.mergedtracefile
     threshold      = args.threshold
+    windowSize     = args.windowSize
+    maxdepth       = args.maxdepth
+    profileFile    = dumpdir + profileFile
+    ## get verbose level from generateStrat.py
+    verbose = getVerbose()
+    profile = Profile(profileFile)
+    initSet = profile._doublePrecisionSet
     slocClusterBFS(params,binary,dumpdir,profileFile,checkTest2Find,tracefile,threshold)

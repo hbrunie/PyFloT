@@ -1,4 +1,5 @@
 import json
+import pdb
 import os
 import re
 
@@ -84,56 +85,70 @@ def getKeys(subset, static):
     return getCount(subset, static, False)
 
 def createStratFilesCluster(profile, stratDir, communities, depth, sloc):
+    """ Always return under form of BtId
+        community is a set of btCallSite ID
+        communities: ({0, 1, 2, 3, 4}, {5, 6})
+    """
     stratList = []
     os.system(f"mkdir -p {stratDir}")
     for counter,community in enumerate(communities):
         ##build community name
         name = f"depth-{depth}-community-{counter}"
-        stratList.append((name, community))
+        ##if sloc, convert to BtId for stratList
+        if sloc:
+            stratList.append((name, profile.convertSloc2BtId(community)))
+        else:
+            stratList.append((name, community))
         with open(stratDir+f"strat-{name}.txt", 'a') as ouf:
-            profile.getHashKeyList(community, sloc)
+            ##TODO: need to convert btCallSite ID into slocCallSite ID for HashKey
+            hashKeyList = profile.getHashKeyList(community, sloc)
             for key in hashKeyList:
                 ouf.write(key+"\n")
+    ##Sort the strategy to test by performance weight: x: (name, community)
+    stratList.sort(key=lambda x: profile.weight(x[1]), reverse=True)
     if verbose>0:
         n=len(communities)
         print(f"{n} files created.")
     ## Return list of tuples (names, community)
     return stratList
 
-def generateStratFiles(CsubsetList):
-    CsubsetListFiles = []
-    staticName = "dynamic"
-    if static:
-        staticName = "static"
-    for csub in CsubsetList:
-        rank += 1
-        name = f"multiSite-{staticName}-r{rank}"
-        name += f"-k{fileKey}"
-        fileKey += 1
-        f = f"strat-{name}.txt"
-        ## csub ((name,name,), CallsCount)
-        keys = getKeys(csub[0], static)
-        CsubsetListFiles.append((name, keys, csub[1],csub[2]))
-        if verbose>2:
-            print(f"Creation of file: {f}")
-        with open(stratDir+f, 'a') as ouf:
-            for key in keys:
-                ouf.write(key+"\n")
-    return CsubsetListFiles
-
-def createStratFilesMultiSiteStatic(profile, stratDir, jsonFile, validDic):
+def createStratFilesMultiSite(profile, stratDir, validDic, sloc):
+    """ validDic: {'depth-0-community-0': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
+    """
     os.system(f"mkdir -p {stratDir}")
     nameList = validDic.keys()
     nameSet = set(nameList)
-    for n in range(len(nameList),1,-1):
+    approachName = "backtrace"
+    if sloc:
+        approachName = "SLOC"
+    N = len(nameList)
+    for n in range(N,1,-1):
         ## List of all subset strategies
         ## Compute the subsets
-        subsets = findsubsets(nameSet, n)
-        ## Sort subsets list with score
-        subsets.sort(key=lambda x: profile.weight(map(x, lambda y: validDic[y])), reverse=True)
-        CsubsetListFiles = generateStratFiles(CsubsetList)
+        namesubsets = list(itertools.combinations(nameSet, n))
+        couplesubsets = []
+        ##TODO simplify: very complex just to sort subsets according to weight
+        for namesubset in namesubsets:
+            btIdList = []
+            for name in namesubset:
+                btIdList.extend(validDic[name])
+            couplesubsets.append((list(namesubset), btIdList))
+        couplesubsets.sort(key= lambda x: profile.weight(x[1]), reverse=True)
+        for key,couplesubset in enumerate(couplesubsets):
+            name = f"multiSite-{approachName}-i{key}-k{n}-among{N}"
+            f = f"strat-{name}.txt"
+            with open(stratDir+f, 'a') as ouf:
+                ##If sloc: need to convert btCallSite ID into slocCallSite ID for getHashKeyList
+                CallSiteIdSet = couplesubset[1]
+                if sloc:
+                    CallSiteIdSet = set()
+                    for x in couplesubset[1]:
+                        CallSiteIdSet.add(profile._correspondanceBt2SLOC[x])
+                keys = profile.getHashKeyList(CallSiteIdSet, sloc)
+                for key in keys:
+                    ouf.write(key+"\n")
         ## Return list of performance ordered subset names
-        yield CsubsetListFiles
+        yield couplesubsets
     ## Generating strategy files: do not generate best individual
     print("No MultiStrategy found. Back to best individual strategy.")
     return []
@@ -144,92 +159,36 @@ def createStratFilesMultiSiteStatic(stratDir, jsonFile, validNameHashKeyList):
 def createStratFilesMultiSiteDynamic(stratDir, jsonFile, validNameHashKeyList):
     return createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, False)
 
-def createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, static):
-    """  validNameHashKeyList
-        --> COUPLE of 2 lists: (nameList, BtIdList)
-            create one stratFile per combination. Each combination
-            is a subset of the set of individuals
-        Generate list of all subset k among n
-        generate it in n-1 steps, each k at a time
-        each list contains all subsets + best individual
-    """
-    def generateStratFiles(CsubsetList):
-        global fileKey
-        rank = 0
-        CsubsetListFiles = []
-        staticName = "dynamic"
-        if static:
-            staticName = "static"
-        for csub in CsubsetList:
-            rank += 1
-            name = f"multiSite-{staticName}-r{rank}"
-            name += f"-k{fileKey}"
-            fileKey += 1
-            f = f"strat-{name}.txt"
-            ## csub ((name,name,), CallsCount)
-            keys = getKeys(csub[0], static)
-            CsubsetListFiles.append((name, keys, csub[1],csub[2]))
-            if verbose>2:
-                print(f"Creation of file: {f}")
-            with open(stratDir+f, 'a') as ouf:
-                for key in keys:
-                    ouf.write(key+"\n")
-        return CsubsetListFiles
-
-    def findsubsets(s, n):
-        return list(itertools.combinations(s, n))
-    ## For possible size of subset composing strategies
-    ## E.G. for Cluster:  validNameHashKeyList=(['depth-0-cluster-1'], [['0x5ead72', '0x5e913e']])
-    ## E.G. for non cluster: (['name'], ['0x5ead72', '0x5e913e'])
-    callsName = validNameHashKeyList[0]
-    print("DEBUG")
-    ##E.G. snames: {'depth-0-cluster-1'}
-    snames = set(callsName)
-    os.system(f"mkdir -p {stratDir}")
-    lenCallsName = len(callsName)
-    for n in range(lenCallsName,0,-1):
-        ## List of all subset strategies
-        CsubsetList = []
-        ## Compute the subsets
-        subsets = findsubsets(snames, n)
-        ##E.G. subsets: [('depth-0-cluster-1',)]
-        lensubsets = len(subsets)
-        ## For each subset, create a strategy file
-        for subset in subsets:
-            ## Compute score: sum of dynCalls count
-            Csubset = (subset, getCountCalls(subset, static),n)
-            ## Append tuple subset,score to the list
-            CsubsetList.append(Csubset)
-        ## Sort subsets list with score
-        CsubsetList.sort(key=lambda x: x[1], reverse=True)
-        ## Generating strategy files: do not generate best individual
-        if n == 1:
-            ##get existing individual strat file
-            print("No MultiStrategy found. Best individual strategy is")
-            return []
-        else:
-            CsubsetListFiles = generateStratFiles(CsubsetList)
-        ## Return list of performance ordered subset names
-        yield CsubsetListFiles
-    ## return best individual elts
-    return []
-
-
-def createStratFilesIndividuals(profile, stratDir, sloc):
+def createStratFilesIndividuals(profile, stratDir, searchSet, sloc):
     """ Static: level1
-        Create strategy files, for each individual static call sites
+        Create strategy files, for each individual SLOC or BT call sites
     """
+    stratList = []
     os.system(f"mkdir -p {stratDir}")
-    for counter,btIdSet in enumerate(profile.__slocBtIdSetList):
-        ##build community name
-        name = f"sloc-{counter}"
-        stratList.append((name, btIdSet))
+    ## CallSiteId represents slocCallSiteId if sloc, else btCallSiteId
+    if sloc:
+        n = profile._totalSlocCallSites
+        searchList = list(searchSet)
+        searchList = profile.slocListFromBt(searchList)
+        searchList.sort(key= lambda x: profile.slocweight(x), reverse=True)
+    else:
+        searchList = list(searchSet)
+        searchList.sort(key= lambda x: profile.weight(x), reverse=True)
+    for CallSiteId in searchList:
+        ## CallSiteId represents slocCallSiteId if sloc, else btCallSiteId
+        if sloc:
+            name = f"sloc-{CallSiteId}"
+            btCallSiteIdList = list(profile._slocListOfBtIdSet[CallSiteId])
+            stratList.append((name, btCallSiteIdList))
+        else:
+            name = f"bt-{CallSiteId}"
+            stratList.append((name, [CallSiteId]))
         with open(stratDir+f"strat-{name}.txt", 'a') as ouf:
-            profile.getHashKeyList(btIdSet)
+            ##TODO: be  sure CallSiteId is btCallSite ID and not slocCallSite ID
+            hashKeyList = profile.getHashKeyList([CallSiteId], sloc)
             for key in hashKeyList:
                 ouf.write(key+"\n")
     if verbose>0:
-        n=len(btIdSet)
         print(f"{n} files created.")
     ## Return list of tuples (names, community)
     return stratList
@@ -277,7 +236,7 @@ def runApp(cmd, stratDir, name, checkText, envStr):
         print(f"BacktraceListFile ({backtrace}) Valid? {valid}")
     return valid
 
-def updateEnv(resultsDirectory, profileFile, binary):
+def updateEnv(resultsDir, profileFile, binary):
     procenv = {}
     ##TODO: use script arguments
     procenv["TARGET_FILENAME"] = binary

@@ -8,13 +8,73 @@ import pdb
 verbose = getVerbose()
 ##TODO: class Communities
 
+def build_graph_simplest(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=None):
+    CSV = {"index":0, "timeStamp":1, "argument":2, "doubleP":3, "singleP":4, "absErr":5, "relErr":6, "spBoolean":7, "callSite":8}
+    def getVertex(words):
+        btCallSiteId = int(words[CSV["callSite"]])
+        if btCallSiteId not in searchSet:
+            return None
+        cur_timestamp = float(words[CSV["timeStamp"]])
+        if corrBtSLOC:##static approach
+            cur_vertix = corrBtSLOC[btCallSiteId]
+        else:##dynamic approach
+            cur_vertix = btCallSiteId
+        return (cur_timestamp,cur_vertix)
+    graph_edges = {}
+    graph_nodes = set()
+    print("build graph, search set",searchSet)
+    with open(tracefile, 'r') as trace_file:
+        # run the loop once
+        line = trace_file.readline()
+        # get rid of the first line
+        if "index" in line:
+            line = trace_file.readline()
+        words = line.split()
+        #pdb.set_trace()
+        v = getVertex(words)
+        ## ignore nodes which are not in search space
+        while line and not v:
+            line = trace_file.readline()
+            words = line.split()
+            v = getVertex(words)
+        (cur_timestamp,cur_vertix) = v
+        last_timestamp = cur_timestamp
+        last_vertix = cur_vertix
+        graph_nodes.add(cur_vertix)
+        graph_edges[(cur_vertix, cur_vertix)] = [0]
+        line = trace_file.readline()
+        counter=0
+        while line:
+            words = line.split()
+            v = getVertex(words)
+            ## ignore nodes which are not in search space
+            while line and not v:
+                line = trace_file.readline()
+                words = line.split()
+                v = getVertex(words)
+            (cur_timestamp,cur_vertix) = v
+            if last_vertix != cur_vertix:
+                graph_nodes.add(cur_vertix)
+                if (last_vertix, cur_vertix) in graph_edges:
+                    graph_edges[(last_vertix, cur_vertix)].append(cur_timestamp - last_timestamp)
+                else:
+                    graph_edges[(last_vertix, cur_vertix)] = [cur_timestamp - last_timestamp]
+            else:
+                if (cur_vertix, cur_vertix) not in graph_edges:
+                    graph_edges[(cur_vertix, cur_vertix)] = [cur_timestamp - last_timestamp]
+                    graph_nodes.add(cur_vertix)
+            last_timestamp = cur_timestamp
+            last_vertix = cur_vertix
+            line = trace_file.readline()
+    return (graph_edges,graph_nodes)
+
 def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=None):
     """ Return graph edges. Each node is either a static call site or a full backtrace "dynamic" call.
         TODO: Should graph_nodes be a set or a dictionnary?
     """
     graph_edges = {}
     graph_nodes = set()
-    print(searchSet)
+    print("build graph, search set",searchSet)
     def getVertex(words):
         btCallSiteId = int(words[CSV["callSite"]])
         if btCallSiteId not in searchSet:
@@ -38,7 +98,9 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
         #pdb.set_trace()
         v = getVertex(words)
         ## ignore nodes which are not in search space
-        while not v:
+        while line and not v:
+            line = trace_file.readline()
+            words = line.split()
             v = getVertex(words)
         (cur_timestamp,cur_vertix) = v
         last_timestamp = cur_timestamp
@@ -52,7 +114,11 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
             words = line.split()
             v = getVertex(words)
             ## ignore nodes which are not in search space
-            while not v:
+            while line and not v:
+                line = trace_file.readline()
+                words = line.split()
+                if len(words) < 1:
+                    return (graph_edges,graph_nodes)
                 v = getVertex(words)
             (cur_timestamp,cur_vertix) = v
             assert len(window) <  maxWindowSize+1
@@ -76,13 +142,7 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
                     graph_edges[(x[1], cur_vertix)].append(delta)
                 else:
                     graph_edges[(x[1], cur_vertix)] = [delta]
-            #if (last_vertix, cur_vertix) in graph_edges:
-            #    graph_edges[(last_vertix, cur_vertix)].append(cur_timestamp - last_timestamp)
-            #else:
-            #    graph_edges[(last_vertix, cur_vertix)] = [cur_timestamp - last_timestamp]
             graph_nodes.add(cur_vertix)
-            #last_timestamp = cur_timestamp
-            #last_vertix = cur_vertix
             line = trace_file.readline()
     return (graph_edges,graph_nodes)
 

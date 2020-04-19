@@ -161,7 +161,7 @@ def parseWithCluster():
     assert args.binary, "binary absolute path is required"
     return args
 
-def parseDynamic():
+def parseBt():
     parser,remainging_argv = _parseStatic()
     args = parser.parse_args(remaining_argv)
     assert args.binary, "binary absolute path is required"

@@ -23,27 +23,32 @@ profileFile = dumpdir + "/" + profileFile
 verbose = getVerbose()
 
 ## Fill initial type configuration list indexed by backtrace based call site ID
-profile = Profile(profileFile)
+profile = Profile(profileFile,verbose)
 initSet = profile._doublePrecisionSet
-success = set()
+success = []
 ## S:success F:failure
-S = set()
-F = set()
+S = []
+F = []
 ##TODO: why need profileFile to apply strategy (libC++)?
-(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkText2Find,tracefile, 100000, verbose=verbose)
-print("end")
-exit(0)
-success += S
-(S,F) = slocBFS(F, params,binary,dumpdir,profileFile,checkText2Find)
-success += S
-(S,F) = backtraceClusterBFS(F, params,binary,dumpdir,profileFile,checkText2Find,tracefile,threshold)
-success += S
-(S,F) = backtraceBFS(F, params,binary,dumpdir,profileFile,checkText2Find)
-success += S
+print("slocClusterBFS")
+(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkText2Find,tracefile, 100000, verbose=0)
+print("F",F)
+success.extend(S)
+print("slocBFS")
+(S,F) = slocBFS(profile, F, params,binary,dumpdir,checkText2Find, 10)
+print("F",F)
+print("slocBFSend")
+success.extend(S)
+print("backtraceClusterBFS")
+(S,F) = backtraceClusterBFS(profile, F, params,binary,dumpdir,checkText2Find,tracefile,100000,verbose=40)
+print("F",F)
+success.extend(S)
+print(" backtraceBFS")
+(S,F) = backtraceBFS(profile, F, params,binary,dumpdir,checkText2Find,verbose=10)
+print("F",F)
+success.extend(S)
 
 print("Can be converted to single precision: ")
-for btInfo in map(profile.getInfoByBtID(), success):
-    print(btInfo)
+print(sorted(success))
 print("Must remain in double precision: ")
-for btInfo in map(profile.getInfoByBtID(), F):
-    print(btInfo)
+print(sorted(F))

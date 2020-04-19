@@ -1,28 +1,23 @@
 #!/usr/bin/env python3
 from parse import parseWithCluster
 
-from Common import execApplication
 from Common import updateEnv
+from Common import runApp
 from Profile import Profile
 
 from generateStrat import createStratFilesCluster
 from generateStrat import createStratFilesMultiSiteStatic
-from generateStrat import execApplication
-from generateStrat import execApplicationMultiSite
-from generateStrat import getVerbose
 
 from communities import build_graph
 from communities import community_algorithm
-import itertools
 
 def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
                    checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=2,verbose=1):
     """ Search set contains backtrace based index of call site yet in double precision.
         Returns the new search set and the set of call site successfully converted to single precision.
     """
-    spConvertedSet = set()
-    resultsDir = dumpdir + "/results/"
     stratDir   = dumpdir + "/strats/staticWithClustering/"
+    resultsDir = dumpdir + "/results/"
     tracefile = dumpdir + "/" + tracefile
     cmd = f"{binary} {params}"
     envStr = updateEnv(resultsDir, profile._profileFile, binary)
@@ -38,7 +33,7 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
     ## Get the successful individual static call sites
     validDic = {}
     for (name, btCallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, checkText, envStr)
+        valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
         if valid:
             validDic[name] = btCallSiteList
             profile.trialSuccess(btCallSiteList)
@@ -48,12 +43,20 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
         else:
             profile.trialFailure()
             profile.display()
-    ## E.g. (['depth-0-community-1'], [['0x5ead72', '0x5e913e']])
+    ## E.g. (['depth-0-community-1'], [ ['0x5ead72', '0x5e913e'] ])
     if verbose>2:
         print("Level1, Valid name list of individual-site static call sites: ", validDic.keys())
     ## For all remaining Static Calls
     ## Sort all strategies per performance impact,
     ## start trying them from the most to the less impact.
+    print("validDic",validDic)
+    assert len(validDic.keys())>0
+    if len(validDic.keys()) < 2:
+        ## take Best individual as solution
+        onlyCorrectIndividual = list(validDic.values())[0]
+        spConvertedSet = set(onlyCorrectIndividual)
+        searchSet = searchSet - spConvertedSet
+        return (spConvertedSet,searchSet)
     toTestListGen = createStratFilesMultiSiteStatic(profile, stratDir, validDic)
     assert(toTestListGen)
     ## Execute the application on generated strategy files
@@ -69,12 +72,12 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
         for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name, checkText, envStr)
+            valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
             if valid:
-                spConvertedSet.extend(btCallSiteList)
-                profile.trialSuccess(spConvertedSet)
+                spConvertedSet = set(btCallSiteList)
+                profile.trialSuccess(btCallSiteList)
                 ## Revert success because we testing individual
-                searchSet.remove(spConvertedSet)
+                searchSet = searchSet - spConvertedSet
                 profile.display()
                 break
             else:

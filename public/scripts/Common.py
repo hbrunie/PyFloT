@@ -1,5 +1,5 @@
 import os
-verbose = 5
+verbose = 0
 def getVerbose():
     return verbose
 
@@ -26,8 +26,13 @@ def runCheckScript(f, checkText):
     #return checkTest3Exp()
     return checkPMF(f, checkText)
 
-def runApp(cmd, stratDir, name, checkText, envStr):
-    global outputFile
+def runApp(cmd, stratDir, name, checkText, envStr, nbTrials, btCallSiteIdList):
+    ## MOCKUP
+    for i in btCallSiteIdList:
+        if i in range(50,60):
+            return False
+    return True
+    outputFile = "output"
     outputFileLocal = stratDir + outputFile + f"-{nbTrials}.dat"
     ## File name Should be same as in generateStrat.py
     backtrace = f"{stratDir}/strat-{name}.txt"
