@@ -1,11 +1,10 @@
 import networkx as nx
 from networkx.algorithms import community
 import itertools
-from generateStrat import getVerbose
 import pdb
 
 ## get verbose level from generateStrat.py
-verbose = getVerbose()
+verbose = 0
 ##TODO: class Communities
 
 def build_graph_simplest(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=None):

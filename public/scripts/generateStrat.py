@@ -2,87 +2,10 @@ import json
 import pdb
 import os
 import re
-
-profile = {}
-globalBestName = None
-verbose = 3
-def getVerbose():
-    return verbose
-
-correspondanceDynStatic = []
-def getCorrStatList():
-    """ return a list giving the corresopndance between
-        dynamic ID and static ID.
-        This list is filled inside updateProfile.
-        It is useful in communities build_graph and generate_clusters functions.
-    """
-    return correspondanceDynStatic
-
-nbTrials       = 0
-ratioDynSP     = 0.
-ratioStatSP    = 0.
-dynCallsSP     = 0
-statCallsSP    = 0
-totalDynCalls  = 0
-totalStatCalls = 0
-fileKey        = 0
-## TODO: move it into argument parser
-outputFile = "pmfOutputFile-4check"
-
-def display():
-    global ratioSP
-    ratioStatSP = float(statCallsSP) / float(totalStatCalls)
-    ratioDynSP = float(dynCallsSP) / float(totalDynCalls)
-    if verbose > 0:
-        print(f"nbTrials: {nbTrials}")
-        print(f"ratioStatSP: {ratioStatSP*100:2.0f}")
-        print(f"ratioDynSP: {ratioDynSP*100:2.0f}")
-        print(f"dynCallsSP: {dynCallsSP}")
-        print(f"statCallsSP: {statCallsSP}")
-        print(f"totalDynCalls: {totalDynCalls}")
-        print(f"totalStatCalls: {totalStatCalls}")
-
-def getHashKeysFromIndex(ind,jsonFile):
-    global profile
-    with open(jsonFile, 'r') as json_file:
-        profile = json.load(json_file)
-    staticCalls,dynCalls = updateProfile(profile)
-    hashKeys = []
-    for i in ind:
-        hashKeys.append(dynCalls[i]["HashKey"])
-    return hashKeys
-
 from itertools import permutations
 import itertools
 
-def getCount(subset, static, computeCalls=True):
-    """ subset is a set of names ...
-        #TODO USE id ! integer.
-    """
-    keys = []
-    cc = 0
-    if static:
-        calls = profile["StaticCalls"]
-        name = "statname"
-    else:
-        calls = profile["IndependantCallStacks"]
-        name = "dynname"
-    for call in calls:
-        if call[name] in subset:
-            if computeCalls:
-                cc += call["CallsCount"]
-            else:
-                keys.append(call["HashKey"])
-    if computeCalls:
-        return cc
-    else:
-        return keys
-
-def getCountCalls(subset, static):
-    return getCount(subset, static, True)
-
-def getKeys(subset, static):
-    return getCount(subset, static, False)
+verbose = 0
 
 def createStratFilesCluster(profile, stratDir, communities, depth, sloc):
     """ Always return under form of BtId
@@ -156,10 +79,10 @@ def createStratFilesMultiSite(profile, stratDir, validDic, sloc):
     print("No MultiStrategy found. Back to best individual strategy.")
     return []
 
-def createStratFilesMultiSiteStatic(stratDir, jsonFile, validNameHashKeyList):
+def createStratFilesMultiSiteSLOC(stratDir, jsonFile, validNameHashKeyList):
     return createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, True)
 
-def createStratFilesMultiSiteDynamic(stratDir, jsonFile, validNameHashKeyList):
+def createStratFilesMultiSiteBacktrace(stratDir, jsonFile, validNameHashKeyList):
     return createStratFilesMultiSite(stratDir, jsonFile, validNameHashKeyList, False)
 
 def createStratFilesIndividuals(profile, stratDir, searchSet, sloc):
@@ -259,54 +182,3 @@ def updateEnv(resultsDir, profileFile, binary):
     for var,value in procenv.items():
         os.environ[var] = value
     return envStr
-
-def __execApplication(binary, args, stratDir, stratList, checkText, resultsDirectory, profileFile, multiSite):
-    """ stratList is a list of tuple (name,hashKeys)
-        In case of multiSite, hashKeys is a list
-        Otherwise is just a single hashkey
-    """
-    global dynCallsSP
-    global statCallsSP
-    cmd = f"{binary} {args}"
-    validNames = []
-    validHashKeys = []
-    envStr = updateEnv(resultsDirectory, profileFile, binary)
-    _stratList = stratList
-    ##TODO: here we need dynCallsCount and statCallsCount from stratList
-    ## Only because we compute the SCORE of solution.
-    ## SCORE should be computed in separated function elsewhere.
-    for (name, hashKey, dynCallsCount, statCallsCount) in _stratList:
-        valid = runApp(cmd, stratDir, name, checkText,envStr)
-        if valid:
-            if multiSite:
-                ##TODO: why making sum?
-                ## Will it sum over several multisite strat tested, and count the invalid one too?
-                #dynCallsSP += dynCallsCount
-                #statCallsSP += statCallsCount
-                dynCallsSP = max(dynCallsSP,dynCallsCount)
-                statCallsSP = max(statCallsSP,statCallsCount)
-                display()
-                return ([name],hashKey)
-            else:
-                dynCallsSP = max(dynCallsSP,dynCallsCount)
-                statCallsSP = max(statCallsSP,statCallsCount)
-                validNames.append(name)
-                validHashKeys.append(hashKey)
-            display()
-    if multiSite:
-        return []
-    else:
-        return (validNames,validHashKeys)
-
-def execApplication(binary, args, stratDir, stratList, checkText, resultsDirectory, profileFile):
-    """ stratList is a list of tuple (name,hashKeys)
-        In case of multiSite, hashKeys is a list
-        Otherwise is just a single hashkey
-    """
-    return __execApplication(binary, args, stratDir, stratList, checkText, resultsDirectory, profileFile, False)
-
-def execApplicationMultiSite(binary, args, stratDir, stratList, checkText, resultsDirectory, profileFile):
-    """ stratList is a list of tuple (name,hashKeys)
-        GOAL: Returns best multisite solution, if not return best individual solution
-    """
-    return __execApplication(binary,args,stratDir,stratList, checkText, resultsDirectory, profileFile, True)
