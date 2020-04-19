@@ -3,6 +3,7 @@ from parse import parseWithCluster
 
 from Common import updateEnv
 from Common import runApp
+from Common import runAppMockup
 from Profile import Profile
 
 from generateStrat import createStratFilesCluster
@@ -25,6 +26,8 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
     corr = profile._correspondanceBt2SLOC
     (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
     com = community_algorithm(ge, gn, threshold, maxdepth)
+    if not com:
+        return (set(), searchSet)
     ## Individual analysis (BFS inspired from Mike Lam papers)
     toTestList =  createStratFilesCluster(profile, stratDir, com, depth=0, sloc=True)
     if verbose >2:
@@ -33,7 +36,8 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
     ## Get the successful individual static call sites
     validDic = {}
     for (name, btCallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
+        valid = runAppMockup(btCallSiteList, True)
+        #valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials)
         if valid:
             validDic[name] = btCallSiteList
             profile.trialSuccess(btCallSiteList)
@@ -67,13 +71,13 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
         try:
             toTestList = next(toTestListGen)
         except StopIteration:
-            print(f"No more strategy to test for depth {depth}.")
+            print(f"No more strategy to test.")
             break
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
         for (name, btCallSiteList) in toTestList:
-            valid = runAppMockup(btCallSiteList)
-            valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
+            valid = runAppMockup(btCallSiteList, True)
+            #valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccess(btCallSiteList)

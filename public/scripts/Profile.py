@@ -9,7 +9,8 @@ class Profile:
     _statCallsSP           = 0
     _dynCallsSP            = 0
     _nbTrials              = 0
-    _doublePrecisionSet     = set()
+    _doublePrecisionBtSet     = set()
+    _doublePrecisionSlocSet     = set()
     _profile               = {}
     _correspondanceBt2SLOC  = []
     ## double precision 0, single precision 1
@@ -26,8 +27,10 @@ class Profile:
         with open(jsonFile, 'r') as json_file:
             self._profile = json.load(json_file)
         self.updateProfile()
+        self._doublePrecisionSlocSet = set(range(self._totalSlocCallSites))
         self._btTypeConfiguration = [0] *self._totalBtCallSites
         self._slocTypeConfiguration = [0] *self._totalSlocCallSites
+        print("List indexed by CLOC id, containing corresponding set BtId: ",self._slocListOfBtIdSet)
         return None
 
     def trialFailure(self):
@@ -59,10 +62,24 @@ class Profile:
         self._dynCallsSP = self._btTypeConfiguration.count(1)
         self._statCallsSP = self._slocTypeConfiguration.count(0)
 
-    def weight(self, s):
+    def clusterbtweight(self, s):
         weights = []
         for x in s:
             weights.append(self._weightPerBtCallSite[x])
+        return sum(weights)
+
+    def btweight(self, x):
+        return self._weightPerBtCallSite[x]
+
+    def slocweight(self, x):
+        btIdSetList = self._slocListOfBtIdSet[x]
+        return self.clusterbtweight(btIdSetList)
+
+    def clusterslocweight(self, s):
+        weights = []
+        for x in s:
+            btIdSetList = self._slocListOfBtIdSet[x]
+            weights.append(self.clusterbtweight(btIdSetList))
         return sum(weights)
 
     def convertSloc2BtId(self, l):
@@ -112,7 +129,7 @@ class Profile:
         self._btCallSitesList = self._profile["IndependantCallStacks"]
         self._slocCallSitesList = []
         self._totalBtCallSites = len(self._btCallSitesList)
-        self._doublePrecisionSet = set(range(self._totalBtCallSites))
+        self._doublePrecisionBtSet = set(range(self._totalBtCallSites))
         self._weightPerBtCallSite = []
         slocDict = {}
         currentSlocId = 0

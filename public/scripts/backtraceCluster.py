@@ -2,6 +2,7 @@
 from parse import parseWithCluster
 
 from Common import runApp
+from Common import runAppMockup
 from Common import updateEnv
 from Common import getVerbose
 
@@ -25,6 +26,8 @@ def backtraceClusterBFS(profile, searchSet, params, binary, dumpdir,
     ## Generate clusters
     (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize)
     com = community_algorithm(ge, gn, threshold, maxdepth)
+    if not com:
+        return (set(), searchSet)
         ## Individual analysis (BFS inspired from Mike Lam papers)
     toTestList =  createStratFilesCluster(profile, stratDir, com, depth=0, sloc=False)
     if verbose >2:
@@ -33,7 +36,8 @@ def backtraceClusterBFS(profile, searchSet, params, binary, dumpdir,
     ## Get the successful individual backtrace based call sites
     validDic = {}
     for (name, btCallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
+        #valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
+        valid = runAppMockup(btCallSiteList)
         if valid:
             validDic[name] = btCallSiteList
             profile.trialSuccess(btCallSiteList)
@@ -71,7 +75,8 @@ def backtraceClusterBFS(profile, searchSet, params, binary, dumpdir,
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
     for (name, btCallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
+        #valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
+        valid = runAppMockup(btCallSiteList)
         if valid:
             spConvertedSet = set(btCallSiteList)
             profile.trialSuccess(btCallSiteList)

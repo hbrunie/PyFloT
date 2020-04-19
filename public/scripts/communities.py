@@ -72,6 +72,7 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
     """ Return graph edges. Each node is either a static call site or a full backtrace "dynamic" call.
         TODO: Should graph_nodes be a set or a dictionnary?
     """
+    CSV = {"index":0, "timeStamp":1, "argument":2, "doubleP":3, "singleP":4, "absErr":5, "relErr":6, "spBoolean":7, "callSite":8}
     def getVertex(words):
         btCallSiteId = int(words[CSV["callSite"]])
         if corrBtSLOC:##static approach
@@ -87,7 +88,6 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
     graph_edges = {}
     graph_nodes = set()
     print("build graph, search set",searchSet)
-    CSV = {"index":0, "timeStamp":1, "argument":2, "doubleP":3, "singleP":4, "absErr":5, "relErr":6, "spBoolean":7, "callSite":8}
     with open(tracefile, 'r') as trace_file:
         # run the loop once
         line = trace_file.readline()
@@ -162,7 +162,11 @@ def community_algorithm(graph_edges, graph_nodes, threshold, max_depth):
         if count > 0:
             G.add_edge(edge[0], edge[1], count=count)
     communities_generator = community.girvan_newman(G)
-    com = next(communities_generator)
+    try:
+        com = next(communities_generator)
+    except StopIteration:
+        print("No Community found: number nodes {}.".format(len(graph_nodes)))
+        return None
     return com
     #for depth,communities in enumerate(itertools.islice(communities_generator, max_depth)):
     #    if verbose > 1:

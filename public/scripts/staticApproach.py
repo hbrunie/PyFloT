@@ -3,6 +3,7 @@ import pdb
 from parse import parseStatic
 
 from Common import updateEnv
+from Common import runAppMockup
 from Common import runApp
 from Profile import Profile
 
@@ -24,7 +25,8 @@ def slocBFS(profile, searchSet, params, binary, dumpdir, checkText2Find, verbose
     ## Get the successful individual static call sites
     validDic = {}
     for (name, btCallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+        #valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+        valid = runAppMockup(btCallSiteList, True)
         if valid:
             validDic[name] = btCallSiteList
             profile.trialSuccess(btCallSiteList)
@@ -61,14 +63,15 @@ def slocBFS(profile, searchSet, params, binary, dumpdir, checkText2Find, verbose
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
         for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+            #valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+            valid = runAppMockup(btCallSiteList,True)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccess(btCallSiteList)
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
                 profile.display()
-                break
+                return (spConvertedSet,searchSet)
             else:
                 profile.trialFailure()
                 profile.display()

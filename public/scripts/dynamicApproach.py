@@ -3,6 +3,7 @@ import pdb
 from parse import parseBt
 
 from Common import updateEnv
+from Common import runAppMockup
 from Common import runApp
 from Profile import Profile
 
@@ -17,13 +18,14 @@ def backtraceBFS(profile, searchSet, params, binary, dumpdir, checkText2Find, ve
     cmd = f"{binary} {params}"
     envStr = updateEnv(resultsDir, profile._profileFile, binary)
     ## Backtrace CallSite identification (Full CallStack)
-    toTestList = createStratFilesIndividuals(profile, stratDir, sloc=True)
+    toTestList = createStratFilesIndividuals(profile, stratDir, searchSet, sloc=False)
     if verbose >2:
         print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
     ## Get the successful inidividual static call sites
     validDic = {}
     for (name, btCallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+        valid = runAppMockup(btCallSiteList)
+        #valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
         if valid:
             validDic[name] = btCallSiteList
             profile.trialSuccess(btCallSiteList)
@@ -59,14 +61,15 @@ def backtraceBFS(profile, searchSet, params, binary, dumpdir, checkText2Find, ve
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
         for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+            #valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+            valid = runAppMockup(btCallSiteList)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccess(btCallSiteList)
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
                 profile.display()
-                break
+                return (spConvertedSet,searchSet)
             else:
                 profile.trialFailure()
                 profile.display()

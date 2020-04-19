@@ -94,18 +94,17 @@ def createStratFilesCluster(profile, stratDir, communities, depth, sloc):
     for counter,community in enumerate(communities):
         ##build community name
         name = f"depth-{depth}-community-{counter}"
-        ##if sloc, convert to BtId for stratList
-        if sloc:
-            stratList.append((name, profile.convertSloc2BtId(community)))
-        else:
-            stratList.append((name, community))
+        stratList.append((name, community))
         with open(stratDir+f"strat-{name}.txt", 'a') as ouf:
-            ##TODO: need to convert btCallSite ID into slocCallSite ID for HashKey
             hashKeyList = profile.getHashKeyList(community, sloc)
             for key in hashKeyList:
                 ouf.write(key+"\n")
+                #TODO: check this is the right keys ...
     ##Sort the strategy to test by performance weight: x: (name, community)
-    stratList.sort(key=lambda x: profile.weight(x[1]), reverse=True)
+    if sloc:
+        stratList.sort(key=lambda x: profile.clusterslocweight(x[1]), reverse=True)
+    else:
+        stratList.sort(key=lambda x: profile.clusterbtweight(x[1]), reverse=True)
     if verbose>0:
         n=len(communities)
         print(f"{n} files created.")
@@ -127,18 +126,22 @@ def createStratFilesMultiSite(profile, stratDir, validDic, sloc):
         ## Compute the subsets
         namesubsets = list(itertools.combinations(nameSet, n))
         couplesubsets = []
-        ##TODO simplify: very complex just to sort subsets according to weight
+        ##sort subsets according to weight
         for namesubset in namesubsets:
             btIdList = []
             for name in namesubset:
                 btIdList.extend(validDic[name])
             couplesubsets.append((list(namesubset), btIdList))
-        couplesubsets.sort(key= lambda x: profile.weight(x[1]), reverse=True)
+        if sloc:
+            couplesubsets.sort(key= lambda x: profile.clusterslocweight(x[1]), reverse=True)
+        else:
+            couplesubsets.sort(key= lambda x: profile.clusterbtweight(x[1]), reverse=True)
         for key,couplesubset in enumerate(couplesubsets):
             name = f"multiSite-{approachName}-i{key}-k{n}-among{N}"
             f = f"strat-{name}.txt"
             with open(stratDir+f, 'a') as ouf:
                 ##If sloc: need to convert btCallSite ID into slocCallSite ID for getHashKeyList
+                ##TODO not needed anymore
                 CallSiteIdSet = couplesubset[1]
                 if sloc:
                     CallSiteIdSet = set()
@@ -167,28 +170,25 @@ def createStratFilesIndividuals(profile, stratDir, searchSet, sloc):
     os.system(f"mkdir -p {stratDir}")
     ## CallSiteId represents slocCallSiteId if sloc, else btCallSiteId
     if sloc:
-        n = profile._totalSlocCallSites
         searchList = list(searchSet)
-        searchList = profile.slocListFromBt(searchList)
         searchList.sort(key= lambda x: profile.slocweight(x), reverse=True)
     else:
         searchList = list(searchSet)
-        searchList.sort(key= lambda x: profile.weight(x), reverse=True)
+        searchList.sort(key= lambda x: profile.btweight(x), reverse=True)
     for CallSiteId in searchList:
         ## CallSiteId represents slocCallSiteId if sloc, else btCallSiteId
         if sloc:
             name = f"sloc-{CallSiteId}"
-            btCallSiteIdList = list(profile._slocListOfBtIdSet[CallSiteId])
-            stratList.append((name, btCallSiteIdList))
         else:
             name = f"bt-{CallSiteId}"
-            stratList.append((name, [CallSiteId]))
+        stratList.append((name, [CallSiteId]))
         with open(stratDir+f"strat-{name}.txt", 'a') as ouf:
             ##TODO: be  sure CallSiteId is btCallSite ID and not slocCallSite ID
             hashKeyList = profile.getHashKeyList([CallSiteId], sloc)
             for key in hashKeyList:
                 ouf.write(key+"\n")
     if verbose>0:
+        n = len(stratList)
         print(f"{n} files created.")
     ## Return list of tuples (names, community)
     return stratList

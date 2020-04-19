@@ -25,13 +25,19 @@ def checkPMF(f, checkText):
 def runCheckScript(f, checkText):
     #return checkTest3Exp()
     return checkPMF(f, checkText)
-def runAppMockup(cmd, stratDir, name, checkText, envStr, nbTrials, btCallSiteIdList):
+
+def runAppMockup(btCallSiteIdList, sloc=False):
     """ CallSiteId are BT or SLOC?
     """
     ## MOCKUP:TODO
-    for i in btCallSiteIdList:
-        if i in range(50,60):
-            return False
+    if sloc:
+        for i in btCallSiteIdList:
+            if i in [5]:
+                return False
+    else:
+        for i in btCallSiteIdList:
+            if i in [ 37, 38, 39, 40, 41, 42, 43, 44, 45]:
+                return False
     return True
 
 def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
