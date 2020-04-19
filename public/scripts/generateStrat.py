@@ -83,7 +83,7 @@ def getCountCalls(subset, static):
 def getKeys(subset, static):
     return getCount(subset, static, False)
 
-def createStratFilesCluster(profile, stratDir, communities, depth):
+def createStratFilesCluster(profile, stratDir, communities, depth, sloc):
     stratList = []
     os.system(f"mkdir -p {stratDir}")
     for counter,community in enumerate(communities):
@@ -91,7 +91,7 @@ def createStratFilesCluster(profile, stratDir, communities, depth):
         name = f"depth-{depth}-community-{counter}"
         stratList.append((name, community))
         with open(stratDir+f"strat-{name}.txt", 'a') as ouf:
-            profile.getHashKeyList(community)
+            profile.getHashKeyList(community, sloc)
             for key in hashKeyList:
                 ouf.write(key+"\n")
     if verbose>0:

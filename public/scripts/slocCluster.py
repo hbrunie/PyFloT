@@ -16,7 +16,7 @@ from communities import community_algorithm
 import itertools
 
 def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
-                   checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=1,verbose=1):
+                   checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=2,verbose=1):
     """ Search set contains backtrace based index of call site yet in double precision.
         Returns the new search set and the set of call site successfully converted to single precision.
     """
@@ -31,7 +31,7 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
     (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
     com = community_algorithm(ge, gn, threshold, maxdepth)
     ## Individual analysis (BFS inspired from Mike Lam papers)
-    toTestList =  createStratFilesCluster(profile, stratDir, communities, depth)
+    toTestList =  createStratFilesCluster(profile, stratDir, com, depth=0, sloc=True)
     if verbose >2:
         print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
         print(toTestList)

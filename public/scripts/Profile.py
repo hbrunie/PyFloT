@@ -49,6 +49,23 @@ class Profile:
     def weight(self, s):
         return sum(map(s, lambda i: self._weightPerBtCallSite[i]))
 
+    def getHashKeyList(self,l,sloc):
+        r = []
+        for e in l:
+            hk = None
+            if sloc:
+                for x in self._slocCallSiteList:
+                    if x["SlocId"] == e:
+                        hk = x["SlocSymbolsHashKey"]
+                        break
+            else:#BT
+                for x in self._btCallSitesList:
+                    if x["BtId"] == e:
+                        hk = x["HashKey"]
+                        break
+            assert hk != None
+            r.append(hk)
+        return r
 
     def display(self):
         ratioStatSP = float(self._statCallsSP) / float(self._totalSlocCallSites)
@@ -64,7 +81,8 @@ class Profile:
 
     def updateProfile(self):
         slocreg = "([a-zA-Z0-9._-]+):([0-9]+)"
-        btCallSitesList = self._profile["IndependantCallStacks"]
+        self._btCallSitesList = self._profile["IndependantCallStacks"]
+        self._slocCallSitesList = []
         self._doublePrecisionSet = set(range(len(btCallSitesList)))
         self._weightPerBtCallSite = []
         slocDict = {}
@@ -89,8 +107,9 @@ class Profile:
             ## identification
             btCallSite["BtId"] = currentBtId
             ## HashKey already exist in btCallSite: it is the BtHashKey without addr2line
-            btCallSite["BtHashKey"] = btHKey
-            btCallSite["SlocHashKey"] = slocHKey
+            btCallSite["BtAddrHashKey"] = btHKey
+            btCallSite["SlocAddrHashKey"] = slocHKey
+            btCallSite["SlocSymbolsHashKey"] = slocSymbolsHKey
             ## If already in dict update CallsCount
             if slocDict.get(slocHKey):
                 ## Retrieve slocCallSite from dictionnary
@@ -109,6 +128,7 @@ class Profile:
                 self._slocListOfBtIdSet.append(set([currentBtId]))
                 ##Copy of Backtrace Call Site into SLOC Call site
                 slocCallSite = btCallSite.copy()
-                slocCallSite["StaticHashKey"] = slocHKey
+                slocCallSite["SlocAddrHashKey"] = slocHKey
                 slocCallSite["SlocCallsCount"] = slocCallSite["CallsCount"]
                 slocDict[slocHKey] = slocCallSite
+                slocCallSiteList.append(slocCallSite)

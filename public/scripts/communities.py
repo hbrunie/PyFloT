@@ -2,6 +2,7 @@ import networkx as nx
 from networkx.algorithms import community
 import itertools
 from generateStrat import getVerbose
+import pdb
 
 ## get verbose level from generateStrat.py
 verbose = getVerbose()
@@ -34,6 +35,7 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
         if "index" in line:
             line = trace_file.readline()
         words = line.split()
+        #pdb.set_trace()
         v = getVertex(words)
         ## ignore nodes which are not in search space
         while not v:
@@ -93,8 +95,6 @@ def community_algorithm(graph_edges, graph_nodes, threshold, max_depth, corrSLOC
     edges_count = {}
     G = nx.DiGraph()
     G.add_nodes_from(list(graph_nodes))
-    print(graph_edges)
-    exit(0)
     for edge, deltas in graph_edges.items():
         #count = sum(map(lambda delta: delta < float(threshold), deltas))
         count = sum(map(lambda delta: delta < float(threshold), deltas))

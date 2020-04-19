@@ -30,7 +30,8 @@ success = set()
 S = set()
 F = set()
 ##TODO: why need profileFile to apply strategy (libC++)?
-(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkText2Find,tracefile,threshold)
+(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkText2Find,tracefile, 100000, verbose=verbose)
+print("end")
 exit(0)
 success += S
 (S,F) = slocBFS(F, params,binary,dumpdir,profileFile,checkText2Find)
