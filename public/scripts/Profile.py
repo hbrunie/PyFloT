@@ -1,3 +1,4 @@
+from colorama import Fore, Back, Style
 import json
 import pdb
 import re
@@ -6,9 +7,14 @@ class Profile:
     """
     _totalDynCalls         = 0
     _totalSlocCallSites    = 0
-    _statCallsSP           = 0
+    _totalBtCallSites    = 0
+
+    _slocCallSitesSP           = 0
+    _btCallSitesSP           = 0
     _dynCallsSP            = 0
+
     _nbTrials              = 0
+    _verbose = 1
     _doublePrecisionBtSet     = set()
     _doublePrecisionSlocSet     = set()
     _profile               = {}
@@ -20,6 +26,13 @@ class Profile:
     ## each element is a set of backtrace ID corresponding to
     ## same SLOC id
     _slocListOfBtIdSet = []
+    ##trialGlobalVar
+    ## SlocCallSiteCount
+    ## BetaP
+    _prevDynCallsSP = 0
+    ## Gammap
+    _prevBtCallSitesSP = 0
+    _firstTrial = True
 
     def __init__(self,jsonFile,verbose):
         self._profileFile = jsonFile
@@ -30,6 +43,7 @@ class Profile:
         self._doublePrecisionSlocSet = set(range(self._totalSlocCallSites))
         self._btTypeConfiguration = [0] *self._totalBtCallSites
         self._slocTypeConfiguration = [0] *self._totalSlocCallSites
+        self._onlyOnce = True
         print("List indexed by CLOC id, containing corresponding set BtId: ",self._slocListOfBtIdSet)
         return None
 
@@ -39,28 +53,77 @@ class Profile:
     def getInfoByBtId(self,x):
         return [x]
 
-    def revertSuccess(self, spConvertedSet):
-        for i in spConvertedSet:
-            self._btTypeConfiguration[i] = 0
-        for i in range(self._totalSlocCallSites):
-            self._slocTypeConfiguration[i] = 1
-            for j in self._slocListOfBtIdSet[i]:
-                if self._btTypeConfiguration[j] == 0:
-                    break
-        self._dynCallsSP = self._btTypeConfiguration.count(1)
-        self._statCallsSP = self._slocTypeConfiguration.count(0)
-
-    def trialSuccess(self,spConvertedSet):
+    def trialSuccessMultiSite(self,spConvertedSet, sloc):
         self._nbTrials += 1
-        for i in spConvertedSet:
-            self._btTypeConfiguration[i] = 1
-        for i in range(self._totalSlocCallSites):
-            self._slocTypeConfiguration[i] = 1
-            for j in self._slocListOfBtIdSet[i]:
-                if self._btTypeConfiguration[j] == 0:
-                    break
-        self._dynCallsSP = self._btTypeConfiguration.count(1)
-        self._statCallsSP = self._slocTypeConfiguration.count(0)
+
+    def trialNewStep(self):
+        self._firstTrial = True
+
+    def clusternbBtInSLOC(self, sloc):
+        n = 0
+        for s in sloc:
+            n+=len(self._slocListOfBtIdSet[s])
+        return n
+
+    def nbBtInSLOC(self, sloc):
+        return len(self._slocListOfBtIdSet[sloc])
+
+    def updateSlocCallSite(self,callSitesList, sloc, cluster, indiv):
+        if sloc:
+            if cluster:
+                self._slocCallSitesSP = max(self._slocCallSitesSP, len(callSitesList))
+            else:
+                if indiv and self._onlyOnce:
+                    self._onlyOnce = False
+                    self._slocCallSitesSP = self._slocCallSitesSP + 1
+                else:
+                    self._slocCallSitesSP = self._slocCallSitesSP + len(callSitesList) - 1
+
+    def trialSuccessMultiSiteBFS(self, slocCallSite, sloc):
+        self.trialSuccessMultiSite(slocCallSite, sloc)
+        self.updateSlocCallSite(slocCallSite,sloc,False,False)
+
+    def trialSuccessMultiSiteCluster(self, slocCallSite, sloc):
+        self.trialSuccessMultiSite(slocCallSite, sloc)
+        self.updateSlocCallSite(slocCallSite,sloc,True,False)
+
+    def trialSuccessMultiSite(self, CallSites, sloc):
+        self._nbTrials += 1
+        if sloc:
+            ## Beta <- Betap + w(Delta)
+            self._dynCallsSP = self._prevDynCallsSP + self.clusterslocweight(CallSites)
+            ## Gamma <- Gammap + f(Delta)
+            self._btCallSitesSP = self._prevBtCallSitesSP + self.clusternbBtInSLOC(CallSites)
+        else:
+            self._dynCallsSP = self._prevDynCallsSP + self.clusterbtweight(CallSites)
+            self._btCallSitesSP = self._prevBtCallSitesSP + len(CallSites)
+
+    def trialSuccessIndivBFS(self, slocCallSite, sloc):
+        self.trialSuccessIndiv(slocCallSite,sloc)
+        self.updateSlocCallSite(slocCallSite,sloc,False,True)
+
+    def trialSuccessIndivCluster(self, slocCallSite, sloc):
+        self.trialSuccessIndiv(slocCallSite,sloc)
+        self.updateSlocCallSite(slocCallSite,sloc,True,True)
+
+    def trialSuccessIndiv(self, CallSites, sloc):
+        """ slocCallSite is a single integer
+        """
+        self._nbTrials += 1
+        if self._firstTrial:
+            self._firstTrial = False
+            ## Betap <- Beta
+            self._prevDynCallsSP = self._dynCallsSP
+            ## Gammap <- Gamma
+            self._prevBtCallSitesSP = self._btCallSitesSP
+        if sloc:
+            ## Beta
+            self._dynCallsSP = max(self._dynCallsSP, self._prevDynCallsSP + self.clusterslocweight(CallSites))
+            ## Gamma
+            self._btCallSitesSP = max(self._btCallSitesSP, self._prevBtCallSitesSP + self.clusternbBtInSLOC(CallSites))
+        else:
+            self._dynCallsSP = max(self._dynCallsSP, self._prevDynCallsSP + self.clusterbtweight(CallSites))
+            self._btCallSitesSP = max(self._btCallSitesSP, self._prevBtCallSitesSP + len(CallSites))
 
     def clusterbtweight(self, s):
         weights = []
@@ -111,17 +174,24 @@ class Profile:
         return r
 
     def display(self):
-        ratioStatSP = float(self._statCallsSP) / float(self._totalSlocCallSites)
+        ratioSlocSP = float(self._slocCallSitesSP) / float(self._totalSlocCallSites)
+        ratioBtSP = float(self._btCallSitesSP) / float(self._totalBtCallSites)
         ratioDynSP = float(self._dynCallsSP) / float(self._totalDynCalls)
+        if ratioSlocSP >1.0:
+            pdb.set_trace()
         if self._verbose > 0:
-            print(f"nbTrials: {self._nbTrials}")
-            print(f"ratioStatSP: {ratioStatSP*100:2.0f}")
-            print(f"ratioDynSP: {ratioDynSP*100:2.0f}")
-            print(f"dynCallsSP: {self._dynCallsSP}")
-            print(f"statCallsSP: {self._statCallsSP}")
-            print(f"totalDynCalls: {self._totalDynCalls}")
-            print(f"totalSlocCallSites: {self._totalSlocCallSites}")
-            print(f"totalBtCallSites: {self._totalBtCallSites}")
+            print(Fore.RED + f"nbTrials: {self._nbTrials}"+Style.RESET_ALL)
+            if self._verbose > 1:
+                print(f"ratioSlocSP: {ratioSlocSP*100:2.0f}")
+                print(f"ratioBtSP: {ratioBtSP*100:2.0f}")
+                print(f"ratioDynSP: {ratioDynSP*100:2.0f}")
+                if self._verbose > 2:
+                    print(f"dynCallsSP: {self._dynCallsSP}")
+                    print(f"statCallsSP: {self._slocCallSitesSP}")
+                    print(f"statCallsSP: {self._btCallSitesSP}")
+                    print(f"totalDynCalls: {self._totalDynCalls}")
+                    print(f"totalSlocCallSites: {self._totalSlocCallSites}")
+                    print(f"totalBtCallSites: {self._totalBtCallSites}")
 
     def updateProfile(self):
         slocreg = "([a-zA-Z0-9._-]+):([0-9]+)"

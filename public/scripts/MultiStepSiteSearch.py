@@ -6,7 +6,6 @@ from staticApproach import slocBFS
 from slocCluster import slocClusterBFS
 from dynamicApproach import backtraceBFS
 from backtraceCluster import backtraceClusterBFS
-from Common import getVerbose
 ## Parsing arguments
 args           = parseWithCluster()
 params         = args.param
@@ -19,11 +18,9 @@ threshold      = args.threshold
 checkTest2Fine = args.verif_text
 ## Composed constants
 profileFile = dumpdir + "/" + profileFile
-## get verbose level from generateStrat.py
-verbose = getVerbose()
 
 ## Fill initial type configuration list indexed by backtrace based call site ID
-profile = Profile(profileFile,verbose)
+profile = Profile(profileFile,2)
 initSet = profile._doublePrecisionSlocSet
 slocsuccess = []
 btsuccess = []

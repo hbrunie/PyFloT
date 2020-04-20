@@ -145,6 +145,15 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
             line = trace_file.readline()
     return (graph_edges,graph_nodes)
 
+def community_algorithm_mockup(graph_nodes):
+    n = list(graph_nodes)
+    n.sort(reverse=True)
+    s = len(n)
+    n1 = n[:s//4]
+    n2 = n[s//4:4*s//5]
+    n3 = n[4*s//5:]
+    print(n,n1,n2,n3)
+    return [n1,n2,n3]
 def community_algorithm(graph_edges, graph_nodes, threshold, max_depth):
     """ if call by SLOC, fill corrSLOC2Bt
         graph_node is a set

@@ -1,9 +1,11 @@
 import os
+import pdb
 from generateStrat import createStratFilesCluster
 from generateStrat import createStratFilesMultiSite
 from generateStrat import createStratFilesIndividuals
 from communities import build_graph
 from communities import community_algorithm
+from communities import community_algorithm_mockup
 
 verbose = 0
 def getVerbose():
@@ -88,55 +90,10 @@ def updateEnv(resultsDir, profileFile, binary):
         os.environ[var] = value
     return envStr
 
-def __execApplication(binary, args, stratDir, stratList, checkText, resultsDirectory, profileFile, multiSite):
-    """ stratList is a list of tuple (name,hashKeys)
-        In case of multiSite, hashKeys is a list
-        Otherwise is just a single hashkey
-    """
-    validNames = []
-    validHashKeys = []
-    statCallsSP=0
-    dynCallsSP=0
-    ##TODO:
-    ## SCORE should be computed in separated function elsewhere.
-    cmd = f"{binary} {args}"
-    envStr = updateEnv(resultsDirectory, profileFile, binary)
-    for (name, btCallSiteList) in stratList:
-        valid = runApp(cmd, stratDir, name, checkText,envStr)
-        if valid:
-            dynCallsSP = max(dynCallsSP,dynCallsCount)
-            statCallsSP = max(statCallsSP,statCallsCount)
-            if multiSite:
-                ##TODO: why making sum?
-                ## Will it sum over several multisite strat tested, and count the invalid one too?
-                #dynCallsSP += dynCallsCount
-                #statCallsSP += statCallsCount
-                display()
-                return ([name],hashKey)
-            else:
-                validNames.append(name)
-                validHashKeys.append(hashKey)
-            display()
-    if multiSite:
-        return []
-    else:
-        return (validNames,validHashKeys)
-
-def execApplication(binary, args, stratDir, stratList, checkText, resultsDirectory, profileFile):
-    """ stratList is a list of tuple (name,hashKeys)
-        In case of multiSite, hashKeys is a list
-        Otherwise is just a single hashkey
-    """
-    return __execApplication(binary, args, stratDir, stratList, checkText, resultsDirectory, profileFile, False)
-
-def execApplicationMultiSite(binary, args, stratDir, stratList, checkText, resultsDirectory, profileFile):
-    """ stratList is a list of tuple (name,hashKeys)
-        GOAL: Returns best multisite solution, if not return best individual solution
-    """
-    return __execApplication(binary,args,stratDir,stratList, checkText, resultsDirectory, profileFile, True)
-
 def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
                         checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=2,verbose=1):
+    verbose = 3
+    profile.trialNewStep()
     resultsDir = dumpdir + "/results/"
     tracefile = dumpdir + "/" + tracefile
     cmd = f"{binary} {params}"
@@ -146,14 +103,14 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
     if sloc:
         corr = profile._correspondanceBt2SLOC
     (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
-    com = community_algorithm(ge, gn, threshold, maxdepth)
+    #com = community_algorithm(ge, gn, threshold, maxdepth)
+    com = community_algorithm_mockup(gn)
     if not com:
         return (set(), searchSet)
     ## Individual analysis for BFS
     toTestList =  createStratFilesCluster(profile, stratDir, com, 0, sloc)
-    if verbose >2:
-        print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
-        print(toTestList)
+    if verbose>2:
+        print(f"CLUSTER INDIVIDUAL SLOC?{sloc}. ToTest:", toTestList)
     ## Get the successful individual sloc/backtrace based call sites
     validDic = {}
     for (name, btCallSiteList) in toTestList:
@@ -161,17 +118,15 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
         #valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials)
         if valid:
             validDic[name] = btCallSiteList
-            profile.trialSuccess(btCallSiteList)
+            profile.trialSuccessIndivCluster(btCallSiteList, sloc)
             ## Revert success because we testing individual
             profile.display()
-            profile.revertSuccess(btCallSiteList)
         else:
             profile.trialFailure()
             profile.display()
     ## E.g. (['depth-0-community-1'], [ ['0x5ead72', '0x5e913e'] ])
     if verbose>2:
-        print("Level1, Valid name list of individual-site static call sites: ", validDic.keys())
-        print("validDic",validDic)
+        print(f"CLUSTER INDIVIDUAL SLOC?{sloc}. Valid keys:", validDic.keys())
     ## If no valid individual found no need for multisite, return
     if len(validDic.keys())<1:
         return (set(),searchSet)
@@ -194,23 +149,26 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
             print(f"No more strategy to test.")
             break
         if verbose>2:
-            print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
+            print(f"CLUSTER MULTI SET SLOC?{sloc}. To Test List:", toTestList)
         for (name, btCallSiteList) in toTestList:
-            valid = runAppMockup(btCallSiteList, sloc)
             #valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
+            valid = runAppMockup(btCallSiteList, sloc)
             if valid:
                 spConvertedSet = set(btCallSiteList)
-                profile.trialSuccess(btCallSiteList)
+                profile.trialSuccessMultiSiteCluster(btCallSiteList,sloc)
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
                 profile.display()
-                break
+                return (spConvertedSet,searchSet)
             else:
                 profile.trialFailure()
                 profile.display()
     return (spConvertedSet,searchSet)
 
 def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, verbose, sloc):
+    """
+    """
+    profile.trialNewStep()
     resultsDir          = dumpdir + "/results/"
     readJsonProfileFile = dumpdir + profile._profileFile
     cmd = f"{binary} {params}"
@@ -221,15 +179,14 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
         print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
     ## Get the successful individual static call sites
     validDic = {}
-    for (name, btCallSiteList) in toTestList:
-        valid = runAppMockup(btCallSiteList, sloc)
+    for (name, CallSiteList) in toTestList:
+        valid = runAppMockup(CallSiteList, sloc)
         #valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
         if valid:
-            validDic[name] = btCallSiteList
-            profile.trialSuccess(btCallSiteList)
+            validDic[name] = CallSiteList
+            profile.trialSuccessIndivBFS(CallSiteList, sloc)
             ## Revert success because we testing individual
             profile.display()
-            profile.revertSuccess(btCallSiteList)
         else:
             profile.trialFailure()
             profile.display()
@@ -264,7 +221,7 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
             valid = runAppMockup(btCallSiteList,sloc)
             if valid:
                 spConvertedSet = set(btCallSiteList)
-                profile.trialSuccess(btCallSiteList)
+                profile.trialSuccessMultiSiteBFS(btCallSiteList, sloc)
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
                 profile.display()
