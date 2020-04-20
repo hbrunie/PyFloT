@@ -174,11 +174,13 @@ class Profile:
         return r
 
     def display(self):
-        ratioSlocSP = float(self._slocCallSitesSP) / float(self._totalSlocCallSites)
-        ratioBtSP = float(self._btCallSitesSP) / float(self._totalBtCallSites)
-        ratioDynSP = float(self._dynCallsSP) / float(self._totalDynCalls)
+        ratioSlocSP = 100.* float(self._slocCallSitesSP) / float(self._totalSlocCallSites)
+        ratioBtSP   = 100.* float(self._btCallSitesSP) / float(self._totalBtCallSites)
+        ratioDynSP  = 100.*float(self._dynCallsSP) / float(self._totalDynCalls)
         if ratioSlocSP >1.0:
             pdb.set_trace()
+        print(f"{nbTrials} {ratioSlocSP:.2f} {ratioBtSP:.2f} {ratioDynSP:.2f} {self._dynCallsSP} {self._slocCallSitesSP} {self._btCallSitesSP} {self._totalDynCalls} {self._totalSlocCallSites} {self._totalBtCallSites}")
+        self._verbose = 0
         if self._verbose > 0:
             print(Fore.RED + f"nbTrials: {self._nbTrials}"+Style.RESET_ALL)
             if self._verbose > 1:
