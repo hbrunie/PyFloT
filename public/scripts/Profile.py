@@ -1,4 +1,4 @@
-from colorama import Fore, Back, Style
+#from colorama import Fore, Back, Style
 import json
 import pdb
 import re
@@ -34,7 +34,7 @@ class Profile:
     _prevBtCallSitesSP = 0
     _firstTrial = True
 
-    def __init__(self,jsonFile,verbose):
+    def __init__(self,jsonFile,verbose=1):
         self._profileFile = jsonFile
         self._verbose = verbose
         with open(jsonFile, 'r') as json_file:
@@ -177,7 +177,7 @@ class Profile:
         print(f"{self._nbTrials} {ratioSlocSP:.2f} {ratioBtSP:.2f} {ratioDynSP:.2f} {self._dynCallsSP} {self._slocCallSitesSP} {self._btCallSitesSP} {self._totalDynCalls} {self._totalSlocCallSites} {self._totalBtCallSites}")
         self._verbose = 0
         if self._verbose > 0:
-            print(Fore.RED + f"nbTrials: {self._nbTrials}"+Style.RESET_ALL)
+            #print(Fore.RED + f"nbTrials: {self._nbTrials}"+Style.RESET_ALL)
             if self._verbose > 1:
                 print(f"ratioSlocSP: {ratioSlocSP*100:2.0f}")
                 print(f"ratioBtSP: {ratioBtSP*100:2.0f}")
