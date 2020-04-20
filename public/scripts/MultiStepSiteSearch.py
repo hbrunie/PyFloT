@@ -35,7 +35,7 @@ slocsuccess += S
 (S,F) = slocBFS(profile, F, params,binary,dumpdir,checkText2Find, 10)
 slocsuccess.extend(S)
 F = set(profile.convertSloc2BtId(F))
-(S,F) = backtraceClusterBFS(profile, F, params,binary,dumpdir,checkText2Find,tracefile,100000,verbose=40)
+(S,F) = backtraceClusterBFS(profile, F, params,binary,dumpdir,checkText2Find,tracefile,100000,verbose=10)
 btsuccess.extend(S)
 (S,F) = backtraceBFS(profile, F, params,binary,dumpdir,checkText2Find,verbose=10)
 btsuccess.extend(S)
