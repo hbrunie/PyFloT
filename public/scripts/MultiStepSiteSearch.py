@@ -28,8 +28,9 @@ btsuccess = []
 S = set()
 F = set()
 ##TODO: why need profileFile to apply strategy (libC++)?
-print("nbTrials ratioSlocSP ratioBtSP ratioDynSP dynCallsSP slocCallSiteSP btCallSiteSP totalDynCalls totalSlocCallSites totalBtCallSites")
-(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkText2Find,tracefile, 100000, verbose=0)
+#print("nbTrials ratioSlocSP ratioBtSP ratioDynSP dynCallsSP slocCallSiteSP btCallSiteSP totalDynCalls totalSlocCallSites totalBtCallSites")
+#print("0 0 0 0 0 0 0 0 0 0")
+(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkText2Find,tracefile, 100000, verbose=10)
 slocsuccess += S
 (S,F) = slocBFS(profile, F, params,binary,dumpdir,checkText2Find, 10)
 slocsuccess.extend(S)

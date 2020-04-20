@@ -40,11 +40,11 @@ def runAppMockup(btCallSiteIdList, sloc=False):
     ## MOCKUP:TODO
     if sloc:
         for i in btCallSiteIdList:
-            if i in [5]:
+            if i in [3]:
                 return False
     else:
         for i in btCallSiteIdList:
-            if i in [ 37, 38, 39, 40, 41, 42, 43, 44, 45]:
+            if i in [21,22,23]:
                 return False
     return True
 
@@ -92,7 +92,6 @@ def updateEnv(resultsDir, profileFile, binary):
 
 def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
                         checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=2,verbose=1):
-    verbose = 3
     profile.trialNewStep()
     resultsDir = dumpdir + "/results/"
     tracefile = dumpdir + "/" + tracefile
@@ -151,8 +150,8 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
         if verbose>2:
             print(f"CLUSTER MULTI SET SLOC?{sloc}. To Test List:", toTestList)
         for (name, btCallSiteList) in toTestList:
-            #valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials, btCallSiteList)
-            valid = runAppMockup(btCallSiteList, sloc)
+            valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials)
+            #valid = runAppMockup(btCallSiteList, sloc)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccessMultiSiteCluster(btCallSiteList,sloc)
@@ -218,8 +217,8 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
         for (name, btCallSiteList) in toTestList:
-            #valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials, btCallSiteList)
-            valid = runAppMockup(btCallSiteList,sloc)
+            valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials)
+            #valid = runAppMockup(btCallSiteList,sloc)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccessMultiSiteBFS(btCallSiteList, sloc)

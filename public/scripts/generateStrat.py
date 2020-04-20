@@ -59,8 +59,10 @@ def createStratFilesMultiSite(profile, stratDir, validDic, sloc):
             couplesubsets.sort(key= lambda x: profile.clusterslocweight(x[1]), reverse=True)
         else:
             couplesubsets.sort(key= lambda x: profile.clusterbtweight(x[1]), reverse=True)
+        stratList = []
         for key,couplesubset in enumerate(couplesubsets):
             name = f"multiSite-{approachName}-i{key}-k{n}-among{N}"
+            stratList.append((name,list(couplesubset[1])))
             f = f"strat-{name}.txt"
             with open(stratDir+f, 'a') as ouf:
                 ##If sloc: need to convert btCallSite ID into slocCallSite ID for getHashKeyList
@@ -74,7 +76,7 @@ def createStratFilesMultiSite(profile, stratDir, validDic, sloc):
                 for key in keys:
                     ouf.write(key+"\n")
         ## Return list of performance ordered subset names
-        yield couplesubsets
+        yield stratList
     ## Generating strategy files: do not generate best individual
     print("No MultiStrategy found. Back to best individual strategy.")
     return []

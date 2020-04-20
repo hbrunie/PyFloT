@@ -21,7 +21,6 @@ def build_graph_simplest(searchSet, tracefile, DeltaWindow, maxWindowSize, corrB
         return (cur_timestamp,cur_vertix)
     graph_edges = {}
     graph_nodes = set()
-    print("build graph, search set",searchSet)
     with open(tracefile, 'r') as trace_file:
         # run the loop once
         line = trace_file.readline()
@@ -86,7 +85,6 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
     ##index timeStamp argument doubleP singleP absErr relErr spBoolean callSite
     graph_edges = {}
     graph_nodes = set()
-    print("build graph, search set",searchSet)
     with open(tracefile, 'r') as trace_file:
         # run the loop once
         line = trace_file.readline()
