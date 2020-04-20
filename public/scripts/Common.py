@@ -113,8 +113,8 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
     ## Get the successful individual sloc/backtrace based call sites
     validDic = {}
     for (name, btCallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials)
-        #valid = runAppMockup(btCallSiteList, sloc)
+        #valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials)
+        valid = runAppMockup(btCallSiteList, sloc)
         if valid:
             validDic[name] = btCallSiteList
             profile.trialSuccessIndivCluster(btCallSiteList, sloc)
@@ -179,8 +179,8 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
     ## Get the successful individual static call sites
     validDic = {}
     for (name, CallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials)
-        #valid = runAppMockup(CallSiteList, sloc)
+        #valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+        valid = runAppMockup(CallSiteList, sloc)
         if valid:
             validDic[name] = CallSiteList
             profile.trialSuccessIndivBFS(CallSiteList, sloc)
