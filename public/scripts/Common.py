@@ -195,7 +195,8 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
     ## For all remaining Static Calls
     ## Sort all strategies per performance impact,
     ## start trying them from the most to the less impact.
-    assert len(validDic.keys())>0
+    if len(validDic.keys())<1:
+        return (set(),searchSet)
     if len(validDic.keys()) < 2:
         ## take Best individual as solution
         onlyCorrectIndividual = list(validDic.values())[0]

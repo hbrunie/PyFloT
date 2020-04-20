@@ -152,8 +152,11 @@ def community_algorithm_mockup(graph_nodes):
     n1 = n[:s//4]
     n2 = n[s//4:4*s//5]
     n3 = n[4*s//5:]
-    print(n,n1,n2,n3)
-    return [n1,n2,n3]
+    n1 = n[:1]
+    n2 = n[1:]
+    return [[x] for x in n]
+    #print(n,n1,n2,n3)
+    #return [n1,n2]
 def community_algorithm(graph_edges, graph_nodes, threshold, max_depth):
     """ if call by SLOC, fill corrSLOC2Bt
         graph_node is a set
