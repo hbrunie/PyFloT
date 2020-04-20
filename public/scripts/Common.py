@@ -44,7 +44,7 @@ def runAppMockup(btCallSiteIdList, sloc=False):
                 return False
     else:
         for i in btCallSiteIdList:
-            if i in [21,22,23]:
+            if i in [64, 65, 66, 67, 68, 69, 70, 71, 76, 77, 78, 79]:
                 return False
     return True
 
