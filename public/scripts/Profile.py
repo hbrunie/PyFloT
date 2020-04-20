@@ -53,9 +53,6 @@ class Profile:
     def getInfoByBtId(self,x):
         return [x]
 
-    def trialSuccessMultiSite(self,spConvertedSet, sloc):
-        self._nbTrials += 1
-
     def trialNewStep(self):
         self._firstTrial = True
 
