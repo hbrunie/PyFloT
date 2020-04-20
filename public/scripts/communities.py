@@ -143,7 +143,7 @@ def build_graph(searchSet, tracefile, DeltaWindow, maxWindowSize, corrBtSLOC=Non
             line = trace_file.readline()
     return (graph_edges,graph_nodes)
 
-def community_algorithm_mockup(graph_nodes):
+def community_algorithm_mockup(graph_nodes,sloc):
     n = list(graph_nodes)
     n.sort(reverse=True)
     s = len(n)
@@ -152,7 +152,10 @@ def community_algorithm_mockup(graph_nodes):
     n3 = n[4*s//5:]
     n1 = n[:1]
     n2 = n[1:]
-    return [[x] for x in n]
+    if sloc:
+        return ({0, 1, 2, 3, 4}, {5, 6})
+    else:
+        return ({0, 4, 132, 135, 8, 12, 16, 144, 147, 20, 150, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 108, 111, 120, 123}, {1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 59, 61, 63, 65, 67, 69, 71, 73, 75, 77, 79, 81, 83, 85, 87, 89, 91, 93, 95, 97, 99, 100, 102, 103, 105, 106, 107, 109, 110, 112, 114, 115, 117, 118, 119, 121, 122, 124, 126, 127, 129, 130, 131, 133, 134, 136, 137, 138, 139, 141, 142, 143, 145, 146, 148, 149}, {128, 2, 6, 10, 140, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98, 101, 104, 113, 116, 125})
     #print(n,n1,n2,n3)
     #return [n1,n2]
 def community_algorithm(graph_edges, graph_nodes, threshold, max_depth):
@@ -173,6 +176,8 @@ def community_algorithm(graph_edges, graph_nodes, threshold, max_depth):
     communities_generator = community.girvan_newman(G)
     try:
         com = next(communities_generator)
+        print("Number communities:",len(com))
+        print("Communities:",com)
     except StopIteration:
         print("No Community found: number nodes {}.".format(len(graph_nodes)))
         return None

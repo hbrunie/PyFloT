@@ -101,9 +101,10 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
     corr = None
     if sloc:
         corr = profile._correspondanceBt2SLOC
-    (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
-    com = community_algorithm(ge, gn, threshold, maxdepth)
-    #com = community_algorithm_mockup(gn)
+    #(ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
+    #com = community_algorithm(ge, gn, threshold, maxdepth)
+    (ge, gn) = ([],[])
+    com = community_algorithm_mockup(gn,sloc)
     if not com:
         return (set(), searchSet)
     ## Individual analysis for BFS
@@ -179,8 +180,8 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
     ## Get the successful individual static call sites
     validDic = {}
     for (name, CallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
-        #valid = runAppMockup(CallSiteList, sloc)
+        #valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+        valid = runAppMockup(CallSiteList, sloc)
         if valid:
             validDic[name] = CallSiteList
             profile.trialSuccessIndivBFS(CallSiteList, sloc)
@@ -217,8 +218,8 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
         for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials)
-            #valid = runAppMockup(btCallSiteList,sloc)
+            #valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials)
+            valid = runAppMockup(btCallSiteList,sloc)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccessMultiSiteBFS(btCallSiteList, sloc)

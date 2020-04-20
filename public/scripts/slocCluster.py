@@ -11,7 +11,7 @@ def slocClusterBFS(profile, searchSet, params, binary, dumpdir,
     ## Composed constants
     stratDir   = dumpdir + "/strats/staticWithClustering/"
     return clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, True,
-                        checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=2,verbose=1)
+                        checkTest2Find, tracefile, threshold,verbose=verbose)
 
 if __name__ == "__main__":
     ## Parsing arguments
