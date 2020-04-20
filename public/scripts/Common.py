@@ -150,8 +150,8 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
         if verbose>2:
             print(f"CLUSTER MULTI SET SLOC?{sloc}. To Test List:", toTestList)
         for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials)
-            #valid = runAppMockup(btCallSiteList, sloc)
+            #valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials)
+            valid = runAppMockup(btCallSiteList, sloc)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccessMultiSiteCluster(btCallSiteList,sloc)
@@ -179,8 +179,8 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
     ## Get the successful individual static call sites
     validDic = {}
     for (name, CallSiteList) in toTestList:
-        #valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
-        valid = runAppMockup(CallSiteList, sloc)
+        valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+        #valid = runAppMockup(CallSiteList, sloc)
         if valid:
             validDic[name] = CallSiteList
             profile.trialSuccessIndivBFS(CallSiteList, sloc)
