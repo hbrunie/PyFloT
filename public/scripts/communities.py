@@ -173,6 +173,8 @@ def community_algorithm(graph_edges, graph_nodes, threshold, max_depth):
     communities_generator = community.girvan_newman(G)
     try:
         com = next(communities_generator)
+        print("Number communities:",len(com))
+        print("Communities:",com)
     except StopIteration:
         print("No Community found: number nodes {}.".format(len(graph_nodes)))
         return None
