@@ -20,17 +20,17 @@ checkTest2Fine = args.verif_text
 profileFile = dumpdir + "/" + profileFile
 
 ## Fill initial type configuration list indexed by backtrace based call site ID
-profile = Profile(profileFile,2)
+profile = Profile(profileFile,0)
 initSet = profile._doublePrecisionSlocSet
 slocsuccess = []
 btsuccess = []
-verbose = 0
+verbose = 10
 ## S:success F:failure
 S = set()
 F = set()
 ##TODO: why need profileFile to apply strategy (libC++)?
-print("nbTrials ratioSlocSP ratioBtSP ratioDynSP dynCallsSP slocCallSiteSP btCallSiteSP totalDynCalls totalSlocCallSites totalBtCallSites")
-print("0 0 0 0 0 0 0 0 0 0")
+print("nbTrials ratioDynSP")
+print("0 0")
 #(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkText2Find,tracefile, 100000, verbose=verbose)
 slocsuccess += S
 F = initSet
@@ -39,13 +39,13 @@ slocsuccess.extend(S)
 F = set(profile.convertSloc2BtId(F))
 (S,F) = backtraceClusterBFS(profile, F, params,binary,dumpdir,checkText2Find,tracefile,100000,verbose=verbose)
 btsuccess.extend(S)
-(S,F) = backtraceBFS(profile, F, params,binary,dumpdir,checkText2Find,verbose=verbose)
+#(S,F) = backtraceBFS(profile, F, params,binary,dumpdir,checkText2Find,verbose=verbose)
 btsuccess.extend(S)
-
-print("Can be converted to single precision: ")
-print("SLOC")
-print(sorted(slocsuccess))
-print("BT")
-print(sorted(btsuccess))
-print("Must remain in double precision: (BT)")
-print(sorted(F))
+if verbose >1:
+    print("Can be converted to single precision: ")
+    print("SLOC")
+    print(sorted(slocsuccess))
+    print("BT")
+    print(sorted(btsuccess))
+    print("Must remain in double precision: (BT)")
+    print(sorted(F))

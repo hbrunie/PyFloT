@@ -166,7 +166,7 @@ def community_algorithm_mockup(graph_nodes,searchSet, sloc):
         return tuple(upsol)
     #print(n,n1,n2,n3)
     #return [n1,n2]
-def community_algorithm(graph_edges, graph_nodes, threshold, max_depth):
+def community_algorithm(graph_edges, graph_nodes, threshold, max_depth,verbose=3):
     """ if call by SLOC, fill corrSLOC2Bt
         graph_node is a set
         graph_edges is a dictionnary: key is edge, value is list of deltas.
@@ -184,10 +184,12 @@ def community_algorithm(graph_edges, graph_nodes, threshold, max_depth):
     communities_generator = community.girvan_newman(G)
     try:
         com = next(communities_generator)
-        print("Number communities:",len(com))
-        print("Communities:",com)
+        if verbose > 1:
+            print("Number communities:",len(com))
+            print("Communities:",com)
     except StopIteration:
-        print("No Community found: number nodes {}.".format(len(graph_nodes)))
+        if verbose >1:
+            print("No Community found: number nodes {}.".format(len(graph_nodes)))
         return None
     return com
     #for depth,communities in enumerate(itertools.islice(communities_generator, max_depth)):

@@ -33,7 +33,7 @@ def runCheckScript(f, checkText):
     #return checkTest3Exp()
     return checkPMF(f, checkText)
 
-def runAppMockup(btCallSiteIdList, sloc=False, dim=2):
+def runAppMockup(btCallSiteIdList, sloc=False, dim=1):
     """ CallSiteId are BT or SLOC?
     """
     ## MOCKUP:TODO
@@ -95,6 +95,7 @@ def updateEnv(resultsDir, profileFile, binary):
 
 def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
                         checkTest2Find, tracefile, threshold, filtering=1, maxdepth=1,windowSize=2,verbose=1):
+    filtering=0
     profile.trialNewStep()
     resultsDir = dumpdir + "/results/"
     tracefile = dumpdir + "/" + tracefile
@@ -107,14 +108,16 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
         slocSearchSet = profile.convertBt2SlocSearchSet(searchSet)
         ## apply community algorithm to searchSet
         (ge, gn) = build_graph(slocSearchSet, tracefile, threshold, windowSize, corr)
-        slocCom = community_algorithm(ge, gn, threshold, maxdepth)
+        slocCom = community_algorithm(ge, gn, threshold, maxdepth,verbose)
         ## Convert back communities to backtrace CallSites
+        if not slocCom:
+            return (set(), searchSet)
         com = profile.convertSloc2BtCommunity(slocCom)
     else:
         if sloc:
             corr = profile._correspondanceBt2SLOC
         (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
-        com = community_algorithm(ge, gn, threshold, maxdepth)
+        com = community_algorithm(ge, gn, threshold, maxdepth,verbose)
     if not com:
         return (set(), searchSet)
     ## Individual analysis for BFS
@@ -125,10 +128,11 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
     validDic = {}
     for (name, btCallSiteList) in toTestList:
         #valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials)
-        valid = runAppMockup(btCallSiteList, sloc, 2)
+        valid = runAppMockup(btCallSiteList, sloc)
         if valid:
             validDic[name] = btCallSiteList
-            profile.trialSuccessIndivCluster(btCallSiteList, sloc)
+            profile.trialReverse(sloc)
+            profile.trialSuccess(btCallSiteList, sloc,True)
             ## Revert success because we testing individual
             profile.display()
         else:
@@ -162,10 +166,11 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
             print(f"CLUSTER MULTI SET SLOC?{sloc}. To Test List:", toTestList)
         for (name, btCallSiteList) in toTestList:
             #valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials)
-            valid = runAppMockup(btCallSiteList, sloc,2)
+            valid = runAppMockup(btCallSiteList, sloc)
             if valid:
                 spConvertedSet = set(btCallSiteList)
-                profile.trialSuccessMultiSiteCluster(btCallSiteList,sloc)
+                profile.trialReverse(sloc)
+                profile.trialSuccess(btCallSiteList,sloc)
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
                 profile.display()
@@ -194,7 +199,8 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
         valid = runAppMockup(CallSiteList, sloc)
         if valid:
             validDic[name] = CallSiteList
-            profile.trialSuccessIndivBFS(CallSiteList, sloc)
+            profile.trialReverse(sloc)
+            profile.trialSuccess(CallSiteList, sloc, True)
             ## Revert success because we testing individual
             profile.display()
         else:
@@ -232,7 +238,7 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
             valid = runAppMockup(btCallSiteList,sloc)
             if valid:
                 spConvertedSet = set(btCallSiteList)
-                profile.trialSuccessMultiSiteBFS(btCallSiteList, sloc)
+                profile.trialSuccess(btCallSiteList, sloc)
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
                 profile.display()
