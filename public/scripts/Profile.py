@@ -142,8 +142,36 @@ class Profile:
             weights.append(self.clusterbtweight(btIdSetList))
         return sum(weights)
 
+    def convertBt2SlocCommunity(self,com):
+        """ Community is a tuple of sets
+        """
+        newCom = []
+        for c in com:
+            newCom.append(convertBt2SlocId(c))
+        return tuple(newCom)
+
+
+    def convertSloc2BtCommunity():
+        """
+        """
+        newCom = []
+        for c in com:
+            newCom.append(convertSloc2BtId(c))
+        return tuple(newCom)
+
+    def convertBt2SlocId(self,l):
+        """and sort
+        """
+        r = set()
+        for i in l:
+            r.add(self._correspondanceBt2SLOC[i])
+        r = list(r)
+        r.sort()
+        return r
+
     def convertSloc2BtId(self, l):
-        """ in params: list of sloc call sites id [0,1,2]
+        """ and sort
+            in params: list of sloc call sites id [0,1,2]
             use _slocListOfBtIdSet[i] --> set of Bt Id corresponding to SLOC call sites ID i
         """
         r = []

@@ -5,7 +5,6 @@ from generateStrat import createStratFilesMultiSite
 from generateStrat import createStratFilesIndividuals
 from communities import build_graph
 from communities import community_algorithm
-from communities import community_algorithm_mockup
 
 verbose = 0
 def getVerbose():
@@ -95,7 +94,7 @@ def updateEnv(resultsDir, profileFile, binary):
     return envStr
 
 def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
-                        checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=2,verbose=1):
+                        checkTest2Find, tracefile, threshold, filtering=1, maxdepth=1,windowSize=2,verbose=1):
     profile.trialNewStep()
     resultsDir = dumpdir + "/results/"
     tracefile = dumpdir + "/" + tracefile
@@ -103,12 +102,19 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
     envStr = updateEnv(resultsDir, profile._profileFile, binary)
     ## Generate communities
     corr = None
-    if sloc:
-        corr = profile._correspondanceBt2SLOC
-    (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
-    com = community_algorithm(ge, gn, threshold, maxdepth)
-    #(ge, gn) = ([],[])
-    #com = community_algorithm_mockup(gn,searchSet, sloc)
+    if not sloc and filtering:#BT cluster + filtering with SLOC cluster
+        ## Convert bt call sites into sloc call sites from search set
+        slocSearchSet = profile.convertSloc2BtCommunity(searchSet)
+        ## apply community algorithm to searchSet
+        (ge, gn) = build_graph(slocSearchSet, tracefile, threshold, windowSize, corr)
+        slocCom = community_algorithm(ge, gn, threshold, maxdepth)
+        ## Convert back communities to backtrace CallSites
+        com = profile.convert(slocCom)
+    else:
+        if sloc:
+            corr = profile._correspondanceBt2SLOC
+        (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
+        com = community_algorithm(ge, gn, threshold, maxdepth)
     if not com:
         return (set(), searchSet)
     ## Individual analysis for BFS
