@@ -142,21 +142,20 @@ class Profile:
             weights.append(self.clusterbtweight(btIdSetList))
         return sum(weights)
 
-    def convertBt2SlocCommunity(self,com):
+    def convertBt2SlocSearchSet(self,ss):
         """ Community is a tuple of sets
         """
-        newCom = []
-        for c in com:
-            newCom.append(convertBt2SlocId(c))
-        return tuple(newCom)
+        newSS = self.convertBt2SlocId(list(ss))
+        newSS = set(newSS)
+        return newSS
 
 
-    def convertSloc2BtCommunity():
+    def convertSloc2BtCommunity(self,com):
         """
         """
         newCom = []
         for c in com:
-            newCom.append(convertSloc2BtId(c))
+            newCom.append(self.convertSloc2BtId(c))
         return tuple(newCom)
 
     def convertBt2SlocId(self,l):
