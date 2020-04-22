@@ -33,7 +33,7 @@ def runCheckScript(f, checkText):
     #return checkTest3Exp()
     return checkPMF(f, checkText)
 
-def runAppMockup(btCallSiteIdList, sloc=False, dim=1):
+def runAppMockup(btCallSiteIdList, sloc=False, dim=2):
     """ CallSiteId are BT or SLOC?
     """
     ## MOCKUP:TODO
@@ -104,12 +104,12 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
     corr = None
     if not sloc and filtering:#BT cluster + filtering with SLOC cluster
         ## Convert bt call sites into sloc call sites from search set
-        slocSearchSet = profile.convertSloc2BtCommunity(searchSet)
+        slocSearchSet = profile.convertBt2SlocSearchSet(searchSet)
         ## apply community algorithm to searchSet
         (ge, gn) = build_graph(slocSearchSet, tracefile, threshold, windowSize, corr)
         slocCom = community_algorithm(ge, gn, threshold, maxdepth)
         ## Convert back communities to backtrace CallSites
-        com = profile.convert(slocCom)
+        com = profile.convertSloc2BtCommunity(slocCom)
     else:
         if sloc:
             corr = profile._correspondanceBt2SLOC
