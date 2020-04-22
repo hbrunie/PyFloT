@@ -95,7 +95,7 @@ def updateEnv(resultsDir, profileFile, binary):
 
 def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
                         checkTest2Find, tracefile, threshold, filtering=1, maxdepth=1,windowSize=2,verbose=1):
-    filtering=0
+    filtering=1
     profile.trialNewStep()
     resultsDir = dumpdir + "/results/"
     tracefile = dumpdir + "/" + tracefile
@@ -107,12 +107,23 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
         ## Convert bt call sites into sloc call sites from search set
         slocSearchSet = profile.convertBt2SlocSearchSet(searchSet)
         ## apply community algorithm to searchSet
+        corr = profile._correspondanceBt2SLOC
         (ge, gn) = build_graph(slocSearchSet, tracefile, threshold, windowSize, corr)
         slocCom = community_algorithm(ge, gn, threshold, maxdepth,verbose)
+        corr = None
         ## Convert back communities to backtrace CallSites
         if not slocCom:
             return (set(), searchSet)
         com = profile.convertSloc2BtCommunity(slocCom)
+        comList = []
+        for localSearchSet in com:
+            localSearchSet = set(localSearchSet)
+            #pdb.set_trace()
+            (ge, gn) = build_graph(localSearchSet, tracefile, threshold, windowSize, corr)
+            com = community_algorithm(ge, gn, threshold, maxdepth,verbose)
+            comList.extend(list(com))
+        com = comList
+        com=tuple(comList)
     else:
         if sloc:
             corr = profile._correspondanceBt2SLOC

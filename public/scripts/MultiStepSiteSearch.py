@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from parse import parseWithCluster
+import pdb
 
 from Profile import Profile
 from staticApproach import slocBFS
@@ -24,7 +25,7 @@ profile = Profile(profileFile,0)
 initSet = profile._doublePrecisionSlocSet
 slocsuccess = []
 btsuccess = []
-verbose = 10
+verbose = 0
 ## S:success F:failure
 S = set()
 F = set()
