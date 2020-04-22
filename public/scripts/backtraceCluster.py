@@ -10,7 +10,7 @@ def backtraceClusterBFS(profile, searchSet, params, binary, dumpdir,
     ## Composed constants
     stratDir            = dumpdir + "/strats/backtraceWithClustering/"
     return clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, False,
-                        checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=2,verbose=1)
+                        checkTest2Find, tracefile, threshold, verbose=verbose)
 
 
 if __name__ == "__main__":
