@@ -33,6 +33,24 @@ def runCheckScript(f, checkText):
     #return checkTest3Exp()
     return checkPMF(f, checkText)
 
+def runAppMockup(btCallSiteIdList, sloc=False, dim=2):
+    """ CallSiteId are BT or SLOC?
+    """
+    ## MOCKUP:TODO
+    if sloc:
+        for i in btCallSiteIdList:
+            if i in [3]:
+                return False
+    else:
+        for i in btCallSiteIdList:
+            if dim ==2:
+                if i in [64, 65, 66, 67, 68, 69, 70, 71, 76, 77, 78, 79]:
+                    return False
+            if dim == 1:
+                if i in [21,22,23]:
+                    return False
+    return True
+
 def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
     outputFile = "output"
     outputFileLocal = stratDir + outputFile + f"-{nbTrials}.dat"
@@ -106,7 +124,8 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
     ## Get the successful individual sloc/backtrace based call sites
     validDic = {}
     for (name, btCallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials)
+        #valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials)
+        valid = runAppMockup(btCallSiteList, sloc, 2)
         if valid:
             validDic[name] = btCallSiteList
             profile.trialSuccessIndivCluster(btCallSiteList, sloc)
@@ -142,7 +161,8 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
         if verbose>2:
             print(f"CLUSTER MULTI SET SLOC?{sloc}. To Test List:", toTestList)
         for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials)
+            #valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials)
+            valid = runAppMockup(btCallSiteList, sloc,2)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccessMultiSiteCluster(btCallSiteList,sloc)
@@ -170,7 +190,8 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
     ## Get the successful individual static call sites
     validDic = {}
     for (name, CallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials)
+        #valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
+        valid = runAppMockup(CallSiteList, sloc)
         if valid:
             validDic[name] = CallSiteList
             profile.trialSuccessIndivBFS(CallSiteList, sloc)
@@ -207,7 +228,8 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
         for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials)
+            #valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials)
+            valid = runAppMockup(btCallSiteList,sloc)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccessMultiSiteBFS(btCallSiteList, sloc)
