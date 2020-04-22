@@ -24,21 +24,22 @@ profile = Profile(profileFile,2)
 initSet = profile._doublePrecisionSlocSet
 slocsuccess = []
 btsuccess = []
+verbose = 0
 ## S:success F:failure
 S = set()
 F = set()
 ##TODO: why need profileFile to apply strategy (libC++)?
 print("nbTrials ratioSlocSP ratioBtSP ratioDynSP dynCallsSP slocCallSiteSP btCallSiteSP totalDynCalls totalSlocCallSites totalBtCallSites")
 print("0 0 0 0 0 0 0 0 0 0")
-(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkText2Find,tracefile, 100000, verbose=10)
+#(S,F) = slocClusterBFS(profile, initSet, params,binary,dumpdir,checkText2Find,tracefile, 100000, verbose=verbose)
 slocsuccess += S
-#F = initSet
-(S,F) = slocBFS(profile, F, params,binary,dumpdir,checkText2Find, 10)
+F = initSet
+#(S,F) = slocBFS(profile, F, params,binary,dumpdir,checkText2Find, verbose)
 slocsuccess.extend(S)
 F = set(profile.convertSloc2BtId(F))
-(S,F) = backtraceClusterBFS(profile, F, params,binary,dumpdir,checkText2Find,tracefile,100000,verbose=10)
+(S,F) = backtraceClusterBFS(profile, F, params,binary,dumpdir,checkText2Find,tracefile,100000,verbose=verbose)
 btsuccess.extend(S)
-(S,F) = backtraceBFS(profile, F, params,binary,dumpdir,checkText2Find,verbose=10)
+(S,F) = backtraceBFS(profile, F, params,binary,dumpdir,checkText2Find,verbose=verbose)
 btsuccess.extend(S)
 
 print("Can be converted to single precision: ")

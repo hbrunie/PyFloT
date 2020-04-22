@@ -34,7 +34,7 @@ def runCheckScript(f, checkText):
     #return checkTest3Exp()
     return checkPMF(f, checkText)
 
-def runAppMockup(btCallSiteIdList, sloc=False):
+def runAppMockup(btCallSiteIdList, sloc=False, dim=1):
     """ CallSiteId are BT or SLOC?
     """
     ## MOCKUP:TODO
@@ -44,8 +44,12 @@ def runAppMockup(btCallSiteIdList, sloc=False):
                 return False
     else:
         for i in btCallSiteIdList:
-            if i in [64, 65, 66, 67, 68, 69, 70, 71, 76, 77, 78, 79]:
-                return False
+            if dim ==2:
+                if i in [64, 65, 66, 67, 68, 69, 70, 71, 76, 77, 78, 79]:
+                    return False
+            if dim == 1:
+                if i in [21,22,23]:
+                    return False
     return True
 
 def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
@@ -101,10 +105,10 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
     corr = None
     if sloc:
         corr = profile._correspondanceBt2SLOC
-    #(ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
-    #com = community_algorithm(ge, gn, threshold, maxdepth)
-    (ge, gn) = ([],[])
-    com = community_algorithm_mockup(gn,sloc)
+    (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
+    com = community_algorithm(ge, gn, threshold, maxdepth)
+    #(ge, gn) = ([],[])
+    #com = community_algorithm_mockup(gn,searchSet, sloc)
     if not com:
         return (set(), searchSet)
     ## Individual analysis for BFS
@@ -115,7 +119,7 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
     validDic = {}
     for (name, btCallSiteList) in toTestList:
         #valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials)
-        valid = runAppMockup(btCallSiteList, sloc)
+        valid = runAppMockup(btCallSiteList, sloc, 2)
         if valid:
             validDic[name] = btCallSiteList
             profile.trialSuccessIndivCluster(btCallSiteList, sloc)
@@ -152,7 +156,7 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
             print(f"CLUSTER MULTI SET SLOC?{sloc}. To Test List:", toTestList)
         for (name, btCallSiteList) in toTestList:
             #valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials)
-            valid = runAppMockup(btCallSiteList, sloc)
+            valid = runAppMockup(btCallSiteList, sloc,2)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccessMultiSiteCluster(btCallSiteList,sloc)
