@@ -173,11 +173,11 @@ def community_algorithm(graph_edges, graph_nodes, threshold, max_depth, verbose)
     communities_generator = community.girvan_newman(G)
     try:
         com = next(communities_generator)
-        if verbose>3
+        if verbose>3:
             print("Number communities:",len(com))
             print("Communities:",com)
     except StopIteration:
-        if verbose>3
+        if verbose>3:
             print("No Community found: number nodes {}.".format(len(graph_nodes)))
         return None
     return com

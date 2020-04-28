@@ -115,15 +115,16 @@ def parseMergeCSVintoTrace():
     return args
 
 def parseStatic():
-    parser,remaining_argv = _parseStatic()
+    defaults = { "profilefile":"profile.json" ,
+                "verif_text":"AMReX (20.01-36-gfee20d598e0a-dirty) finalized",
+                 "params":"", "dumpdir":"./"}
+    parser,remaining_argv = _parseStatic(defaults)
     args = parser.parse_args(remaining_argv)
     assert args.binary, "binary absolute path is required"
     return args
 
-def _parseStatic():
+def _parseStatic(defaults):
     # defaults arguments
-    defaults = { "profilefile":"profile.json" , "verif_text":"AMReX (20.01-36-gfee20d598e0a-dirty) finalized",
-                 "params":"", "dumpdir":"./"}
     parser,remaining_argv = parse(defaults)
     parser.add_argument("--binary", help="""binary file absolute or relative path:
                         DONT FORGET ./ if in same directory!""")
@@ -144,37 +145,47 @@ def _parseStatic():
                         should be written in between quotes: \"arg1 arg2 ...\" """)
     return parser,remaining_argv
 
-def parseWithCluster():
-    parser,remaining_argv = _parseStatic()
+def parseWithCluster(verbose=1):
+    defaults = { "profilefile":"profile.json" ,
+                "verif_text":"AMReX (20.01-36-gfee20d598e0a-dirty) finalized",
+                "params":"", "dumpdir":"./", "mergedtracefile":"mergeCSVintoTrace.trace",
+                "strategy":"SLOC","filtering":False,"maxdepth":int(1),"windowSize":int(2),
+                "threshold":int(100000)
+                }
+    parser,remaining_argv = _parseStatic(defaults)
 
     parser.add_argument("--mergedtracefile",
-            help="Use merge CSV into trace file to build clusters.",
-            default="mergeCSVintoTrace.trace")
+            help="Use merge CSV into trace file to build clusters.")
+
+    parser.add_argument("--strategy",
+            help="""Strategy MultiStep to test: SLOC BT -C -Cf -> """)
 
     parser.add_argument("--filtering",
     help="""If True, do clustering on SLOC (filter) before clustering on BACKTRACE when doing
-            BT cluster step.""", action='store_true', default=False)
+            BT cluster step.""", action='store_true')
 
     parser.add_argument("--maxdepth",
-            help="Clustering algorithm are hierarchical: pick a max depth.",
-            default=int(1))
+            help="Clustering algorithm are hierarchical: pick a max depth.")
 
     parser.add_argument("--threshold",
             help="""Clustering algorithm result depend on graph edges,
-            which depends on threshold (delta) for max timstamp difference.""",
-            default=int(100000))
+            which depends on threshold (delta) for max timstamp difference.""")
 
     parser.add_argument("--windowSize",
             help="""Clustering algorithm result depend on graph edges,
-            which depends on window size: how many nodes are allowed to have edges together?""",
-            default=int(1))
+            which depends on window size: how many nodes are allowed to have edges together?""")
 
     args = parser.parse_args(remaining_argv)
+    if verbose>1:
+        print(args)
     assert args.binary, "binary absolute path is required"
     return args
 
 def parseBt():
-    parser,remainging_argv = _parseStatic()
+    defaults = { "profilefile":"profile.json" ,
+                "verif_text":"AMReX (20.01-36-gfee20d598e0a-dirty) finalized",
+                 "params":"", "dumpdir":"./"}
+    parser,remainging_argv = _parseStatic(defaults)
     args = parser.parse_args(remaining_argv)
     assert args.binary, "binary absolute path is required"
     return args
