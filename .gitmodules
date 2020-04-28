@@ -7,6 +7,3 @@
 [submodule "external-deps/cereal"]
 	path = external-deps/cereal
 	url = https://github.com/USCiLab/cereal.git
-[submodule "external-deps/libbacktrace"]
-	path = external-deps/libbacktrace
-	url = git@github.com:hbrunie/libbacktrace.git
