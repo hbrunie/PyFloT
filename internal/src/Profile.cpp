@@ -48,6 +48,10 @@ const string Profile::DEFAULT_DUMPDIR                    = "./";
 const string Profile::DEFAULT_DUMP_JSON_STRATRESULT_FILE = "dumpJsonStratResults.json";
 const string Profile::DEFAULT_BACKTRACE_LIST             = "BacktraceList.txt";
 
+#ifndef MAC_OS // On Cori for e.g.
+const string Profile::BACKTRACE_SYMBOLS_REGEX = "[-_a-zA-Z/.0-9]+\\(([a-zA-Z_0-9]+)\\+([xa-f0-9]+)\\)\\s\\[(0x[a-f0-9]+)\\]$";
+#endif
+
 uintptr_t hashLabel(string label){
     uintptr_t key = 0;
     uint32_t p = 0;
@@ -71,18 +75,12 @@ Profile::Profile(bool mode) : __mode(mode){//True --> ApplyingStrat
 }
 
 /* the Static Hash Key corresponds to a non ASLR dependent HashKey
- * User can define the level of callstack he wants to use for
- * defining the DynamicCallSite.
- * By default the level is 1: only the source code function call is taken into account.
- * TODO: make it choosable at runtime (envvar)
- * TODO: make it have an impact on execution time: replace backtrace and backtrace_symbols by custom backtrace.
+ * Full backtrace is studied.
  */
 struct statHashKey_t Profile::__staticHashKey(vector<void*> btVec){
     string statHashKey;
     string tmpHash;
-    // Choosing level: ONE <= size <= btVec.size();
-    //uint64_t size = btVec.size();//Higher for deeper analysis
-    uint64_t size = std::min(btVec.size(),(long unsigned int )(ONE+16));//Higher for deeper analysis
+    uint64_t size = btVec.size();
     void ** btpointer = &btVec[0];
     char ** symbols = backtrace_symbols(btpointer, size);
     // Starting at 3 because backtrace inside PyFloT is not useful.
@@ -91,16 +89,18 @@ struct statHashKey_t Profile::__staticHashKey(vector<void*> btVec){
     while(NULL != tmp && cnt < size){
         string backtraceSymbols(tmp);
         DEBUG("statickey",cerr << "backtraceSymbols: " << backtraceSymbols << endl ;);
-#ifndef MAC_OS
-        // /path/to/libprecisiontuning.so(Mangl_D2_FUncName+0x2e) [0x2aaaaacf5ede]
-        regex regex("[-_a-zA-Z/.0-9]+\\(([a-zA-Z_0-9]+)\\+([xa-f0-9]+)\\)\\s\\[(0x[a-f0-9]+)\\]$");
+#ifndef MAC_OS // On Cori for e.g.
+        // /path/to/binaryFile.exe(Mangl_D2_FUncName+0x2e) [0x2aaaaacf5ede]
+        // /path/to/binaryFile.exe((group 1)+(group 2)) [(group 3)]
+        regex regex(BACKTRACE_SYMBOLS_REGEX);
         smatch m;
         regex_match(backtraceSymbols, m, regex);
+        // Get instruction pointer address
         statHashKey += m[3];
         DEBUG("statickey", cerr << "Function: " << m[1] << endl;);
         DEBUG("statickey", cerr << "?main: " << (m[1].compare("main")==0) << endl;);
         if(m[1].compare("main")==0)
-            cnt=size;
+            break;
 #else// Mac OS environment
         std::vector<std::string> result;
         std::istringstream iss(backtraceSymbols);
