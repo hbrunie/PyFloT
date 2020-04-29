@@ -82,6 +82,8 @@ def clusterBFS(profile, searchSet, args, sloc, verbose):
     ssloc = "sloc"
     if not sloc:
         ssloc      = "backtrace"
+    if verbose > 0:
+        print(f"Running Cluster BFS {ssloc} filtered?",args.filtering)
     stratDir   = args.dumpdir + f"/strats/{ssloc}WithClustering/"
     resultsDir = args.dumpdir + "/results/"
     tracefile  = args.readdir + "/" + args.mergedtracefile
@@ -172,7 +174,8 @@ def BFS(profile, searchSet, args, sloc, verbose):
         ssloc      = "backtrace"
     stratDir       = args.dumpdir + f"/strats/{ssloc}/"
     resultsDir     = args.dumpdir + "/results/"
-
+    if verbose > 0:
+        print(f"Running BFS {ssloc}")
     profile.trialNewStep()
     readJsonProfileFile = dumpdir + profile._profileFile
     cmd = f"{args.binary} {args.params}"
