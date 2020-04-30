@@ -56,10 +56,12 @@ PrecisionTuner::PrecisionTuner(){
 PrecisionTuner::~PrecisionTuner(){
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << __FUNCTION__ << __mode << endl;);
+#ifndef NODUMP
     if(getenv("PTUNER_GETFULLJSON"))
         __profile->dumpJson();
     else
         __profile->dumpJsonPlusCSV();
+#endif
     delete(__profile);
 }
 

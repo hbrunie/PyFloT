@@ -1,6 +1,6 @@
 ### TO BE updated for each new usage ###
 CXX=g++
-OPTIONS=-DNDEBUG -DUSE_TIMESTAMP
+OPTIONS=-DNDEBUG -DNODUMP
 PTHOME=${HOME}/utils/tools/precisiontuning/
 
 ### should not be modified ###
