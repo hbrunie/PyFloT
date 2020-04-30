@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 from parse import parseWithCluster
+import pdb
 
 from Profile import Profile
 from staticApproach import slocBFS
@@ -31,10 +32,11 @@ strategy = args.strategy
 profileFile = args.readdir + "/" + args.profilefile
 
 ## Fill initial type configuration list indexed by backtrace based call site ID
-profile = Profile(profileFile,2)
+profile = Profile(profileFile,0)
 initSet = profile._doublePrecisionSlocSet
 slocsuccess = []
 btsuccess = []
+verbose = 0
 ## S:success F:failure
 S = set()
 F = set()
