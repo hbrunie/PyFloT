@@ -27,5 +27,6 @@
 
 #endif /* NDEBUG */
 #define UNUSED(expr) do { (void)(expr); } while (0)
+#define ATTRIBUTE_UNUSED __attribute__((unused))
 
 #endif /* DEBUG_H */

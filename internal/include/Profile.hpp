@@ -52,6 +52,8 @@ class Profile{
         static const string DEFAULT_DUMPDIR;
         static const string DEFAULT_DUMP_CSV_PROF_FILE;
         static const string DEFAULT_DUMP_JSON_STRATRESULT_FILE;
+
+        static const string BACKTRACE_SYMBOLS_REGEX;
         /// JSON Keys
         // List of all the call stack dictionnaries
         static const string JSON_MAIN_LIST;

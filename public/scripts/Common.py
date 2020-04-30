@@ -5,7 +5,6 @@ from generateStrat import createStratFilesMultiSite
 from generateStrat import createStratFilesIndividuals
 from communities import build_graph
 from communities import community_algorithm
-from communities import community_algorithm_mockup
 
 verbose = 0
 def getVerbose():
@@ -34,20 +33,6 @@ def runCheckScript(f, checkText):
     #return checkTest3Exp()
     return checkPMF(f, checkText)
 
-def runAppMockup(btCallSiteIdList, sloc=False):
-    """ CallSiteId are BT or SLOC?
-    """
-    ## MOCKUP:TODO
-    if sloc:
-        for i in btCallSiteIdList:
-            if i in [3]:
-                return False
-    else:
-        for i in btCallSiteIdList:
-            if i in [21,22,23]:
-                return False
-    return True
-
 def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
     outputFile = "output"
     outputFileLocal = stratDir + outputFile + f"-{nbTrials}.dat"
@@ -66,7 +51,7 @@ def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
         print(f"BacktraceListFile ({backtrace}) Valid? {valid}")
     return valid
 
-def updateEnv(resultsDir, profileFile, binary):
+def updateEnv(resultsDir, profileFile, binary, verbose):
     procenv = {}
     ##TODO: use script arguments
     procenv["TARGET_FILENAME"] = binary
@@ -88,22 +73,40 @@ def updateEnv(resultsDir, profileFile, binary):
     envStr += " PRECISION_TUNER_MODE=APPLYING_STRAT"
     for var,value in procenv.items():
         os.environ[var] = value
+        if verbose>3:
+            print(f"{var}={value}")
     return envStr
 
-def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
-                        checkTest2Find, tracefile, threshold, maxdepth=1,windowSize=2,verbose=1):
+def clusterBFS(profile, searchSet, args, sloc, verbose):
     profile.trialNewStep()
-    resultsDir = dumpdir + "/results/"
-    tracefile = dumpdir + "/" + tracefile
-    cmd = f"{binary} {params}"
-    envStr = updateEnv(resultsDir, profile._profileFile, binary)
+    ssloc = "sloc"
+    if not sloc:
+        ssloc      = "backtrace"
+    if verbose > 0:
+        print(f"Running Cluster BFS {ssloc} filtered?",args.filtering)
+    stratDir   = args.dumpdir + f"/strats/{ssloc}WithClustering/"
+    resultsDir = args.dumpdir + "/results/"
+    tracefile  = args.readdir + "/" + args.mergedtracefile
+    threshold  = args.threshold
+    windowSize = args.windowSize
+    maxdepth   = args.maxdepth
+    cmd = f"{args.binary} {args.params}"
+    envStr = updateEnv(resultsDir, profile._profileFile, args.binary, verbose)
     ## Generate communities
     corr = None
-    if sloc:
-        corr = profile._correspondanceBt2SLOC
-    (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
-    com = community_algorithm(ge, gn, threshold, maxdepth)
-    #com = community_algorithm_mockup(gn)
+    if not sloc and args.filtering:#BT cluster + filtering with SLOC cluster
+        ## Convert bt call sites into sloc call sites from search set
+        slocSearchSet = profile.convertBt2SlocSearchSet(searchSet)
+        ## apply community algorithm to searchSet
+        (ge, gn) = build_graph(slocSearchSet, tracefile, threshold, windowSize, corr)
+        slocCom = community_algorithm(ge, gn, threshold, maxdepth,verbose)
+        ## Convert back communities to backtrace CallSites
+        com = profile.convertSloc2BtCommunity(slocCom)
+    else:
+        if sloc:
+            corr = profile._correspondanceBt2SLOC
+        (ge, gn) = build_graph(searchSet, tracefile, threshold, windowSize, corr)
+        com = community_algorithm(ge, gn, threshold, maxdepth,verbose)
     if not com:
         return (set(), searchSet)
     ## Individual analysis for BFS
@@ -113,8 +116,7 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
     ## Get the successful individual sloc/backtrace based call sites
     validDic = {}
     for (name, btCallSiteList) in toTestList:
-        #valid = runApp(cmd, stratDir, name, checkTest2Find, envStr, profile._nbTrials)
-        valid = runAppMockup(btCallSiteList, sloc)
+        valid = runApp(cmd, stratDir, name, args.verif_text, envStr, profile._nbTrials)
         if valid:
             validDic[name] = btCallSiteList
             profile.trialSuccessIndivCluster(btCallSiteList, sloc)
@@ -150,8 +152,7 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
         if verbose>2:
             print(f"CLUSTER MULTI SET SLOC?{sloc}. To Test List:", toTestList)
         for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name,  checkTest2Find, envStr, profile._nbTrials)
-            #valid = runAppMockup(btCallSiteList, sloc)
+            valid = runApp(cmd, stratDir, name,  args.verif_text, envStr, profile._nbTrials)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccessMultiSiteCluster(btCallSiteList,sloc)
@@ -164,14 +165,23 @@ def clusterBFS(profile, searchSet, params, binary, dumpdir, stratDir, sloc,
                 profile.display()
     return (spConvertedSet,searchSet)
 
-def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, verbose, sloc):
+def BFS(profile, searchSet, args, sloc, verbose):
     """
     """
+    dumpdir        = args.dumpdir
+    ssloc          = "sloc"
+    if not sloc:
+        ssloc      = "backtrace"
+    stratDir       = args.dumpdir + f"/strats/{ssloc}/"
+    resultsDir     = args.dumpdir + "/results/"
+    if verbose > 0:
+        print(f"Running BFS {ssloc}")
     profile.trialNewStep()
-    resultsDir          = dumpdir + "/results/"
     readJsonProfileFile = dumpdir + profile._profileFile
-    cmd = f"{binary} {params}"
-    envStr = updateEnv(resultsDir, profile._profileFile, binary)
+    cmd = f"{args.binary} {args.params}"
+    if verbose > 2:
+        print("command",cmd)
+    envStr = updateEnv(resultsDir, profile._profileFile, args.binary, verbose)
     ## SLOC CallSite identification (1 level CallStack)
     toTestList = createStratFilesIndividuals(profile, stratDir, searchSet, sloc)
     if verbose >2:
@@ -179,8 +189,7 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
     ## Get the successful individual static call sites
     validDic = {}
     for (name, CallSiteList) in toTestList:
-        #valid = runApp(cmd, stratDir, name, checkText2Find, envStr, profile._nbTrials, btCallSiteList)
-        valid = runAppMockup(CallSiteList, sloc)
+        valid = runApp(cmd, stratDir, name, args.verif_text, envStr, profile._nbTrials)
         if valid:
             validDic[name] = CallSiteList
             profile.trialSuccessIndivBFS(CallSiteList, sloc)
@@ -217,8 +226,7 @@ def BFS(profile, searchSet, params, binary, dumpdir, stratDir, checkText2Find, v
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
         for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name,  checkText2Find, envStr, profile._nbTrials)
-            #valid = runAppMockup(btCallSiteList,sloc)
+            valid = runApp(cmd, stratDir, name,  args.verif_text, envStr, profile._nbTrials)
             if valid:
                 spConvertedSet = set(btCallSiteList)
                 profile.trialSuccessMultiSiteBFS(btCallSiteList, sloc)
