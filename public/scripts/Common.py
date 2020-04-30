@@ -33,6 +33,24 @@ def runCheckScript(f, checkText):
     #return checkTest3Exp()
     return checkPMF(f, checkText)
 
+def runAppMockup(btCallSiteIdList, sloc=False, dim=1):
+    """ CallSiteId are BT or SLOC?
+    """
+    ## MOCKUP:TODO
+    if sloc:
+        for i in btCallSiteIdList:
+            if i in [3]:
+                return False
+    else:
+        for i in btCallSiteIdList:
+            if dim ==2:
+                if i in [64, 65, 66, 67, 68, 69, 70, 71, 76, 77, 78, 79]:
+                    return False
+            if dim == 1:
+                if i in [21,22,23]:
+                    return False
+    return True
+
 def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
     outputFile = "output"
     outputFileLocal = stratDir + outputFile + f"-{nbTrials}.dat"
@@ -98,10 +116,22 @@ def clusterBFS(profile, searchSet, args, sloc, verbose):
         ## Convert bt call sites into sloc call sites from search set
         slocSearchSet = profile.convertBt2SlocSearchSet(searchSet)
         ## apply community algorithm to searchSet
+        corr = profile._correspondanceBt2SLOC
         (ge, gn) = build_graph(slocSearchSet, tracefile, threshold, windowSize, corr)
         slocCom = community_algorithm(ge, gn, threshold, maxdepth,verbose)
         ## Convert back communities to backtrace CallSites
+        if not slocCom:
+            return (set(), searchSet)
         com = profile.convertSloc2BtCommunity(slocCom)
+        comList = []
+        for localSearchSet in com:
+            localSearchSet = set(localSearchSet)
+            #pdb.set_trace()
+            (ge, gn) = build_graph(localSearchSet, tracefile, threshold, windowSize, corr)
+            com = community_algorithm(ge, gn, threshold, maxdepth,verbose)
+            comList.extend(list(com))
+        com = comList
+        com=tuple(comList)
     else:
         if sloc:
             corr = profile._correspondanceBt2SLOC
@@ -119,7 +149,8 @@ def clusterBFS(profile, searchSet, args, sloc, verbose):
         valid = runApp(cmd, stratDir, name, args.verif_text, envStr, profile._nbTrials)
         if valid:
             validDic[name] = btCallSiteList
-            profile.trialSuccessIndivCluster(btCallSiteList, sloc)
+            profile.trialReverse(sloc)
+            profile.trialSuccess(btCallSiteList, sloc,True)
             ## Revert success because we testing individual
             profile.display()
         else:
@@ -155,7 +186,8 @@ def clusterBFS(profile, searchSet, args, sloc, verbose):
             valid = runApp(cmd, stratDir, name,  args.verif_text, envStr, profile._nbTrials)
             if valid:
                 spConvertedSet = set(btCallSiteList)
-                profile.trialSuccessMultiSiteCluster(btCallSiteList,sloc)
+                profile.trialReverse(sloc)
+                profile.trialSuccess(btCallSiteList,sloc)
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
                 profile.display()
@@ -192,7 +224,8 @@ def BFS(profile, searchSet, args, sloc, verbose):
         valid = runApp(cmd, stratDir, name, args.verif_text, envStr, profile._nbTrials)
         if valid:
             validDic[name] = CallSiteList
-            profile.trialSuccessIndivBFS(CallSiteList, sloc)
+            profile.trialReverse(sloc)
+            profile.trialSuccess(CallSiteList, sloc, True)
             ## Revert success because we testing individual
             profile.display()
         else:
@@ -229,7 +262,7 @@ def BFS(profile, searchSet, args, sloc, verbose):
             valid = runApp(cmd, stratDir, name,  args.verif_text, envStr, profile._nbTrials)
             if valid:
                 spConvertedSet = set(btCallSiteList)
-                profile.trialSuccessMultiSiteBFS(btCallSiteList, sloc)
+                profile.trialSuccess(btCallSiteList, sloc)
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
                 profile.display()
