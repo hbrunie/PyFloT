@@ -86,16 +86,18 @@ class Profile:
                 else:
                     self._slocCallSitesSP = self._slocCallSitesSP + len(callSitesList) - 1
 
-    def trialSuccess(self,btCallSiteList,sloc,indiv=False):
+    def trialSuccess(self,CallSiteList,sloc,indiv=False):
+        """ CallSiteList can be either BT or SLOC
+        """
         self._nbTrials += 1
         if sloc:
-            for y in btCallSiteList:
+            for y in CallSiteList:
                 for x in self._slocListOfBtIdSet[y]:
                     self._btTypeConfiguration[x] = 1
                     if indiv:
                         self._toReverse.append(x)
         else:
-            for y in btCallSiteList:
+            for y in CallSiteList:
                 self._btTypeConfiguration[y] = 1
                 if indiv:
                     self._toReverse.append(y)
