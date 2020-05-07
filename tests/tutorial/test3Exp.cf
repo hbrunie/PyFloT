@@ -1,0 +1,4 @@
+[Defaults]
+binary:/global/u1/h/hbrunie/utils/tools/precisiontuning/tests/tutorial/test3Exp
+dumpdir:/global/u1/h/hbrunie/utils/tools/precisiontuning/tests/tutorial/.pyflot/
+profilefile:profile.json
