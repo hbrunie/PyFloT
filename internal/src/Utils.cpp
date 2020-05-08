@@ -30,13 +30,14 @@ ofstream writeFile(string envName, string defaultFile,string dumpDir, string def
         else
             file = string(envVarString);
         DEBUGINFO("File2write: " << file);
-        if(csvIndex > -1)//dumpCSV
+        if(csvIndex > -1){//dumpCSV
             file = file + string("-") + to_string(csvIndex) + string(".csv");
-        char * dumpDirectory = getenv(dumpDir.c_str());
-        if(NULL != dumpDirectory){
-            file = string(dumpDirectory)+string("/")+file;
-        }else{
-            file = defaultDir+file;
+            char * dumpDirectory = getenv(dumpDir.c_str());
+            if(NULL != dumpDirectory){
+                file = string(dumpDirectory)+string("/")+file;
+            }else{
+                file = defaultDir+file;
+            }
         }
         ofstream f(file, ios_base::app | ios_base::out);
         if(!f){

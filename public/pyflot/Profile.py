@@ -27,19 +27,20 @@ class Profile:
     _prevBtCallSitesSP = 0
 
     def __init__(self, jsonFile, args=None, verbose=1):
+        self._verbose = verbose
         if jsonFile == None:
             self.profiling(args)
-        self._profileFile = jsonFile
-        self._verbose = verbose
-        with open(jsonFile, 'r') as json_file:
-            self._profile = json.load(json_file)
-        self.updateProfile()
-        self._doublePrecisionSlocSet = set(range(self._totalSlocCallSites))
-        Trial._btTypeConfiguration_g =  [0] *self._totalBtCallSites
-        Trial._slocTypeConfiguration_g =  [0] *self._totalSlocCallSites
-        self._onlyOnce = True
-        if verbose >1:
-            print("List indexed by CLOC id, containing corresponding set BtId: ",self._slocListOfBtIdSet)
+        else:
+            self._profileFile = jsonFile
+            with open(jsonFile, 'r') as json_file:
+                self._profile = json.load(json_file)
+            self.updateProfile()
+            self._doublePrecisionSlocSet = set(range(self._totalSlocCallSites))
+            Trial._btTypeConfiguration_g =  [0] *self._totalBtCallSites
+            Trial._slocTypeConfiguration_g =  [0] *self._totalSlocCallSites
+            self._onlyOnce = True
+            if verbose >1:
+                print("List indexed by CLOC id, containing corresponding set BtId: ",self._slocListOfBtIdSet)
         return None
 
     def getInfoByBtId(self,x):
@@ -201,13 +202,13 @@ class Profile:
         """ Do profiling
         """
         print("Profiling application ...")
-        directory = args.directory
+        print(args)
+        directory = args.dumpdir
         binary = args.binary
-        outputfile= args.outputfile
+        outputfile= args.dumpdir + args.outputfile
+        profilefile = args.dumpdir + args.profilefile
         params = args.params
-        _ENVVAR_DUMPSTRAT          = "PRECISION_TUNER_DUMPJSONSTRATSRESULTSFILE"
         _ENVVAR_DUMPDIR            = "PRECISION_TUNER_OUTPUT_DIRECTORY"
-        _ENVVAR_READSTRAT          = "PRECISION_TUNER_READJSONPROFILESTRATFILE"
         _ENVVAR_PTUNERMODE         = "PRECISION_TUNER_MODE"
         _ENVVAR_OMPNUMTHREADS      = "OMP_NUM_THREADS"
         _ENVVAR_PTUNERDEBUG        = "DEBUG"
@@ -216,7 +217,7 @@ class Profile:
         #_ENVVAR_PTUNERDUMPPROFCSV = "PRECISION_TUNER_DUMPCSV"
         _MODE_STRAT                = "APPLYING_STRAT"
         procenv = os.environ.copy()
-        procenv[_ENVVAR_PTUNERDUMPPROF] = outputfile
+        procenv[_ENVVAR_PTUNERDUMPPROF] = profilefile
         procenv[_ENVVAR_OMPNUMTHREADS] = "1"
         procenv[_ENVVAR_DUMPDIR] = directory
         procenv[_ENVVAR_BINARY] = binary
@@ -229,7 +230,6 @@ class Profile:
         command = []
         command.append(binary + " " + params)
         print("PROFILING Command: ",command)
-        outputfile = "profile.out"
         for var,value in procenv.items():
             os.environ[var] = value
         print(" ".join(command))
