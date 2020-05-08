@@ -48,9 +48,7 @@ def parse(defaults):
 def parseProfiling():
     # defaults arguments
     defaults = { "profilefile":"profile.json" , "verif_text":"VERIFICATION SUCCESSFUL",
-            "params":"","outputfile":"stdoutAndstderr", "movePLTdir":False, "onlyProfile":False,
-            "onlyGenStrat":False, "onlyApplyingStrat":False, "execAllStrat":False,
-            "ptunerdir":"./"}
+            "params":"", "outputfile":"output", "dumpdir":"./"}
     parser,remaining_argv = parse(defaults)
     parser.add_argument("--binary", help="""binary file absolute or relative path:
                         DONT FORGET ./ if in same directory!""")
@@ -60,11 +58,8 @@ def parseProfiling():
                         (ex: ./inputs-2d-regt). Several arguments
                         should be written in between quotes: \"arg1 arg2 ...\" """)
 
-    parser.add_argument("--ptunerdir",
+    parser.add_argument("--dumpdir",
             help="directory absolute path for all files generated and read by tool analysis")
-
-    parser.add_argument("--stratfiles", nargs="+",
-            help="List of json files containing either generated strategies and/or strategies to apply.")
 
     parser.add_argument("--outputfile",
     help="""Stdout and stderr are dumped into:
@@ -73,31 +68,6 @@ def parseProfiling():
     parser.add_argument("--profilefile",
     help="""Profile phase dumps the JSON into profilefile into outputdir,
     Applying strat phase read into to create strat files.""")
-
-    parser.add_argument("--onlyProfile",
-    help="""Choose to do only profiling no strategy generation,
-    no applying strategy. One execution.""",
-    action='store_true')
-
-    parser.add_argument("--onlyGenStrat",
-    help="""Choose to do only strategies generation based on existing profiling.
-    No application execution here.""",
-    action='store_true')
-
-    parser.add_argument("--onlyApplyingStrat",
-            help="Choose to do only applying strategy. These MUST already have been generated.",
-    action='store_true')
-
-    parser.add_argument("--movePLTdir",
-            help="Choose to move plt directories according to strategy number.",
-    action='store_true')
-
-    parser.add_argument("--execAllStrat",
-    help="Exec all strategies even when a valid one is found",
-    action='store_true')
-
-    parser.add_argument("--verif_text",
-            help="Text searched in output to verify the code executed without accuracy error")
 
     args = parser.parse_args(remaining_argv)
     assert args.binary, "binary absolute path is required"
