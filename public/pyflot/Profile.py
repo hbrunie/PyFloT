@@ -149,7 +149,8 @@ class Profile:
         self._weightPerBtCallSite = []
         slocDict = {}
         currentSlocId = 0
-        for currentBtId,btCallSite in enumerate(self._btCallSitesList):
+        for btCallSite in enumerate(self._btCallSitesList):
+            currentBtId = btCallSite["Index"]
             self._totalDynCalls += btCallSite["CallsCount"]
             self._weightPerBtCallSite.append(btCallSite["CallsCount"])
             ## Building SLOC HashKeys: addr2line
