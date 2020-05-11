@@ -23,6 +23,7 @@ using namespace Json;
 const string DynFuncCall::JSON_CALLSTACK_ADDR_LIST_KEY       = "CallStack";
 const string DynFuncCall::JSON_CALLSTACK_FILELINENO_LIST_KEY = "Addr2lineCallStack";
 const string DynFuncCall::JSON_CALLSCOUNT_KEY                = "CallsCount";
+const string DynFuncCall::JSON_INDEX_KEY                     = "Index";
 const string DynFuncCall::JSON_LABELS_KEY                    = "Labels";
 const string DynFuncCall::JSON_LOWERCOUNT_KEY                = "LowerCount";
 const string DynFuncCall::JSON_LOWERBOUND_KEY                = "LowerBound";
@@ -50,16 +51,22 @@ int unSetInRegion(const char * label){
 
 list<string> DynFuncCall::backtraceToLower = list<string>();
 
+unsigned long DynFuncCall::__globalCounter = 0;
 DynFuncCall::DynFuncCall(){
     DEBUGINFO("STARTING");
     __dynHashKey       = 0;
     __backtraceStrat   = false;
+    __index            = __globalCounter++;
     __statHashKey      = "";
     __dyncount         = 0;
     __profiledDyncount = 0;
     __loweredCount     = 0;
     __lowerBound       = numeric_limits<unsigned int>::max();
     __upperBound       = 0;
+}
+
+unsigned long DynFuncCall::getIndex(){
+    return __index;
 }
 
 static bool onceForAll = true;
@@ -263,6 +270,7 @@ Value DynFuncCall::getFullJsonValue(char * targetExe){
 Value DynFuncCall::getJsonValue(char * targetExe, bool dumpReduced){
     DEBUGINFO("STARTING");
     Value v;
+    Value index((UInt)__index);
     Value dyncount((UInt)__dyncount);
     Value loweredCount((UInt)__loweredCount);
     Value lowerBound((UInt)__lowerBound);
@@ -273,6 +281,7 @@ Value DynFuncCall::getJsonValue(char * targetExe, bool dumpReduced){
 
     v[JSON_LABELS_KEY] = labels.getJsonValue();
 
+    v[JSON_INDEX_KEY]      = index;
     v[JSON_CALLSCOUNT_KEY] = dyncount;
     v[JSON_LOWERCOUNT_KEY] = loweredCount;
     v[JSON_LOWERBOUND_KEY] = lowerBound;

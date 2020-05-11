@@ -287,9 +287,9 @@ void Profile::__dumpCSVdynamicCalls(){
     unsigned int index = 0;
     string fileName;
     for (auto it = __backtraceStaticMap.begin(); it != __backtraceStaticMap.end(); ++it){
-        dumpFile = writeCSVFile(DUMP_CSV_PROFILING_FILE,
-                DEFAULT_DUMP_CSV_PROF_FILE, DUMP_DIR, DEFAULT_DUMPDIR, index);
         shared_ptr<DynFuncCall>value = it->second;
+        dumpFile = writeCSVFile(DUMP_CSV_PROFILING_FILE,
+                DEFAULT_DUMP_CSV_PROF_FILE, DUMP_DIR, DEFAULT_DUMPDIR, value->getIndex());
         dumpFile << "index timeStamp argument doubleP singleP absErr relErr spBoolean callSite" << endl;
         dumpFile << value->getCSVformat(index) << endl;;
         index++;
@@ -324,7 +324,7 @@ void Profile::__dumpJsonPermanentHashMap(bool dumpReduced){
             jsonDynFuncCall = value->getFullJsonValue(targetExe);
         jsonDynFuncCall[JSON_HASHKEY_KEY] = statHashKey;
         jsonDynFuncCall[JSON_CSV_FILENAME] =
-            string("dumpCSVdynCallSite-") + to_string(index++) + string(".csv");
+            string("dumpCSVdynCallSite-") + to_string(value->getIndex()) + string(".csv");
         jsonDynFuncCallsList.append(jsonDynFuncCall);
     }
     jsonDictionary[JSON_MAIN_LIST] = jsonDynFuncCallsList;
