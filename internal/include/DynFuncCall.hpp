@@ -36,6 +36,7 @@ class DynFuncCall
         // List of File name and line no from virtual addresses (addr2line)
         static const string JSON_CALLSTACK_FILELINENO_LIST_KEY;
         // LOWERED Dynamic calls count
+        static const string JSON_INDEX_KEY;
         static const string JSON_LABELS_KEY;
         static const string JSON_LOWERCOUNT_KEY;
         static const string JSON_LOWERBOUND_KEY;
@@ -44,6 +45,8 @@ class DynFuncCall
         vector<void*> __staticBtVec;
         vector<string> __btSymbolsVec;
         bool __backtraceStrat;
+        static unsigned long __globalCounter;
+        unsigned long __index;
         unsigned long __loweredCount;
         unsigned int __lowerBound;
         unsigned int __upperBound;
@@ -78,6 +81,7 @@ class DynFuncCall
         void updateStrategyBacktraceList();
         void updateStrategyBacktrace();
         void updateBtSymbols(struct statHashKey_t&);
+        unsigned long getIndex();
         bool applyStrategyDynCount();
         bool applyStrategyBacktrace();
         void applyProfiling(ShadowValue&);
