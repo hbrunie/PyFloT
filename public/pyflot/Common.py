@@ -23,53 +23,38 @@ def checkTest3Exp():
         checkCount +=1
         return False
 
-def updateEnv(resultsDir, profileFile, binary, verbose):
-    procenv = {}
-    ##TODO: use script arguments
-    procenv["TARGET_FILENAME"] = binary
-    ##TODO: why need profileFile to apply strategy (libC++)?
-    procenv["PRECISION_TUNER_READJSON"] = profileFile
-    ##TODO change with real csv filename
-    procenv["PRECISION_TUNER_DUMPCSV"] = "./whocares.csv"
-    procenv["PRECISION_TUNER_OUTPUT_DIRECTORY"] = resultsDir
-    procenv["PRECISION_TUNER_MODE"] = "APPLYING_STRAT"
-    os.system(f"mkdir -p {resultsDir}")
-    envStr = "TARGET_FILENAME="
-    envStr += binary
-    envStr += " PRECISION_TUNER_READJSON="
-    envStr += profileFile
-    envStr += " PRECISION_TUNER_DUMPCSV="
-    envStr += "./whocares.csv"
-    envStr += " PRECISION_TUNER_OUTPUT_DIRECTORY="
-    envStr += resultsDir
-    envStr += " PRECISION_TUNER_MODE=APPLYING_STRAT"
-    for var,value in procenv.items():
-        os.environ[var] = value
-        if verbose>3:
-            print(f"{var}={value}")
-    return envStr
-
-def worker(self, obj):
+def worker(obj):
     return obj.runApp()
+
+def execute(toTestList, args, verbose):
+    pool = mp.Pool(min(1,len(toTestList))) ## haswell
+    poolargs = []
+    for (name, callSiteList) in toTestList:
+        args.name = name
+        args.callSiteList = callSiteList
+        poolargs.append(Trial(args,verbose))
+    #trialsList = [worker(x) for x in poolargs]
+    trialsList = pool.map(worker,poolargs)
+    pool.close()
+    pool.join()
+    return trialsList
 
 def clusterBFS(profile, searchSet, args, sloc, verbose):
     """ Compute Breadth First Search with clustering
     """
     Trial._profile = profile
     Trial._verbose = verbose
-    ssloc = "sloc"
-    if not sloc:
-        ssloc      = "backtrace"
-    if verbose > 0:
-        print(f"Running Cluster BFS {ssloc} filtered?",args.filtering)
-    stratDir   = args.dumpdir + f"/strats/{ssloc}WithClustering/"
-    resultsDir = args.dumpdir + "/results/"
     tracefile  = args.readdir + "/" + args.mergedtracefile
     threshold  = args.threshold
     windowSize = args.windowSize
     maxdepth   = args.maxdepth
-    cmd = f"{args.binary} {args.params}"
-    envStr = updateEnv(resultsDir, profile._profileFile, args.binary, verbose)
+    ssloc          = "sloc"
+    if not sloc:
+        ssloc      = "backtrace"
+    if verbose > 0:
+        print(f"Running BFS {ssloc}")
+    args.stratDir = args.dumpdir + f"/strats/{ssloc}/"
+    args.sloc = sloc
     ## Generate communities
     corr = None
     if not sloc and args.filtering:#BT cluster + filtering with SLOC cluster
@@ -86,7 +71,6 @@ def clusterBFS(profile, searchSet, args, sloc, verbose):
         comList = []
         for localSearchSet in com:
             localSearchSet = set(localSearchSet)
-            #pdb.set_trace()
             (ge, gn) = build_graph(localSearchSet, tracefile, threshold, windowSize, corr)
             com = community_algorithm(ge, gn, threshold, maxdepth,verbose)
             comList.extend(list(com))
@@ -105,27 +89,28 @@ def clusterBFS(profile, searchSet, args, sloc, verbose):
         print(f"CLUSTER INDIVIDUAL SLOC?{sloc}. ToTest:", toTestList)
     ## Get the successful individual sloc/backtrace based call sites
     validDic = {}
-    for (name, btCallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, args.verif_text, envStr, profile._nbTrials)
-        if valid:
-            validDic[name] = btCallSiteList
-            profile.trialReverse(sloc)
-            profile.trialSuccess(btCallSiteList, sloc,True)
-            ## Revert success because we testing individual
-            profile.display()
+    trialsList = execute(toTestList, args, verbose)
+    ## Displaying
+    validTrials = []
+    for trial in trialsList:
+        if trial._valid:
+            trial.success(sloc)
+            ## validTrials is sorted by impact on performance (because trials is)
+            validTrials.append(trial)
+            validDic[trial.getName()] = trial.getCallSiteList()
         else:
-            profile.trialFailure()
-            profile.display()
+            trial.failure(sloc)
+        trial.display()
     ## E.g. (['depth-0-community-1'], [ ['0x5ead72', '0x5e913e'] ])
     if verbose>2:
         print(f"CLUSTER INDIVIDUAL SLOC?{sloc}. Valid keys:", validDic.keys())
     ## If no valid individual found no need for multisite, return
     if len(validDic.keys())<1:
         return (set(),searchSet)
+    ## take Best individual as solution
+    onlyCorrectIndividual = list(validDic.values())[0]
+    spConvertedSet = set(onlyCorrectIndividual.getCallSiteList())
     if len(validDic.keys()) < 2:
-        ## take Best individual as solution
-        onlyCorrectIndividual = list(validDic.values())[0]
-        spConvertedSet = set(onlyCorrectIndividual)
         searchSet = searchSet - spConvertedSet
         return (spConvertedSet,searchSet)
     toTestListGen = createStratFilesMultiSite(profile, stratDir, validDic, sloc)
@@ -142,19 +127,19 @@ def clusterBFS(profile, searchSet, args, sloc, verbose):
             break
         if verbose>2:
             print(f"CLUSTER MULTI SET SLOC?{sloc}. To Test List:", toTestList)
-        for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name,  args.verif_text, envStr, profile._nbTrials)
-            if valid:
-                spConvertedSet = set(btCallSiteList)
-                profile.trialReverse(sloc)
-                profile.trialSuccess(btCallSiteList,sloc)
+        trialsList = execute(toTestList, args, verbose)
+        validTrials = []
+        for trial in trialsList:
+            if trial._valid:
+                trial.success(sloc)
+                spConvertedSet = set(trial.getCallSiteList())
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
-                profile.display()
+                trial.display()
                 return (spConvertedSet,searchSet)
             else:
-                profile.trialFailure()
-                profile.display()
+                trial.failure(sloc)
+                trial.display()
     return (spConvertedSet,searchSet)
 
 def BFS(profile, searchSet, args, sloc, verbose):
@@ -173,33 +158,20 @@ def BFS(profile, searchSet, args, sloc, verbose):
     """
     Trial._profile = profile
     Trial._verbose = verbose
-    dumpdir        = args.dumpdir
+    ## SLOC CallSite identification (1 level CallStack)
     ssloc          = "sloc"
     if not sloc:
         ssloc      = "backtrace"
-    stratDir       = args.dumpdir + f"/strats/{ssloc}/"
-    resultsDir     = args.dumpdir + "/results/"
-    scoreFile = resultsDir + "score.txt"
     if verbose > 0:
         print(f"Running BFS {ssloc}")
-    readJsonProfileFile = dumpdir + profile._profileFile
-    cmd = f"{args.binary} {args.params}"
-    if verbose > 2:
-        print("command",cmd)
-    envStr = updateEnv(resultsDir, profile._profileFile, args.binary, verbose)
-    ## SLOC CallSite identification (1 level CallStack)
-    toTestList = createStratFilesIndividuals(profile, stratDir, searchSet, sloc)
+    args.stratDir = args.dumpdir + f"/strats/{ssloc}/"
+    args.sloc = sloc
+    toTestList = createStratFilesIndividuals(profile, args.stratDir, searchSet, sloc)
     if verbose >2:
         print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
     ## Get the successful individual static call sites
     validDic = {}
-    pool = mp.Pool(min(32,len(toTestList))) ## haswell
-    poolargs = []
-    for (name, callSiteList) in toTestList:
-        poolargs.append(Trial(cmd, stratDir, name, args.verif_text, envStr, callSiteList))
-    trialsList = pool.map(worker,poolargs)
-    pool.close()
-    pool.join()
+    trialsList = execute(toTestList, args, verbose)
     ## Displaying
     validTrials = []
     for trial in trialsList:
@@ -210,7 +182,7 @@ def BFS(profile, searchSet, args, sloc, verbose):
             validDic[trial.getName()] = trial.getCallSiteList()
         else:
             trial.failure(sloc)
-        trial.display(scoreFile)
+        trial.display()
     if verbose>2:
         print("Level1, Valid name list of individual-site static call sites: ", validDic)
     ## For all remaining Static Calls
@@ -218,13 +190,13 @@ def BFS(profile, searchSet, args, sloc, verbose):
     ## start trying them from the most to the less impact.
     if len(validTrials)<1:
         return (set(),searchSet)
+    onlyCorrectIndividual = validTrials[0]
+    spConvertedSet = set(onlyCorrectIndividual.getCallSiteList())
     if len(validTrials) < 2:
         ## take Best individual as solution
-        onlyCorrectIndividual = validTrials[0]
-        spConvertedSet = set(onlyCorrectIndividual)
         searchSet = searchSet - spConvertedSet
         return (spConvertedSet,searchSet)
-    toTestListGen = createStratFilesMultiSite(profile, stratDir, validDic, sloc)
+    toTestListGen = createStratFilesMultiSite(profile, args.stratDir, validDic, sloc)
     assert(toTestListGen)
     ## Execute the application on generated strategy files
     ## Generate strategies choosing k among n.
@@ -238,16 +210,17 @@ def BFS(profile, searchSet, args, sloc, verbose):
             break
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
-        for (name, btCallSiteList) in toTestList:
-            trial = runApp(cmd, stratDir, name,  args.verif_text, envStr, btCallSiteList)
+        trialsList = execute(toTestList, args, verbose)
+        validTrials = []
+        for trial in trialsList:
             if trial._valid:
-                spConvertedSet = set(btCallSiteList)
                 trial.success(sloc)
+                spConvertedSet = set(trial.getCallSiteList())
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
-                trial.display(scoreFile)
+                trial.display()
                 return (spConvertedSet,searchSet)
             else:
                 trial.failure(sloc)
-                trial.display(scoreFile)
+                trial.display()
     return (spConvertedSet,searchSet)

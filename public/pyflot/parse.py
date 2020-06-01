@@ -112,6 +112,16 @@ def parseAnalyzing(verbose=1):
                         parameter absolute or relative path.
                         (ex: ./inputs-2d-regt). Several arguments
                         should be written in between quotes: \"arg1 arg2 ...\" """)
+    return parser,remaining_argv
+
+def parseWithCluster(verbose=1):
+    defaults = { "profilefile":"profile.json" , "scorefile":"score.dat",
+                "verif_text":"AMReX (20.01-36-gfee20d598e0a-dirty) finalized",
+                "params":"", "dumpdir":"./", "mergedtracefile":"mergeCSVintoTrace.trace",
+                "strategy":"SLOC","filtering":False,"maxdepth":int(1),"windowSize":int(2),
+                "threshold":int(100000)
+                }
+    parser,remaining_argv = _parseStatic(defaults)
 
     parser.add_argument("--mergedtracefile",
             help="Use merge CSV into trace file to build clusters.")

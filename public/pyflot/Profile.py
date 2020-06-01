@@ -4,6 +4,8 @@ import json
 import pdb
 import re
 
+from Trial import Trial
+
 class Profile:
     """ Rename it metada? (profile + score)
     """
@@ -38,11 +40,15 @@ class Profile:
             self._doublePrecisionSlocSet = set(range(self._totalSlocCallSites))
             Trial._btTypeConfiguration_g =  [0] *self._totalBtCallSites
             Trial._slocTypeConfiguration_g =  [0] *self._totalSlocCallSites
+            Trial._scorefile = args.dumpdir + args.scorefile
             self._onlyOnce = True
             if verbose >1:
                 print("List indexed by CLOC id, containing corresponding set BtId: ",self._slocListOfBtIdSet)
         return None
 
+    def initScore(self):
+        t = Trial(None, self._verbose, initScore=True)
+        t.display()
     def getInfoByBtId(self,x):
         return [x]
 

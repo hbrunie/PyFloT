@@ -58,7 +58,7 @@ class DynFuncCall
         list<struct FloatSet> __stratMultiSet;
         static list<string> backtraceToLower;
         void displaySet();
-        Value getJsonValue(char*,bool);
+        Value getJsonValue(char*);
     public:
         DynFuncCall();
         // static: called in __buildProfiledDataFromJsonFile

@@ -1,6 +1,4 @@
-all: test3Exp#testExp test5Exp testMathFunctions testConstructor testHeader
-
-include ../../make.def
+all: testExp test3Exp test5Exp testMathFunctions testConstructor testHeader
 
 testMathFunctions:
 	$(CXX) -c testMathFunctions.cpp -g $(DEBUG) $(PTINCDIR)
@@ -30,6 +28,6 @@ clean:
 	rm -f *.o
 
 cleanall: clean
-	rm -f testConstructor testHeader testMathFunctions testExp test5Exp test3Exp ./TMP/*
+	rm -f testConstructor testHeader testMathFunctions testExp test5Exp test3Exp
 
 .PHONY: unittest

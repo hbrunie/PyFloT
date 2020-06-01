@@ -1,3 +1,6 @@
+import os
+import pdb
+
 class Trial:
     _nbTrials              = 0
     _btTypeConfiguration_g = []
@@ -5,18 +8,27 @@ class Trial:
     _profile               = None
     _verbose = 1
 
-    def __init__(self, cmd, stratDir, name, verif_text, envStr, callSiteList):
+    def __init__(self, args, verbose, initScore=False):
+        self._trialId    = Trial._nbTrials
+        Trial._nbTrials += 1
+        if initScore:
+            return None
         self._btTypeConfiguration = Trial._btTypeConfiguration_g.copy()
         self._slocTypeConfiguration = Trial._slocTypeConfiguration_g.copy()
+        cmd = f"{args.binary} {args.params}"
+        if verbose > 2:
+            print("command",cmd)
         self._cmd             = cmd
-        self._stratDir        = stratDir
-        self._name            = name
-        self._checkText       = verif_text
-        self._envStr          = envStr
-        self._callSiteList    = callSiteList
-        self._trialId         = Trial._nbTrials
+        self._profileFile     = args.readdir + args.profilefile
+        self._stratDir        = args.stratDir
+        self._name            = args.name
+        self._checkText       = args.verif_text
+        self._callSiteList    = args.callSiteList
+        self._binary          = args.binary
+        self._resultsDir      = args.dumpdir + "/results/"
         self._outputFileLocal = self._stratDir + "output" + f"-{self._trialId}.dat"
-        Trial._nbTrials += 1
+        scoreFile = self._resultsDir + "score.txt"
+        self.updateEnv()
         return None
 
     def getName(self):
@@ -42,18 +54,13 @@ class Trial:
         outputFile      = "output"
         outputFileLocal = self._stratDir + outputFile + f"-{self._trialId}.dat"
         ## File name Should be same as in generateStrat.py
-        backtrace = f"{self._stratDir}/strat-{self._name}.txt"
-        os.environ["BACKTRACE_LIST"] = backtrace
-        if Trial._verbose>3:
-            print(f"BACKTRACE_LIST={backtrace}")
-        os.environ["PRECISION_TUNER_DUMPJSON"] = f"./dumpResults-{self._name}.json"
-        if Trial._verbose>3:
-            print(f"{envStr} PRECISION_TUNER_DUMPJSON="+f"./dumpResults-{self._name}.json")
-            print(self._cmd)
-        os.system(self._cmd + f" >> {self._outputFileLocal}")
+        cmd = self._cmd + " toto"#+ f" >> {self._outputFileLocal}"
+        print("Command:",cmd)
+        os.system(cmd)
+        exit(0)
         self._valid = self.runCheckScript(outputFileLocal, self._checkText)
         if Trial._verbose>2:
-            print(f"BacktraceListFile ({backtrace}) Valid? {valid}")
+            print(f"Trial number({self._trialId}) Valid? {self._valid}")
         return self
 
     def _score(self):
@@ -75,13 +82,16 @@ class Trial:
     def failure(self,sloc):
         return None
 
-    def display(self,scoreFile):
+    def display(self):
         #ratioSlocSP = 100.* float(self._slocCallSitesSP) / float(self._totalSlocCallSites)
         #ratioBtSP   = 100.* float(self._btCallSitesSP) / float(self._totalBtCallSites)
-        ratioDynSP  = self._score()
+        if self._trialId == 0:
+            ratioDynSP = 0
+        else:
+            ratioDynSP  = self._score()
         #print(f"{self._nbTrials} {ratioSlocSP:.2f} {ratioBtSP:.2f} {ratioDynSP:.2f} {self._dynCallsSP} {self._slocCallSitesSP} {self._btCallSitesSP} {self._totalDynCalls} {self._totalSlocCallSites} {self._totalBtCallSites}")
         print(f"{self._trialId} {ratioDynSP:.2f}")
-        with open(scoreFile, "a") as ouf:
+        with open(self._scorefile, "a") as ouf:
             ouf.write(f"{self._trialId} {ratioDynSP:.2f}\n")
         #self._verbose = 0
         #if self._verbose > 0:
@@ -97,3 +107,37 @@ class Trial:
         #            print(f"totalDynCalls: {self._totalDynCalls}")
         #            print(f"totalSlocCallSites: {self._totalSlocCallSites}")
         #            print(f"totalBtCallSites: {self._totalBtCallSites}")
+
+    def updateEnv(self):
+        resultsDir = self._resultsDir
+        profileFile = self._profileFile
+        binary = self._binary
+        verbose = self._verbose
+        procenv = {}
+        ##TODO: use script arguments
+        procenv["TARGET_FILENAME"] = binary
+        ##TODO: why need profileFile to apply strategy (libC++)?
+        procenv["PRECISION_TUNER_READJSON"] = profileFile
+        ##TODO change with real csv filename
+        procenv["PRECISION_TUNER_DUMPCSV"] = "./whocares.csv"
+        procenv["PRECISION_TUNER_OUTPUT_DIRECTORY"] = resultsDir
+        procenv["PRECISION_TUNER_MODE"] = "APPLYING_STRAT"
+        procenv["PRECISION_TUNER_DUMPJSON"] = resultsDir + f"./results-{self._name}.json"
+        backtrace = f"{self._stratDir}/strat-{self._name}.txt"
+        procenv["BACKTRACE_LIST"] = backtrace
+
+        os.system(f"mkdir -p {resultsDir}")
+        envStr = "TARGET_FILENAME="
+        envStr += binary
+        envStr += " PRECISION_TUNER_READJSON="
+        envStr += profileFile
+        envStr += " PRECISION_TUNER_DUMPCSV="
+        envStr += "./whocares.csv"
+        envStr += " PRECISION_TUNER_OUTPUT_DIRECTORY="
+        envStr += resultsDir
+        envStr += " PRECISION_TUNER_MODE=APPLYING_STRAT"
+        for var,value in procenv.items():
+            os.environ[var] = value
+            if verbose>3:
+                print(f"{var}={value}")
+        return envStr
