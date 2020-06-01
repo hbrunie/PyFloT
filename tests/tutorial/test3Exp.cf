@@ -1,4 +1,6 @@
 [Defaults]
 binary:/global/u1/h/hbrunie/utils/tools/precisiontuning/tests/tutorial/test3Exp
 dumpdir:/global/u1/h/hbrunie/utils/tools/precisiontuning/tests/tutorial/.pyflot/
+readdir:/global/u1/h/hbrunie/utils/tools/precisiontuning/tests/tutorial/.pyflot/
+verif_text:SUCCESS
 profilefile:profile.json

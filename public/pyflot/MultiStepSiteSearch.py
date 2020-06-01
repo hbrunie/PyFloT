@@ -34,7 +34,7 @@ strategy = args.strategy
 profileFile = args.readdir + "/" + args.profilefile
 
 ## Fill initial type configuration list indexed by backtrace based call site ID
-profile = Profile(profileFile,0)
+profile = Profile(profileFile,args=args)
 initSet = profile._doublePrecisionSlocSet
 slocsuccess = []
 btsuccess = []
@@ -42,9 +42,10 @@ btsuccess = []
 S = set()
 F = set()
 ##TODO: why need profileFile to apply strategy (libC++)?
+print("strategy",strategy)
 print("nbTrials ratioSlocSP ratioBtSP ratioDynSP dynCallsSP slocCallSiteSP btCallSiteSP totalDynCalls totalSlocCallSites totalBtCallSites")
 print("0 0 0 0 0 0 0 0 0 0")
-print("strategy",strategy)
+profile.initScore()
 if strategy not in strategies:
     print("Error Strategy unknown.")
     exit(-1)

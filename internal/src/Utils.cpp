@@ -24,7 +24,7 @@ ofstream writeCSVFile(string envName, string defaultFile,string dumpDir,string d
 ofstream writeFile(string envName, string defaultFile,string dumpDir, string defaultDir, int csvIndex){
     try{
         char * envVarString = getenv(envName.c_str());
-        string file;
+        string file = "";
         if(NULL == envVarString)
             file = defaultFile;
         else
