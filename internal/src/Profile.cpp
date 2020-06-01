@@ -257,7 +257,7 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
 
 void Profile::dumpJsonPlusCSV(){
     __dumpReducedJsonPermanentHashMap();
-    __dumpCSVdynamicCalls();
+    //__dumpCSVdynamicCalls();
 }
 
 void Profile::dumpJson(){
@@ -311,7 +311,6 @@ void Profile::__dumpJsonPermanentHashMap(bool dumpReduced){
     Value jsonDynFuncCallsList;
     Value jsonTotalCallStacks = (UInt)__totalCallStacks;
     jsonDictionary[JSON_TOTALCALLSTACKS_KEY] = jsonTotalCallStacks;
-    unsigned int index = 0;
     for (auto it = __backtraceStaticMap.begin(); it != __backtraceStaticMap.end(); ++it){
         string key = it->first;
         shared_ptr<DynFuncCall>value = it->second;

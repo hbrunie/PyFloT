@@ -1,7 +1,5 @@
 all: testManyCallsExp testManyCalls test1CallSiteMultipleDynCalls test1Call test2Calls
 
-include ../../make.def
-
 testManyCallsExp:
 	$(CXX) $(CXXFLAGS) -o $@_$(DEBUG)_v1 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV1
 	$(CXX) $(CXXFLAGS) -o $@_$(DEBUG)_v2 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV2
@@ -30,7 +28,7 @@ test1CallSiteMultipleDynCalls:
 	$(CXX) $(CXXFLAGS) -o $@_v1 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV1
 	$(CXX) $(CXXFLAGS) -o $@_v2 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV2
 	$(CXX) $(CXXFLAGS) -o $@_v3 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV3
-	$(CXX) $(CXXFLAGS) -o $@_v4 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV4 
+	$(CXX) $(CXXFLAGS) -o $@_v4 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV4
 	$(CXX) $(CXXFLAGS) -o $@_v5 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR) -DV5
 	$(CXX) -o $@_v6 $@.cpp -g $(PTLIB) $(DEBUG) $(PTINCDIR)
 

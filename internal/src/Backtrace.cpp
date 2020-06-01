@@ -38,7 +38,7 @@ string addr2lineBacktrace(char * targetExecutable, string bt_sym) {
     return r;
 }
 
-vector<string> addr2lineBacktraceVec(std::string targetExecutable, vector<string> bt_syms, size_t bt_size) {
+vector<string> addr2lineBacktraceVec(string targetExecutable, vector<string>& bt_syms, size_t bt_size) {
     vector<string> strVec;
     if(bt_size<1)
         return strVec;

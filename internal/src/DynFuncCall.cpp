@@ -260,15 +260,21 @@ string DynFuncCall::getCSVformat(int callSiteIndex){
 }
 
 Value DynFuncCall::getReducedJsonValue(char * targetExe){
-    return getJsonValue(targetExe, true);
+    return getJsonValue(targetExe);
 }
 
-Value DynFuncCall::getFullJsonValue(char * targetExe){
-    return getJsonValue(targetExe, false);
+inline bool exists_test0 (const std::string& name) {
+        ifstream f(name.c_str());
+            return f.good();
 }
 
-Value DynFuncCall::getJsonValue(char * targetExe, bool dumpReduced){
+Value DynFuncCall::getJsonValue(char * targetExe){
     DEBUGINFO("STARTING");
+    string stargetExe = string(targetExe);
+    if(!exists_test0(stargetExe)){
+        cerr << "ERROR executable does not exist " << stargetExe << endl;
+        exit(-1);
+    }
     Value v;
     Value index((UInt)__index);
     Value dyncount((UInt)__dyncount);
@@ -286,12 +292,6 @@ Value DynFuncCall::getJsonValue(char * targetExe, bool dumpReduced){
     v[JSON_LOWERCOUNT_KEY] = loweredCount;
     v[JSON_LOWERBOUND_KEY] = lowerBound;
     v[JSON_UPPERBOUND_KEY] = upperBound;
-
-    if(!dumpReduced){
-        for(unsigned int i=0; i<__shadowValues.size(); i++)
-            shadowValues.append(__shadowValues[i].getJsonValue());
-        v["ShadowValues"] = shadowValues;
-    }
     vector<string> addr2lineVector;
     if(__btSymbolsVec.size()>0){
         addr2lineVector = addr2lineBacktraceVec(targetExe, __btSymbolsVec,

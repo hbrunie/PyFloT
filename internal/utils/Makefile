@@ -1,5 +1,4 @@
 all: testDebug
-include ../../make.def
 
 testDebug:
 	$(CXX) $(CXXPTFLAGS) -c Debug.cpp testDebug.cpp -g $(DEBUG) -I. $(INCDIR) $(GCCDYNLIB)

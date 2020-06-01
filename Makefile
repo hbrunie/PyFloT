@@ -1,8 +1,8 @@
-## IN THAT ORDER !
+## lib depends from jsoncpp
 all: jsoncpp lib
 allplus: all unittest
 
-include make.def
+-include make.Cori.def
 
 jsoncpp:
 	make -C external-deps

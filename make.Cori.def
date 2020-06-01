@@ -1,26 +1,26 @@
 ### TO BE updated for each new usage ###
-CXX=g++
+export CXX=g++
 OPTIONS=-DNDEBUG -DUSE_TIMESTAMP
-PTHOME=${HOME}/utils/tools/precisiontuning/
+export PTHOME=${HOME}/utils/tools/precisiontuning/
 
 ### should not be modified ###
 
 ##Generic flags
 JSONLIB=${PTHOME}/external-deps/jsoncpp/build/src/lib_json/  -ljsoncpp
 GOTCHALIB=${PTHOME}/external-deps/install/lib64/ -lgotcha -Wl,-rpath, /global/cscratch1/sd/hbrunie/tools/precisiontuning/external-deps/install/lib64/
-LIB=-L ${JSONLIB} -L ${GOTCHALIB}
-CXXPTFLAGS=-O3 -std=c++11 -Wall -Wextra -g -rdynamic $(OPTIONS)
+export LIB=-L ${JSONLIB} -L ${GOTCHALIB}
+export CXXPTFLAGS=-O3 -std=c++11 -Wall -Wextra -g -rdynamic $(OPTIONS)
 
 ## Compile PrecisionTuning framework
 JSONINCDIR=${PTHOME}/external-deps/jsoncpp/include/
 GOTCHAINCDIR=${PTHOME}/external-deps/GOTCHA/include/
 CEREALINCDIR=${PTHOME}/external-deps/cereal/include/
-PTLabels= ${PTHOME}/public/include/
-INCDIR= -I $(PTHOME)/internal/utils/ -I $(PTHOME)/internal/include/ -I $(JSONINCDIR) -I. -I$(CEREALINCDIR) -I$(GOTCHAINCDIR) -I $(PTLabels)
-DYNLIB=-shared -fPIC
-GCCDYNLIB= -fPIC
+export PTLabels= ${PTHOME}/public/include/
+export INCDIR= -I $(PTHOME)/internal/utils/ -I $(PTHOME)/internal/include/ -I $(JSONINCDIR) -I. -I$(CEREALINCDIR) -I$(GOTCHAINCDIR) -I $(PTLabels)
+export DYNLIB=-shared -fPIC
+export GCCDYNLIB= -fPIC
 
 ## Use PrecisionTuning framework
-CXXFLAGS=-O3 -std=c++11 -g -rdynamic
-PTLIB=-L $(PTHOME)/public/lib/ -lprecisiontuning
-PTINCDIR= -I $(PTHOME)/public/include/
+export CXXFLAGS=-O3 -std=c++11 -g -rdynamic
+export PTLIB=-L $(PTHOME)/public/lib/ -lprecisiontuning
+export PTINCDIR= -I $(PTHOME)/public/include/

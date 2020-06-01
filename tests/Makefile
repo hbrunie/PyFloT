@@ -1,20 +1,20 @@
-all: NBPBenchmarks systematic trivial
+all: NBPBenchmarks systematic tutorial
 
 NBPBenchmarks:
 	make -C NBPBenchmarks
 
 systematic:
 	make -C systematic
-	
-trivial:
-	make -C trivial
+
+tutorial:
+	make -C tutorial
 
 clean:
 	make clean -C systematic
-	make clean -C trivial
+	make clean -C tutorial
 
 cleanall: clean
 	make cleanall -C systematic
-	make cleanall -C trivial
+	make cleanall -C tutorial
 
-.PHONY: trivial systematic
+.PHONY: tutorial systematic
