@@ -13,7 +13,7 @@ test3Exp:
 	$(CXX) $(CXXFLAGS) -o $@ $@.o -g -lm $(PTLIB) $(DEBUG)
 
 test5Exp:
-	$(CXX) -c test5Exp.cpp -g $(DEBUG) $(PTINCDIR)
+	$(CXX) -c test5Exp.cpp -g $(DEBUG) $(PTINCDIR) -I ../../public/include/
 	$(CXX) -o $@ test5Exp.o -g $(PTLIB) $(DEBUG)
 
 testHeader:

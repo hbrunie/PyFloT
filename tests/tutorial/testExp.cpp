@@ -1,6 +1,6 @@
 #include <cstdlib>
 #include <iostream>
-#include "PT_math.h"
+#include <cmath>
 using namespace std;
 int main(){
     double a = exp(3.14);

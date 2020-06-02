@@ -195,7 +195,7 @@ void DynFuncCall::updateBtSymbols(struct statHashKey_t &shk){
 }
 
 vector<string> DynFuncCall::getAddr2lineBacktraceVec(string targetExe){
-    return addr2lineBacktraceVec(targetExe, __btSymbolsVec, __btSymbolsVec.size());
+    return addr2lineBacktraceVec(targetExe, __btSymbolsVec, (size_t) __btSymbolsVec.size());
 }
 
 bool DynFuncCall::applyStrategyBacktrace(){
