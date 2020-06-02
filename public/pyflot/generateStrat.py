@@ -35,7 +35,7 @@ def createStratFilesCluster(profile, stratDir, communities, depth, sloc):
     return stratList
 
 def createStratFilesMultiSite(profile, stratDir, validDic, sloc):
-     """
+    """
         Generates files containing backtrace keys (@) for strategies to be tested.
         Individual configurations have been tested in previous phase:
         For each call site, type configuration reducing only this one precision has been tested.

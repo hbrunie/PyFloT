@@ -1,4 +1,3 @@
-include ../../make.def
 SOURCES=PrecisionTuner.cpp overloading.cpp Profile.cpp DynFuncCall.cpp Labels.cpp Utils.cpp ShadowValue.cpp
 OBJECTS=Backtrace.o Profile.o PrecisionTuner.o DynFuncCall.o overloading.o Labels.o Utils.o ShadowValue.o ../utils/Debug.o
 GOTCHAWARNING=-fpermissive
