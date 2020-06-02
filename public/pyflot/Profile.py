@@ -146,6 +146,10 @@ class Profile:
         return r
 
     def updateProfile(self):
+        """ SLOC and backtrace identities are defined by the order of their appearance
+            in the profile.json file.
+            TODO: make it more robust, according to alphabet order of their BtAddrHashKeys?
+        """
         slocreg = "([a-zA-Z0-9._-]+):([0-9]+)"
         btsymbolreg = "[-_a-zA-Z/.0-9]+\\([a-zA-Z_0-9+]*\\)\\s\\[(0x[a-f0-9]+)\\]"
         self._btCallSitesList = self._profile["IndependantCallStacks"]
