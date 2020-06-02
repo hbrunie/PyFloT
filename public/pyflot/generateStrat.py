@@ -35,18 +35,26 @@ def createStratFilesCluster(profile, stratDir, communities, depth, sloc):
     return stratList
 
 def createStratFilesMultiSite(profile, stratDir, validDic, sloc):
-    """ validDic: {'depth-0-community-0': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
+     """
+        Generates files containing backtrace keys (@) for strategies to be tested.
+        Individual configurations have been tested in previous phase:
+        For each call site, type configuration reducing only this one precision has been tested.
+        validDic: {'depth-0-community-0': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
     """
+    ## Create strategies directory
     os.system(f"mkdir -p {stratDir}")
-    nameList = validDic.keys()
-    nameSet = set(nameList)
+    ## Extract names of valid type configurations tested during individual phase
+    nameSet = set(validDic.keys())
+    setSize = len(nameSet)
+    ## define approach name: backtrace or sloc
     approachName = "backtrace"
     if sloc:
         approachName = "SLOC"
-    N = len(nameList)
-    for n in range(N,1,-1):
-        ## List of all subset strategies
-        ## Compute the subsets
+    ## Testing multi-site type configurations reducing precision
+    ## of simultaneously n valid individual,
+    ## starting with n equal sizeSet and decreasing.
+    for n in range(setSize,1,-1):
+        ## List of all subset strategies of n among sizeSet
         namesubsets = list(itertools.combinations(nameSet, n))
         couplesubsets = []
         ##sort subsets according to weight
@@ -61,18 +69,26 @@ def createStratFilesMultiSite(profile, stratDir, validDic, sloc):
             couplesubsets.sort(key= lambda x: profile.clusterbtweight(x[1]), reverse=True)
         stratList = []
         for key,couplesubset in enumerate(couplesubsets):
-            name = f"multiSite-{approachName}-i{key}-k{n}-among{N}"
+            name = f"multiSite-{approachName}-i{key}-k{n}-among{setSize}"
             stratList.append((name,list(couplesubset[1])))
-            f = f"strat-{name}.txt"
-            with open(stratDir+f, 'a') as ouf:
-                ##If sloc: need to convert btCallSite ID into slocCallSite ID for getHashKeyList
-                ##TODO not needed anymore
-                CallSiteIdSet = couplesubset[1]
-                if sloc:
-                    CallSiteIdSet = set()
-                    for x in couplesubset[1]:
-                        CallSiteIdSet.add(profile._correspondanceBt2SLOC[x])
-                keys = profile.getHashKeyList(CallSiteIdSet, sloc)
+            fkeys = f"strat-{name}.txt"
+            fnames = f"strat-{name}-ids.txt"
+            ##If sloc: need to convert btCallSite ID into slocCallSite ID for getHashKeyList
+            ##TODO not needed anymore
+            CallSiteIdSet = couplesubset[1]
+            with open(stratDir+fkeys, 'a') as ouf:
+                ## Write backtrace or sloc id
+                towrite = list(CallSiteIdSet)
+                for x in towrite[:-1]:
+                    ouf.write(x+" ")
+                ouf.write(x+"\n")
+            ## Convert sloc id to bt id set if necessary
+            if sloc:
+                CallSiteIdSet = set()
+                for x in couplesubset[1]:
+                    CallSiteIdSet.add(profile._correspondanceBt2SLOC[x])
+            keys = profile.getHashKeyList(CallSiteIdSet, sloc)
+            with open(stratDir+fnames, 'a') as ouf:
                 for key in keys:
                     ouf.write(key+"\n")
         ## Return list of performance ordered subset names
@@ -90,6 +106,9 @@ def createStratFilesMultiSiteBacktrace(stratDir, jsonFile, validNameHashKeyList)
 def createStratFilesIndividuals(profile, stratDir, searchSet, sloc):
     """ Static: level1
         Create strategy files, for each individual SLOC or BT call sites
+        searchSet contains the call site identity:
+            - btCallSite["SlocId"]
+            - btCallSite["BtId"]
     """
     stratList = []
     os.system(f"mkdir -p {stratDir}")
