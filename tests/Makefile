@@ -1,4 +1,4 @@
-all: NBPBenchmarks systematic tutorial
+all: tutorial
 
 NBPBenchmarks:
 	make -C NBPBenchmarks

@@ -257,11 +257,7 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
 
 void Profile::dumpJsonPlusCSV(){
     __dumpReducedJsonPermanentHashMap();
-    //__dumpCSVdynamicCalls();
-}
-
-void Profile::dumpJson(){
-    __dumpFullJsonPermanentHashMap();
+    __dumpCSVdynamicCalls();
 }
 
 void Profile::__displayBacktraceStaticMap(){
@@ -296,14 +292,7 @@ void Profile::__dumpCSVdynamicCalls(){
     }
 }
 
-void Profile::__dumpFullJsonPermanentHashMap(){
-    __dumpJsonPermanentHashMap(false);
-}
 void Profile::__dumpReducedJsonPermanentHashMap(){
-    __dumpJsonPermanentHashMap(true);
-}
-
-void Profile::__dumpJsonPermanentHashMap(bool dumpReduced){
     DEBUGINFO("STARTING");
     char * targetExe = getenv(TARGET_EXE_FILENAME);
     assert(NULL != targetExe);
@@ -317,10 +306,7 @@ void Profile::__dumpJsonPermanentHashMap(bool dumpReduced){
         Value statHashKey(key);
         Value jsonDynFuncCall;
         //Reduced in JSON, rest of data in CSV
-        if(dumpReduced)
-            jsonDynFuncCall = value->getReducedJsonValue(targetExe);
-        else
-            jsonDynFuncCall = value->getFullJsonValue(targetExe);
+        jsonDynFuncCall = value->getReducedJsonValue(targetExe);
         jsonDynFuncCall[JSON_HASHKEY_KEY] = statHashKey;
         jsonDynFuncCall[JSON_CSV_FILENAME] =
             string("dumpCSVdynCallSite-") + to_string(value->getIndex()) + string(".csv");
