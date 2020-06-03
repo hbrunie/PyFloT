@@ -139,6 +139,9 @@ def parseWithCluster(verbose=1):
     parser.add_argument("--maxdepth",
             help="Clustering algorithm are hierarchical: pick a max depth.")
 
+    parser.add_argument("--verif_text",
+            help="Look for verif_text in program output to validate execution correctness criteria")
+
     parser.add_argument("--threshold",
             help="""Clustering algorithm result depend on graph edges,
             which depends on threshold (delta) for max timstamp difference.""")
