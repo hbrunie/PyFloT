@@ -1,7 +1,11 @@
 #include <cstdlib>
-#include "PrecisionTuner.hpp"
-
+/*
+ * Executing testConstructor should generate a dumpProfile.json containing:
+ * {
+ *         "IndependantCallStacks" : null,
+ *         "TotalCallStacks" : 0
+ * }
+ * */
 int main(){
-    PrecisionTuner pt;
     return 0;
 }
