@@ -54,6 +54,7 @@ class Profile{
         static const string DEFAULT_DUMP_JSON_STRATRESULT_FILE;
 
         static const string BACKTRACE_SYMBOLS_REGEX;
+        static const string BACKTRACE_SYMBOLS_NOFUNCNAME_REGEX;
         /// JSON Keys
         // List of all the call stack dictionnaries
         static const string JSON_MAIN_LIST;
