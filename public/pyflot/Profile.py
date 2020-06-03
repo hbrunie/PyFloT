@@ -40,14 +40,14 @@ class Profile:
             self._doublePrecisionSlocSet = set(range(self._totalSlocCallSites))
             Trial._btTypeConfiguration_g =  [0] *self._totalBtCallSites
             Trial._slocTypeConfiguration_g =  [0] *self._totalSlocCallSites
-            Trial._scorefile = args.dumpdir + args.scorefile
+            Trial._scorefile = args.dumpdir + "/" + args.scorefile
             self._onlyOnce = True
             if verbose >1:
                 print("List indexed by CLOC id, containing corresponding set BtId: ",self._slocListOfBtIdSet)
         return None
 
-    def initScore(self):
-        t = Trial(None, self._verbose, initScore=True)
+    def initScore(self,args):
+        t = Trial(args, self._verbose, initScore=True)
         t.display()
     def getInfoByBtId(self,x):
         return [x]
@@ -159,7 +159,7 @@ class Profile:
         self._weightPerBtCallSite = []
         slocDict = {}
         currentSlocId = 0
-        for btCallSite in enumerate(self._btCallSitesList):
+        for btCallSite in self._btCallSitesList:
             currentBtId = btCallSite["Index"]
             self._totalDynCalls += btCallSite["CallsCount"]
             self._weightPerBtCallSite.append(btCallSite["CallsCount"])
@@ -232,6 +232,7 @@ class Profile:
         procenv[_ENVVAR_OMPNUMTHREADS] = "1"
         procenv[_ENVVAR_DUMPDIR] = directory
         procenv[_ENVVAR_BINARY] = binary
+        ## create profile dump directory if not already exist
         os.system("mkdir -p {}".format(directory))
         print("env: {}={} {}={} {}={} {}={}".format(_ENVVAR_BINARY,procenv[_ENVVAR_BINARY],
             _ENVVAR_DUMPDIR, procenv[_ENVVAR_DUMPDIR],

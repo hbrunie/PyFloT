@@ -45,7 +45,7 @@ F = set()
 print("strategy",strategy)
 print("nbTrials ratioSlocSP ratioBtSP ratioDynSP dynCallsSP slocCallSiteSP btCallSiteSP totalDynCalls totalSlocCallSites totalBtCallSites")
 print("0 0 0 0 0 0 0 0 0 0")
-profile.initScore()
+profile.initScore(args)
 if strategy not in strategies:
     print("Error Strategy unknown.")
     exit(-1)
