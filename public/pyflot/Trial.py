@@ -11,6 +11,8 @@ class Trial:
     def __init__(self, args, verbose, initScore=False):
         self._trialId    = Trial._nbTrials
         Trial._nbTrials += 1
+        self._resultsDir      = args.dumpdir + "/results/"
+        os.system(f"mkdir -p {self._resultsDir}")
         if initScore:
             return None
         self._btTypeConfiguration = Trial._btTypeConfiguration_g.copy()
@@ -25,10 +27,8 @@ class Trial:
         self._checkText       = args.verif_text
         self._callSiteList    = args.callSiteList
         self._binary          = args.binary
-        self._resultsDir      = args.dumpdir + "/results/"
         self._outputFileLocal = self._stratDir + "output" + f"-{self._trialId}.dat"
         scoreFile = self._resultsDir + "score.txt"
-        self.updateEnv()
         return None
 
     def getName(self):
@@ -51,13 +51,13 @@ class Trial:
         return self.checkPMF(f, checkText)
 
     def runApp(self):
+        self.updateEnv()
         outputFile      = "output"
         outputFileLocal = self._stratDir + outputFile + f"-{self._trialId}.dat"
         ## File name Should be same as in generateStrat.py
-        cmd = self._cmd + " toto"#+ f" >> {self._outputFileLocal}"
+        cmd = self._cmd + f" >> {self._outputFileLocal}"
         print("Command:",cmd)
         os.system(cmd)
-        exit(0)
         self._valid = self.runCheckScript(outputFileLocal, self._checkText)
         if Trial._verbose>2:
             print(f"Trial number({self._trialId}) Valid? {self._valid}")
@@ -91,6 +91,7 @@ class Trial:
             ratioDynSP  = self._score()
         #print(f"{self._nbTrials} {ratioSlocSP:.2f} {ratioBtSP:.2f} {ratioDynSP:.2f} {self._dynCallsSP} {self._slocCallSitesSP} {self._btCallSitesSP} {self._totalDynCalls} {self._totalSlocCallSites} {self._totalBtCallSites}")
         print(f"{self._trialId} {ratioDynSP:.2f}")
+        print("scorefile: ",self._scorefile)
         with open(self._scorefile, "a") as ouf:
             ouf.write(f"{self._trialId} {ratioDynSP:.2f}\n")
         #self._verbose = 0
@@ -126,7 +127,6 @@ class Trial:
         backtrace = f"{self._stratDir}/strat-{self._name}.txt"
         procenv["BACKTRACE_LIST"] = backtrace
 
-        os.system(f"mkdir -p {resultsDir}")
         envStr = "TARGET_FILENAME="
         envStr += binary
         envStr += " PRECISION_TUNER_READJSON="
