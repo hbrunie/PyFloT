@@ -1,0 +1,6 @@
+Complete path in environ.source and execute:
+source environ.source
+
+Then launch tests with:
+pyflot-profiling -c default-profiling.config
+pyflot-analyzing -c default-analyzing.config
