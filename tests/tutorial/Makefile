@@ -1,12 +1,12 @@
-all: testExp test3Exp test5Exp testMathFunctions testConstructor testHeader
+all:testNewCallStack2Exp testNewCallStack testExp test3Exp test5Exp testMathFunctions testConstructor testHeader
 
 testMathFunctions:
 	$(CXX) -c testMathFunctions.cpp -g $(DEBUG) $(PTINCDIR)
 	$(CXX) -o $@  testMathFunctions.o -g $(PTLIB) $(DEBUG)
 
 testExp:
-	$(CXX) -c testExp.cpp -g $(DEBUG) $(PTINCDIR)
-	$(CXX) -o $@ testExp.o -g $(PTLIB) $(DEBUG)
+	$(CXX) -O0 -c testExp.cpp -g $(DEBUG) $(PTINCDIR)
+	$(CXX) -O0 -o $@ testExp.o -g $(PTLIB) $(DEBUG)
 
 test3Exp:
 	$(CXX) $(CXXFLAGS) -c $@.cpp -g $(DEBUG)
@@ -24,10 +24,18 @@ testConstructor:
 	$(CXX) -c testConstructor.cpp -g $(DEBUG) $(INCDIR)
 	$(CXX) -o $@ testConstructor.o -g $(PTLIB) $(DEBUG)
 
+testNewCallStack:
+	$(CXX) -O0 -c testNewCallStack.cpp -g $(DEBUG) $(INCDIR)
+	$(CXX) -o $@ testNewCallStack.o -g $(PTLIB) $(DEBUG)
+
+testNewCallStack2Exp:
+	$(CXX) -O0 -c testNewCallStack2Exp.cpp -g $(DEBUG) $(INCDIR)
+	$(CXX) -o $@ testNewCallStack2Exp.o -g $(PTLIB) $(DEBUG)
+
 clean:
 	rm -f *.o
 
 cleanall: clean
-	rm -f testConstructor testHeader testMathFunctions testExp test5Exp test3Exp
+	rm -f testConstructor testHeader testMathFunctions testExp test5Exp test3Exp testNewCallStack testNewCallStack2Exp
 
 .PHONY: unittest
