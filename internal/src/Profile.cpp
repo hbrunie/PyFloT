@@ -50,6 +50,7 @@ const string Profile::DEFAULT_BACKTRACE_LIST             = "BacktraceList.txt";
 
 #ifndef MAC_OS // On Cori for e.g.
 const string Profile::BACKTRACE_SYMBOLS_REGEX = "[-_a-zA-Z/.0-9]+\\(([a-zA-Z_0-9]+)\\+([xa-f0-9]+)\\)\\s\\[(0x[a-f0-9]+)\\]$";
+const string Profile::BACKTRACE_SYMBOLS_NOFUNCNAME_REGEX = "[-_a-zA-Z/.0-9]+\\(\\)\\s\\[(0x[a-f0-9]+)\\]$";
 #endif
 
 uintptr_t hashLabel(string label){
@@ -92,15 +93,24 @@ struct statHashKey_t Profile::__staticHashKey(vector<void*> btVec){
 #ifndef MAC_OS // On Cori for e.g.
         // /path/to/binaryFile.exe(Mangl_D2_FUncName+0x2e) [0x2aaaaacf5ede]
         // /path/to/binaryFile.exe((group 1)+(group 2)) [(group 3)]
-        regex regex(BACKTRACE_SYMBOLS_REGEX);
+        regex reg(BACKTRACE_SYMBOLS_REGEX);
+        regex newreg(BACKTRACE_SYMBOLS_NOFUNCNAME_REGEX);
         smatch m;
-        regex_match(backtraceSymbols, m, regex);
-        // Get instruction pointer address
-        statHashKey += m[3];
-        DEBUG("statickey", cerr << "Function: " << m[1] << endl;);
-        DEBUG("statickey", cerr << "?main: " << (m[1].compare("main")==0) << endl;);
-        if(m[1].compare("main")==0)
-            break;
+        regex_match(backtraceSymbols, m, reg);
+        DEBUG("statickey", cerr << "regex group size: " << m.size() << endl;);
+        if(m.size()<4){
+            regex_match(backtraceSymbols, m, newreg);
+            // Get instruction pointer address
+            statHashKey += m[1];
+        }else{
+            // Get instruction pointer address
+            statHashKey += m[3];
+            bool cond = m[1].compare("main")==0 || m[1].compare("__libc_start_main")==0;
+            DEBUG("statickey", cerr << "Function: " << m[1] << endl;);
+            DEBUG("statickey", cerr << "?main or __libc_start_main: " << cond << endl;);
+            if(cond)
+                break;
+        }
 #else// Mac OS environment
         std::vector<std::string> result;
         std::istringstream iss(backtraceSymbols);
