@@ -41,6 +41,7 @@ class DynFuncCall
         static const string JSON_LOWERCOUNT_KEY;
         static const string JSON_LOWERBOUND_KEY;
         static const string JSON_UPPERBOUND_KEY;
+        static const string JSON_NEWPATH_KEY;
         vector<void*> __btVec;
         vector<void*> __staticBtVec;
         vector<string> __btSymbolsVec;
@@ -53,6 +54,7 @@ class DynFuncCall
         unsigned long __dyncount;
         unsigned long __profiledDyncount;
         uintptr_t __dynHashKey;
+        bool __newPath;
         vector<ShadowValue> __shadowValues;
         string __statHashKey;
         list<struct FloatSet> __stratMultiSet;
@@ -81,6 +83,7 @@ class DynFuncCall
         void updateStrategyBacktraceList();
         void updateStrategyBacktrace();
         void updateBtSymbols(struct statHashKey_t&);
+        void setNewPath();
         unsigned long getIndex();
         bool applyStrategyDynCount();
         bool applyStrategyBacktrace();
