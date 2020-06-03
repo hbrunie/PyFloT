@@ -28,6 +28,7 @@ const string DynFuncCall::JSON_LABELS_KEY                    = "Labels";
 const string DynFuncCall::JSON_LOWERCOUNT_KEY                = "LowerCount";
 const string DynFuncCall::JSON_LOWERBOUND_KEY                = "LowerBound";
 const string DynFuncCall::JSON_UPPERBOUND_KEY                = "UpperBound";
+const string DynFuncCall::JSON_NEWPATH_KEY                   = "NewPathBool";
 
 int setInRegion(string label){
     Labels labels;
@@ -63,10 +64,15 @@ DynFuncCall::DynFuncCall(){
     __loweredCount     = 0;
     __lowerBound       = numeric_limits<unsigned int>::max();
     __upperBound       = 0;
+    __newPath          = false;
 }
 
 unsigned long DynFuncCall::getIndex(){
     return __index;
+}
+
+void DynFuncCall::setNewPath(){
+    __newPath = true;
 }
 
 static bool onceForAll = true;
@@ -284,6 +290,7 @@ Value DynFuncCall::getJsonValue(char * targetExe){
     Value btVec;
     Value btVecFileLineno;
     Value shadowValues;
+    Value newPath(__newPath);
 
     v[JSON_LABELS_KEY] = labels.getJsonValue();
 
@@ -292,6 +299,7 @@ Value DynFuncCall::getJsonValue(char * targetExe){
     v[JSON_LOWERCOUNT_KEY] = loweredCount;
     v[JSON_LOWERBOUND_KEY] = lowerBound;
     v[JSON_UPPERBOUND_KEY] = upperBound;
+    v[JSON_NEWPATH_KEY] = newPath;
     vector<string> addr2lineVector;
     if(__btSymbolsVec.size()>0){
         addr2lineVector = addr2lineBacktraceVec(targetExe, __btSymbolsVec,

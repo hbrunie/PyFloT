@@ -187,6 +187,7 @@ bool Profile::applyStrategy(vector<void*> & btVec, string label){
             // DFC did not exist: create it.
             // TODO: profile it?
             dfc = make_shared<DynFuncCall>(btVec, dynHashKey);
+            dfc->setNewPath();
             __backtraceStaticMap[staticHashKey] = dfc;
         }else{
             // DFC already exists
