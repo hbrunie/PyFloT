@@ -15,14 +15,14 @@ strat2 = "BT-Cf"
 strat3 = "BT-Cf->BT"
 strat4 = "BT-C->BT"
 strat5 = "SLOC"
-strat6 = "SLOC-C"
-strat7 = "SLOC-C->SLOC"
-strat8 = "SLOC-C->SLOC->BT"
-strat9 = "SLOC-C->SLOC->BT-Cf"
-strat10 = "SLOC-C->SLOC->BT-Cf->BT"
-strat11 = "SLOC-C->SLOC->BT-C"
-strat12 = "SLOC-C->SLOC->BT-C->BT"
-strat13 = "SLOC->BT"
+strat6 = "SLOC->BT"
+strat7 = "SLOC-C"
+strat8 = "SLOC-C->SLOC"
+strat9 = "SLOC-C->SLOC->BT"
+strat10 = "SLOC-C->SLOC->BT-Cf"
+strat11 = "SLOC-C->SLOC->BT-Cf->BT"
+strat12 = "SLOC-C->SLOC->BT-C"
+strat13 = "SLOC-C->SLOC->BT-C->BT"
 strategies = np.array([strat0,strat1,strat2,strat3,strat4,strat5,strat6,strat7,strat8,strat9,strat10,strat11,strat12,strat13])
 ## Parsing arguments
 verbose = 1
@@ -49,25 +49,25 @@ profile.initScore(args)
 if strategy not in strategies:
     print("Error Strategy unknown.")
     exit(-1)
-if strategy in strategies[6:13]:##SLOC-C
+if strategy in strategies[7:14]:##SLOC-C
     (S,F) = slocClusterBFS(profile, initSet, args, verbose=verbose)
     slocsuccess += S
-if strategy in strategies[np.r_[0:6,13]]:##NO SLOC-C
+if strategy in strategies[0:7]:##NO SLOC-C
     F = initSet
-if strategy in strategies[np.r_[5,7:14]]:##SLOC
+if strategy in strategies[np.r_[5,6,8:14]]:##SLOC
     (S,F) = slocBFS(profile, F, args, verbose)
     slocsuccess.extend(S)
 if strategy in strategies[0:5]:##NO SLOC-C NOR SLOC
     F = initSet
-if strategy in  strategies[np.r_[0:5,8:14]]:##BT or BT-C or BT-Cf
+if strategy in  strategies[np.r_[0:5,6,9:14]]:##BT or BT-C or BT-Cf
     F = set(profile.convertSloc2BtId(F))
     args.filtering = False
-    if strategy in strategies[np.r_[2:4,9:11]]:##BT-Cf
+    if strategy in strategies[np.r_[2:4,10:12]]:##BT-Cf
         args.filtering = True
-    if strategy in strategies[np.r_[1:5,9:13]]:##BT-C or BT-Cf
+    if strategy in strategies[np.r_[1:5,10:14]]:##BT-C or BT-Cf
         (S,F) = backtraceClusterBFS(profile, F, args, verbose=verbose)
         btsuccess.extend(S)
-    if strategy in strategies[np.r_[0,3:5,8,10,12,13]]:##BT
+    if strategy in strategies[np.r_[0,3,4,6,9,11,13]]:##BT
         (S,F) = backtraceBFS(profile, F, args, verbose=verbose)
         btsuccess.extend(S)
 
