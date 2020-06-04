@@ -39,10 +39,12 @@ string addr2lineBacktrace(char * targetExecutable, string bt_sym) {
 }
 
 vector<string> addr2lineBacktraceVec(std::string targetExecutable, vector<string> bt_syms, size_t bt_size) {
+    vector<string> strVec;
+    if(bt_size<1)
+        return strVec;
     regex re("\\[(.+)\\]");
     string execPath = string(targetExecutable);
     string addrs = "";
-    vector<string> strVec;
     for (size_t i = 0; i < bt_size; i++) {
         std::string sym = bt_syms[i];
         std::smatch ms;
@@ -52,7 +54,8 @@ vector<string> addr2lineBacktraceVec(std::string targetExecutable, vector<string
         }
     }
     //string r = sh("addr2line -e " + execPath + " -f -C " + addrs);
-    string r = sh("addr2line -e " + execPath + " " + addrs);
+    string cmd = "addr2line -e " + execPath + " " + addrs;
+    string r = sh(cmd);
     stringstream ss(r);
     string token;
     while (getline(ss, token, '\n')) {

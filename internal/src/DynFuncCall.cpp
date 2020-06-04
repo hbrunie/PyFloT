@@ -283,17 +283,20 @@ Value DynFuncCall::getJsonValue(char * targetExe, bool dumpReduced){
             shadowValues.append(__shadowValues[i].getJsonValue());
         v["ShadowValues"] = shadowValues;
     }
-    vector<string> addr2lineVector = addr2lineBacktraceVec(targetExe, __btSymbolsVec,
-            __btSymbolsVec.size());
-    assert(addr2lineVector.size() == __btSymbolsVec.size());
-    for(long unsigned i = 0; i < addr2lineVector.size(); i++){
-        Value sym = __btSymbolsVec[i];
-        Value addr2lineSym = addr2lineVector[i];
-        btVec.append(sym);
-        btVecFileLineno.append(addr2lineSym);
+    vector<string> addr2lineVector;
+    if(__btSymbolsVec.size()>0){
+        addr2lineVector = addr2lineBacktraceVec(targetExe, __btSymbolsVec,
+                __btSymbolsVec.size());
+        assert(addr2lineVector.size() == __btSymbolsVec.size());
+        for(long unsigned i = 0; i < addr2lineVector.size(); i++){
+            Value sym = __btSymbolsVec[i];
+            Value addr2lineSym = addr2lineVector[i];
+            btVec.append(sym);
+            btVecFileLineno.append(addr2lineSym);
+        }
+        v[JSON_CALLSTACK_ADDR_LIST_KEY] = btVec;
+        v[JSON_CALLSTACK_FILELINENO_LIST_KEY] = btVecFileLineno;
     }
-    v[JSON_CALLSTACK_ADDR_LIST_KEY] = btVec;
-    v[JSON_CALLSTACK_FILELINENO_LIST_KEY] = btVecFileLineno;
     DEBUGINFO("ENDING");
     return v;
 }
