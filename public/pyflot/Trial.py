@@ -53,9 +53,10 @@ class Trial:
     def runApp(self):
         self.updateEnv()
         outputFile      = "output"
-        outputFileLocal = self._stratDir + outputFile + f"-{self._trialId}.dat"
+        stdoutFile = self._stratDir + outputFile + f"-{self._trialId}.out"
+        stderrFile = self._stratDir + outputFile + f"-{self._trialId}.err"
         ## File name Should be same as in generateStrat.py
-        cmd = self._cmd + f" >> {self._outputFileLocal}"
+        cmd = self._cmd + f" 1>> {stdoutFile} 2>> {stderrFile}"
         print("Command:",cmd)
         os.system(cmd)
         self._valid = self.runCheckScript(outputFileLocal, self._checkText)
@@ -136,8 +137,12 @@ class Trial:
         envStr += " PRECISION_TUNER_OUTPUT_DIRECTORY="
         envStr += resultsDir
         envStr += " PRECISION_TUNER_MODE=APPLYING_STRAT"
+        envStr += " PRECISION_TUNER_DUMPJSON="
+        envStr += procenv["PRECISION_TUNER_DUMPJSON"]
+        envStr += " BACKTRACE_LIST="
+        envStr += backtrace
         for var,value in procenv.items():
             os.environ[var] = value
-            if verbose>3:
-                print(f"{var}={value}")
+        if verbose>3:
+            print(f"env: {envStr}")
         return envStr
