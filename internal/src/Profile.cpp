@@ -268,7 +268,9 @@ void Profile::applyProfiling(vector<void*> & btVec, string label, ShadowValue &s
 
 void Profile::dumpJsonPlusCSV(){
     __dumpReducedJsonPermanentHashMap();
+#ifndef NOCSVDUMP
     __dumpCSVdynamicCalls();
+#endif
 }
 
 void Profile::__displayBacktraceStaticMap(){
