@@ -278,10 +278,9 @@ Value DynFuncCall::getJsonValue(char * targetExe){
     v[JSON_LOWERBOUND_KEY] = lowerBound;
     v[JSON_UPPERBOUND_KEY] = upperBound;
     v[JSON_NEWPATH_KEY] = newPath;
-    vector<string> addr2lineVector;
     if(__btSymbolsVec.size()>0){
-        addr2lineVector = addr2lineBacktraceVec(targetExe, __btSymbolsVec,
-                __btSymbolsVec.size());
+        vector<string> addr2lineVector = addr2lineBacktraceVec(targetExe, __btSymbolsVec,
+                (size_t) __btSymbolsVec.size());
         assert(addr2lineVector.size() == __btSymbolsVec.size());
         for(long unsigned i = 0; i < addr2lineVector.size(); i++){
             Value sym = __btSymbolsVec[i];
