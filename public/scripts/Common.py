@@ -53,7 +53,7 @@ def runAppMockup(btCallSiteIdList, sloc=False, dim=1):
 
 def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
     outputFile = "output"
-    outputFileLocal = stratDir + outputFile + f"-{nbTrials}.dat"
+    outputFileLocal = stratDir + outputFile + f"-{nbTrials}"
     ## File name Should be same as in generateStrat.py
     backtrace = f"{stratDir}/strat-{name}.txt"
     os.environ["BACKTRACE_LIST"] = backtrace
@@ -63,8 +63,8 @@ def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
     if verbose>3:
         print(f"{envStr} PRECISION_TUNER_DUMPJSON="+f"./dumpResults-{name}.json")
         print(cmd)
-    os.system(cmd + f" >> {outputFileLocal}")
-    valid = runCheckScript(outputFileLocal, checkText)
+    os.system(cmd + f" 1>> {outputFileLocal}.out 2>> {outputFileLocal}.err")
+    valid = runCheckScript(outputFileLocal+".out", checkText)
     if verbose>2:
         print(f"BacktraceListFile ({backtrace}) Valid? {valid}")
     return valid

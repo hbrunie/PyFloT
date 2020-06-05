@@ -22,7 +22,8 @@ strat9 = "SLOC-C->SLOC->BT-Cf"
 strat10 = "SLOC-C->SLOC->BT-Cf->BT"
 strat11 = "SLOC-C->SLOC->BT-C"
 strat12 = "SLOC-C->SLOC->BT-C->BT"
-strategies = np.array([strat0,strat1,strat2,strat3,strat4,strat5,strat6,strat7,strat8,strat9,strat10,strat11,strat12])
+strat13 = "SLOC->BT"
+strategies = np.array([strat0,strat1,strat2,strat3,strat4,strat5,strat6,strat7,strat8,strat9,strat10,strat11,strat12,strat13])
 ## Parsing arguments
 verbose = 1
 args    = parseWithCluster(verbose)
@@ -36,7 +37,6 @@ profile = Profile(profileFile,0)
 initSet = profile._doublePrecisionSlocSet
 slocsuccess = []
 btsuccess = []
-verbose = 0
 ## S:success F:failure
 S = set()
 F = set()
@@ -50,14 +50,14 @@ if strategy not in strategies:
 if strategy in strategies[6:13]:##SLOC-C
     (S,F) = slocClusterBFS(profile, initSet, args, verbose=verbose)
     slocsuccess += S
-if strategy in strategies[0:6]:##NO SLOC-C
+if strategy in strategies[np.r_[0:6,13]]:##NO SLOC-C
     F = initSet
-if strategy in strategies[np.r_[5,7:13]]:##SLOC
+if strategy in strategies[np.r_[5,7:14]]:##SLOC
     (S,F) = slocBFS(profile, F, args, verbose)
     slocsuccess.extend(S)
 if strategy in strategies[0:5]:##NO SLOC-C NOR SLOC
     F = initSet
-if strategy in  strategies[np.r_[0:5,8:13]]:##BT or BT-C or BT-Cf
+if strategy in  strategies[np.r_[0:5,8:14]]:##BT or BT-C or BT-Cf
     F = set(profile.convertSloc2BtId(F))
     args.filtering = False
     if strategy in strategies[np.r_[2:4,9:11]]:##BT-Cf
@@ -65,7 +65,7 @@ if strategy in  strategies[np.r_[0:5,8:13]]:##BT or BT-C or BT-Cf
     if strategy in strategies[np.r_[1:5,9:13]]:##BT-C or BT-Cf
         (S,F) = backtraceClusterBFS(profile, F, args, verbose=verbose)
         btsuccess.extend(S)
-    if strategy in strategies[np.r_[0,3:5,8,10,12]]:##BT
+    if strategy in strategies[np.r_[0,3:5,8,10,12,13]]:##BT
         (S,F) = backtraceBFS(profile, F, args, verbose=verbose)
         btsuccess.extend(S)
 
