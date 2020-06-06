@@ -12,7 +12,7 @@ class Profiling(Envvars):
         super(Profiling, self).__init__()
         self.__directory           = args.ptunerdir
         self.__binary              = args.binary
-        self.__param               = args.param
+        self.__param               = args.params
         self.__onlyApplyingStrat   = args.onlyApplyingStrat
         self.__onlyGenStrat        = args.onlyGenStrat
         self.__execAllStrat        = args.execAllStrat
