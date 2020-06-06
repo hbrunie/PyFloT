@@ -7,7 +7,7 @@ PTHOME=${PYFLOT_ROOTDIR}
 
 ##Generic flags
 JSONLIB=${PTHOME}/external-deps/jsoncpp/build/src/lib_json/  -ljsoncpp
-GOTCHALIB=${PTHOME}/external-deps/install/lib64/ -lgotcha -Wl,-rpath, /global/cscratch1/sd/hbrunie/tools/precisiontuning/external-deps/install/lib64/
+GOTCHALIB=${PTHOME}/external-deps/install/lib64/ -lgotcha -Wl,-rpath, ${PYFLOT_ROOTDIR}/external-deps/install/lib64/
 LIB=-L ${JSONLIB} -L ${GOTCHALIB}
 CXXPTFLAGS=-O3 -std=c++11 -Wall -Wextra -g -rdynamic $(OPTIONS)
 
