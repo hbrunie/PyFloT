@@ -1,5 +1,5 @@
 ## Need to be updated
-export PYFLOT_ROOTDIR=/global/u1/h/hbrunie/utils/tools/precisiontuning/
+export PYFLOT_ROOTDIR=/absolute/path/to/PyFloT/
 
 ## No need to change
 export PYFLOT_TUTORIALDIR=${PYFLOT_ROOTDIR}/tests/tutorial/
