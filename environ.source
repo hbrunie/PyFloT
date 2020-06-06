@@ -1,7 +1,8 @@
 ## Need to be updated
-export PYFLOT_ROOTDIR=/absolute/path/to/PyFloT/
+export PYFLOT_ROOTDIR=/global/u1/h/hbrunie/repro/PyFloT/
 
 ## No need to change
+mkdir -p ${PYFLOT_ROOTDIR}/public/lib/
 export PYFLOT_TUTORIALDIR=${PYFLOT_ROOTDIR}/tests/tutorial/
 alias pyflot-profiling=$PYFLOT_ROOTDIR/public/scripts/script.py
 alias pyflot-analyzing=$PYFLOT_ROOTDIR/public/scripts/MultiStepSiteSearch.py

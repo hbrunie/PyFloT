@@ -1,7 +1,7 @@
 ### TO BE updated for each new usage ###
 CXX=g++
 OPTIONS=-DNDEBUG
-PTHOME=${HOME}/utils/tools/precisiontuning/
+PTHOME=${PYFLOT_ROOTDIR}
 
 ### should not be modified ###
 
