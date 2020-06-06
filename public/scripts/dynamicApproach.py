@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import pdb
-from parse import parseBt
+from parse import parseAnalyzing
 
 from Common import BFS
 
@@ -10,7 +10,7 @@ def backtraceBFS(profile, searchSet, args, verbose):
 
 if __name__ == "__main__":
     ## Parsing arguments
-    args           = parseStatic()
+    args           = parseAnalyzing()
     profileFile    = args.readdir + "/" + args.profilefile
     ## get verbose level from generateStrat.py
     profile = Profile(profileFile)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from parse import parseWithCluster
+from parse import parseAnalyzing
 
 from Common import clusterBFS
 
@@ -12,7 +12,7 @@ def slocClusterBFS(profile, searchSet, args, verbose=1):
 
 if __name__ == "__main__":
     ## Parsing arguments
-    args           = parseStaticWithCluster()
+    args           = parseAnalyzing()
     ## get verbose level from generateStrat.py
     profileFile = args.readdir + "/" + args.profileFile
     profile = Profile(profileFile)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
-from parse import parseWithCluster
+from parse import parseAnalyzing
 import pdb
 
 from Profile import Profile
@@ -26,7 +26,8 @@ strat13 = "SLOC->BT"
 strategies = np.array([strat0,strat1,strat2,strat3,strat4,strat5,strat6,strat7,strat8,strat9,strat10,strat11,strat12,strat13])
 ## Parsing arguments
 verbose = 1
-args    = parseWithCluster(verbose)
+args    = parseAnalyzing(verbose)
+print(args)
 ##SLOC BT -C -Cf ->
 strategy = args.strategy
 ## Composed constants

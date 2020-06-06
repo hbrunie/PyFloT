@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import pdb
-from parse import parseStatic
+from parse import parseAnalyzing
 
 from Common import BFS
 from Profile import Profile
@@ -11,7 +11,7 @@ def slocBFS(profile, searchSet, args, verbose=1):
 
 if __name__ == "__main__":
     ## Parsing arguments
-    args           = parseStatic()
+    args           = parseAnalyzing()
     profileFile    = args.readdir + "/" + args.profilefile
     ## get verbose level from generateStrat.py
     profile = Profile(profileFile)
