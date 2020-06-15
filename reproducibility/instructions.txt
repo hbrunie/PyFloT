@@ -3,11 +3,12 @@ git clone git@github.com:hbrunie/PyFloT.git
 cd PyFloT
 git submodule update --init --recursive
 install python3.7+
-install g++8.3+
+install g++8.3+ # On Cori it is important to module load PrgEnv-gnu
 
 **change the path inside environ.source --> /absolute/path/to/PyFloT/ **
 source ./environ.source
 make
+
 chmod u+x ${PYFLOT_ROOTDIR}/public/scripts/MultiStepSiteSearch.py
 chmod u+x ${PYFLOT_ROOTDIR}/public/scripts/script.py
 

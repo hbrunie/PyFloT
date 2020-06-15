@@ -56,6 +56,7 @@ def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
     outputFileLocal = stratDir + outputFile + f"-{nbTrials}"
     ## File name Should be same as in generateStrat.py
     backtrace = f"{stratDir}/strat-{name}.txt"
+    os.environ["BACKTRACE_LIST"] = backtrace
     if verbose>3:
         print(f"BACKTRACE_LIST={backtrace} " + f"{envStr} PRECISION_TUNER_DUMPJSON="+f"./dumpResults-{name}.json")
     os.environ["PRECISION_TUNER_DUMPJSON"] = f"./dumpResults-{name}.json"
