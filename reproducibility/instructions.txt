@@ -4,9 +4,10 @@ cd PyFloT
 git submodule update --init --recursive
 install python3.7+
 install g++8.3+
-make
+
 **change the path inside environ.source --> /absolute/path/to/PyFloT/ **
 source ./environ.source
+make
 chmod u+x ${PYFLOT_ROOTDIR}/public/scripts/MultiStepSiteSearch.py
 chmod u+x ${PYFLOT_ROOTDIR}/public/scripts/script.py
 
