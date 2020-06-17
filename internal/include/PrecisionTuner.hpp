@@ -9,11 +9,47 @@ using namespace std;
   } while (0)
 
 #define CHECK_POS(X,Y) \
-    do { if((X) < 0){cerr << "Error: "<< Y << " < 0" << endl; exit(-1);}\
-    } while (0)
+    do { if((X) < 0){cerr << "Error: "<< Y << " < 0" << endl; exit(-1);}\ } while (0)
 
 enum MODE{APPLYING_PROF, APPLYING_STRAT};
 
+struct dgemm_args_s{
+    //const CBLAS_LAYOUT Layout;
+    //const CBLAS_TRANSPOSE transa;
+    //const CBLAS_TRANSPOSE transb;
+    const char * transa;
+    const char * transb;
+    int *m;
+    int *n;
+    int *k;
+    double *alpha;
+    double *A;
+    int *lda;
+    double *B;
+    int *ldb;
+    double *beta;
+    double *C;
+    int *ldc;
+};
+
+struct sgemm_args_s{
+    //const CBLAS_LAYOUT Layout;
+    //const CBLAS_TRANSPOSE transa;
+    //const CBLAS_TRANSPOSE transb;
+    const char * transa;
+    const char * transb;
+    int *m;
+    int *n;
+    int *k;
+    float *alpha;
+    float *A;
+    int *lda;
+    float *B;
+    int *ldb;
+    float *beta;
+    float *C;
+    int *ldc;
+};
 
 class PrecisionTuner
 {
@@ -38,9 +74,7 @@ class PrecisionTuner
     public:
         PrecisionTuner();
         ~PrecisionTuner();
-        double overloading_function(string s, float (*sp_func) (float, float),
-                double (*func)(double, double), double value, double parameter, string label);
-        double overloading_function(string s, float (*sp_func) (float), double (*func)(double),
-                double value, string label);
+        void overloading_function(string s, float (*sp_func) (float), double (*func)(double),
+                struct dgemm_args_s dgemm_args, struct sgemm_args_s sgemm_args, string label);
 };
 #endif // PrecisionTuner_H
