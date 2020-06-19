@@ -1,5 +1,5 @@
 ## Need to be updated
-export PYFLOT_ROOTDIR=/global/u1/h/hbrunie/repro/PyFloT/
+export PYFLOT_ROOTDIR=${PWD}
 
 ## No need to change
 mkdir -p ${PYFLOT_ROOTDIR}/public/lib/
