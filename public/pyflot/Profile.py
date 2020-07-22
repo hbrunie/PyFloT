@@ -1,62 +1,49 @@
 #from colorama import Fore, Back, Style
+import os
 import json
 import pdb
 import re
+
 class Profile:
     """ Rename it metada? (profile + score)
     """
-    _totalDynCalls         = 0
-    _totalSlocCallSites    = 0
-    _totalBtCallSites    = 0
+    _totalDynCalls          = 0
+    _totalSlocCallSites     = 0
+    _totalBtCallSites       = 0
 
-    _slocCallSitesSP           = 0
-    _btCallSitesSP           = 0
-    _dynCallsSP            = 0
+    _slocCallSitesSP        = 0
+    _btCallSitesSP          = 0
+    _dynCallsSP             = 0
 
-    _nbTrials              = 0
-    _verbose = 1
-    _doublePrecisionBtSet     = set()
-    _doublePrecisionSlocSet     = set()
-    _profile               = {}
+    _verbose                = 1
+    _doublePrecisionBtSet   = set()
+    _doublePrecisionSlocSet = set()
+    _profile                = {}
     _correspondanceBt2SLOC  = []
-    ## double precision 0, single precision 1
-    _btTypeConfiguration = []
-    _slocTypeConfiguration = []
-    _toReverse = []
     ## List indexed by SLOC id,
     ## each element is a set of backtrace ID corresponding to
     ## same SLOC id
     _slocListOfBtIdSet = []
-    ##trialGlobalVar
-    ## SlocCallSiteCount
-    ## BetaP
-    _prevDynCallsSP = 0
-    ## Gammap
     _prevBtCallSitesSP = 0
-    _firstTrial = True
 
-    def __init__(self,jsonFile,verbose=1):
+    def __init__(self, jsonFile, args=None, verbose=1):
+        if jsonFile == None:
+            self.profiling(args)
         self._profileFile = jsonFile
         self._verbose = verbose
         with open(jsonFile, 'r') as json_file:
             self._profile = json.load(json_file)
         self.updateProfile()
         self._doublePrecisionSlocSet = set(range(self._totalSlocCallSites))
-        self._btTypeConfiguration = [0] *self._totalBtCallSites
-        self._slocTypeConfiguration = [0] *self._totalSlocCallSites
+        Trial._btTypeConfiguration_g =  [0] *self._totalBtCallSites
+        Trial._slocTypeConfiguration_g =  [0] *self._totalSlocCallSites
         self._onlyOnce = True
         if verbose >1:
             print("List indexed by CLOC id, containing corresponding set BtId: ",self._slocListOfBtIdSet)
         return None
 
-    def trialFailure(self):
-        self._nbTrials += 1
-
     def getInfoByBtId(self,x):
         return [x]
-
-    def trialNewStep(self):
-        self._toReverse = []
 
     def clusternbBtInSLOC(self, sloc):
         n = 0
@@ -66,91 +53,6 @@ class Profile:
 
     def nbBtInSLOC(self, sloc):
         return len(self._slocListOfBtIdSet[sloc])
-
-    def _score(self):
-        score = 0
-        #pdb.set_trace()
-        for i,x in enumerate(self._weightPerBtCallSite):
-            score += x*self._btTypeConfiguration[i]
-        self._dynCallsSP = max(score,self._dynCallsSP)
-        return 100.*float(self._dynCallsSP) / float(self._totalDynCalls)
-
-    def updateSlocCallSite(self,callSitesList, sloc, cluster, indiv):
-        if sloc:
-            if cluster:
-                self._slocCallSitesSP = max(self._slocCallSitesSP, len(callSitesList))
-            else:
-                if indiv and self._onlyOnce:
-                    self._onlyOnce = False
-                    self._slocCallSitesSP = self._slocCallSitesSP + 1
-                else:
-                    self._slocCallSitesSP = self._slocCallSitesSP + len(callSitesList) - 1
-
-    def trialSuccess(self,CallSiteList,sloc,indiv=False):
-        """ CallSiteList can be either BT or SLOC
-        """
-        self._nbTrials += 1
-        if sloc:
-            for y in CallSiteList:
-                for x in self._slocListOfBtIdSet[y]:
-                    self._btTypeConfiguration[x] = 1
-                    if indiv:
-                        self._toReverse.append(x)
-        else:
-            for y in CallSiteList:
-                self._btTypeConfiguration[y] = 1
-                if indiv:
-                    self._toReverse.append(y)
-
-    def trialReverse(self,sloc):
-        for x in self._toReverse:
-            self._btTypeConfiguration[x] = 0
-
-    #def trialSuccessMultiSiteBFS(self, slocCallSite, sloc):
-    #    self.trialSuccessMultiSite(slocCallSite, sloc)
-    #    self.updateSlocCallSite(slocCallSite,sloc,False,False)
-
-    #def trialSuccessMultiSiteCluster(self, slocCallSite, sloc):
-    #    self.trialSuccessMultiSite(slocCallSite, sloc)
-    #    self.updateSlocCallSite(slocCallSite,sloc,True,False)
-
-    #def trialSuccessMultiSite(self, CallSites, sloc):
-    #    self._nbTrials += 1
-    #    if sloc:
-    #        ## Beta <- Betap + w(Delta)
-    #        self._dynCallsSP = self._prevDynCallsSP + self.clusterslocweight(CallSites)
-    #        ## Gamma <- Gammap + f(Delta)
-    #        self._btCallSitesSP = self._prevBtCallSitesSP + self.clusternbBtInSLOC(CallSites)
-    #    else:
-    #        self._dynCallsSP = self._prevDynCallsSP + self.clusterbtweight(CallSites)
-    #        self._btCallSitesSP = self._prevBtCallSitesSP + len(CallSites)
-
-    #def trialSuccessIndivBFS(self, slocCallSite, sloc):
-    #    self.trialSuccessIndiv(slocCallSite,sloc)
-    #    self.updateSlocCallSite(slocCallSite,sloc,False,True)
-
-    #def trialSuccessIndivCluster(self, slocCallSite, sloc):
-    #    self.trialSuccessIndiv(slocCallSite,sloc)
-    #    self.updateSlocCallSite(slocCallSite,sloc,True,True)
-
-    #def trialSuccessIndiv(self, CallSites, sloc):
-    #    """ slocCallSite is a single integer
-    #    """
-    #    self._nbTrials += 1
-    #    if self._firstTrial:
-    #        self._firstTrial = False
-    #        ## Betap <- Beta
-    #        self._prevDynCallsSP = self._dynCallsSP
-    #        ## Gammap <- Gamma
-    #        self._prevBtCallSitesSP = self._btCallSitesSP
-    #    if sloc:
-    #        ## Beta
-    #        self._dynCallsSP = max(self._dynCallsSP, self._prevDynCallsSP + self.clusterslocweight(CallSites))
-    #        ## Gamma
-    #        self._btCallSitesSP = max(self._btCallSitesSP, self._prevBtCallSitesSP + self.clusternbBtInSLOC(CallSites))
-    #    else:
-    #        self._dynCallsSP = max(self._dynCallsSP, self._prevDynCallsSP + self.clusterbtweight(CallSites))
-    #        self._btCallSitesSP = max(self._btCallSitesSP, self._prevBtCallSitesSP + len(CallSites))
 
     def clusterbtweight(self, s):
         weights = []
@@ -236,27 +138,6 @@ class Profile:
             r.append(hk)
         return r
 
-    def display(self):
-        #ratioSlocSP = 100.* float(self._slocCallSitesSP) / float(self._totalSlocCallSites)
-        #ratioBtSP   = 100.* float(self._btCallSitesSP) / float(self._totalBtCallSites)
-        ratioDynSP  = self._score()
-        #print(f"{self._nbTrials} {ratioSlocSP:.2f} {ratioBtSP:.2f} {ratioDynSP:.2f} {self._dynCallsSP} {self._slocCallSitesSP} {self._btCallSitesSP} {self._totalDynCalls} {self._totalSlocCallSites} {self._totalBtCallSites}")
-        print(f"{self._nbTrials} {ratioDynSP:.2f}")
-        #self._verbose = 0
-        #if self._verbose > 0:
-        #    #print(Fore.RED + f"nbTrials: {self._nbTrials}"+Style.RESET_ALL)
-        #    if self._verbose > 1:
-        #        print(f"ratioSlocSP: {ratioSlocSP*100:2.0f}")
-        #        print(f"ratioBtSP: {ratioBtSP*100:2.0f}")
-        #        print(f"ratioDynSP: {ratioDynSP*100:2.0f}")
-        #        if self._verbose > 2:
-        #            print(f"dynCallsSP: {self._dynCallsSP}")
-        #            print(f"statCallsSP: {self._slocCallSitesSP}")
-        #            print(f"statCallsSP: {self._btCallSitesSP}")
-        #            print(f"totalDynCalls: {self._totalDynCalls}")
-        #            print(f"totalSlocCallSites: {self._totalSlocCallSites}")
-        #            print(f"totalBtCallSites: {self._totalBtCallSites}")
-
     def updateProfile(self):
         slocreg = "([a-zA-Z0-9._-]+):([0-9]+)"
         btsymbolreg = "[-_a-zA-Z/.0-9]+\\([a-zA-Z_0-9+]*\\)\\s\\[(0x[a-f0-9]+)\\]"
@@ -315,3 +196,42 @@ class Profile:
                 slocCallSite["SlocCallsCount"] = slocCallSite["CallsCount"]
                 slocDict[slocHKey] = slocCallSite
                 self._slocCallSitesList.append(slocCallSite)
+
+    def profiling(self, args):
+        """ Do profiling
+        """
+        print("Profiling application ...")
+        directory = args.directory
+        binary = args.binary
+        outputfile= args.outputfile
+        params = args.params
+        _ENVVAR_DUMPSTRAT          = "PRECISION_TUNER_DUMPJSONSTRATSRESULTSFILE"
+        _ENVVAR_DUMPDIR            = "PRECISION_TUNER_OUTPUT_DIRECTORY"
+        _ENVVAR_READSTRAT          = "PRECISION_TUNER_READJSONPROFILESTRATFILE"
+        _ENVVAR_PTUNERMODE         = "PRECISION_TUNER_MODE"
+        _ENVVAR_OMPNUMTHREADS      = "OMP_NUM_THREADS"
+        _ENVVAR_PTUNERDEBUG        = "DEBUG"
+        _ENVVAR_BINARY             = "TARGET_FILENAME"
+        _ENVVAR_PTUNERDUMPPROF     = "PRECISION_TUNER_DUMPJSON"
+        #_ENVVAR_PTUNERDUMPPROFCSV = "PRECISION_TUNER_DUMPCSV"
+        _MODE_STRAT                = "APPLYING_STRAT"
+        procenv = os.environ.copy()
+        procenv[_ENVVAR_PTUNERDUMPPROF] = outputfile
+        procenv[_ENVVAR_OMPNUMTHREADS] = "1"
+        procenv[_ENVVAR_DUMPDIR] = directory
+        procenv[_ENVVAR_BINARY] = binary
+        os.system("mkdir -p {}".format(directory))
+        print("env: {}={} {}={} {}={} {}={}".format(_ENVVAR_BINARY,procenv[_ENVVAR_BINARY],
+            _ENVVAR_DUMPDIR, procenv[_ENVVAR_DUMPDIR],
+            _ENVVAR_OMPNUMTHREADS, procenv[_ENVVAR_OMPNUMTHREADS],
+            _ENVVAR_PTUNERDUMPPROF, procenv[_ENVVAR_PTUNERDUMPPROF]))
+        #procenv["PRECISION_TUNER_DEBUG"] = ""
+        command = []
+        command.append(binary + " " + params)
+        print("PROFILING Command: ",command)
+        outputfile = "profile.out"
+        for var,value in procenv.items():
+            os.environ[var] = value
+        print(" ".join(command))
+        os.system(" ".join(command) + f" >> {outputfile}")
+        print("Application profiled")
