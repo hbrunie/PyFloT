@@ -1,5 +1,6 @@
 #include <alloca.h>
 #include <assert.h>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
@@ -7,7 +8,6 @@
 #include <fstream>
 #include <iostream>
 #include <limits.h>
-#include <math.h>
 #include <sstream>
 
 #include <dlfcn.h>
@@ -38,6 +38,11 @@ extern "C"{
 }
 /* *** Overloading functions *** */
 
+extern "C"{
+double dnrm2_(int* n, double *x, int* incx);
+double cblas_dnrm2(int n, double *x, int incx);
+  float cblas_snrm2(int n, float *x, int incx);
+  }
 
 void __overloaded_dgemm(char const *transa, char const *transb, int *m, int *n, int* k,
                         double* alpha, double *A, int *lda, double *B, int* ldb,

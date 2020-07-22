@@ -30,9 +30,14 @@ void __overloaded_sgemm (char const *transa, char const *transb, int* m, int* n,
                         float* alpha, float *A, int* lda, float *B, int* ldb,
                         float* beta, float *C, int* ldc);
 extern "C"{
+#ifdef USE_CBLAS
+double cblas_dnrm2(int n, double *x, int incx);
+float cblas_snrm2(int n, float *x, int incx);
+#else
 double dnrm2_(int *n, double *x, int *incx);
-  float snrm2_(int *n, float *x, int *incx);
-  }
+float snrm2_(int *n, float *x, int *incx);
+#endif
+}
 
 gotcha_wrappee_handle_t wrappee_dgemm_handle;
 gotcha_wrappee_handle_t wrappee_sgemm_handle;
@@ -156,11 +161,14 @@ void PrecisionTuner::overloading_function(string s, float (*sp_func) (float),
     int sizeB = (*k) * (*n);
     int sizeC = (*m) * (*n);
 
-    float *alphaf = (float*)alpha;
-    float *betaf  = (float*)beta;
+    float alphaf = (float)*alpha;
+    float betaf  = (float)*beta;
+    float *alphaf_p = &alphaf;
+    float *betaf_p  = &betaf;
     float *Af     = (float*) malloc(sizeof(float) * sizeA);
     float *Bf     = (float*) malloc(sizeof(float) * sizeB);
-    float *Cf     = (float*) malloc(sizeof(float) * sizeC);
+    float *Cf     = (float*) malloc(sizeof(float) * sizeC*sizeC);
+    double *Cf_dp     = (double*) malloc(sizeof(double) * sizeC);
 
 
     for(int i = 0; i < sizeA; i++)
@@ -168,15 +176,23 @@ void PrecisionTuner::overloading_function(string s, float (*sp_func) (float),
     for(int i = 0; i < sizeB; i++)
         Bf[i] = (float) B[i];
     for(int i = 0; i < sizeC; i++)
-        Cf[i] = (float) C[i];
+        Cf[i] = (float) 0.;
 
     sgemm_ptr wrappee_sgemm = (sgemm_ptr) gotcha_get_wrappee(wrappee_sgemm_handle); // get my wrappee from Gotcha
-    wrappee_sgemm(transa, transb, m, n, k, alphaf, Af, lda, Bf, ldb, betaf, Cf, ldc);//return void
+    wrappee_sgemm((const char*)trans,(const char*)trans, m, n, k, alphaf_p, Af, lda, Bf, ldb, betaf_p, Cf, ldc);//return void
+    for(int i = 0; i < sizeC; i++)
+        Cf_dp[i] = (double) Cf[i];
     //cblas_sgemm(Layout, transa, transb, m, n, k, alphaf, Af, lda, Bf, ldb, betaf, Cf, ldc);//return void
 
-    double dres,fres; // Norm of matrices
-    fres = snrm2_(&sizeC, Cf, ldc);
-    dres = dnrm2_(&sizeC, C, ldc);
+    double dres =0.,fres=0.; // Norm of matrices
+    //dres = cblas_dnrm2(sizeC*sizeof(double), C, *ldc);
+    cerr << "norm: " << dres << endl;
+    //fres = cblas_dnrm2(sizeC-1, Cf_dp, *ldc);
+    cerr << "norm: " << fres << endl;
+    free(Af);
+    free(Bf);
+    free(Cf);
+    free(Cf_dp);
 
     DEBUG("debug", cerr << __FUNCTION__
             <<": dgemm " << dres
@@ -184,7 +200,7 @@ void PrecisionTuner::overloading_function(string s, float (*sp_func) (float),
             << " s(" <<s << ") "
             << "label (" << label << ")"
             <<endl;);
-    PrecisionTuner::__overloading_function(btVec, s,fres,dres, 0.0, label, timeStamp);
+    //PrecisionTuner::__overloading_function(btVec, s,fres,dres, 0.0, label, timeStamp);
 }
 
 /*** PRIVATE FUNCTIONS ***/
