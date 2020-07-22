@@ -35,4 +35,4 @@ make
 make test
 ```
 ### Reproducing our results
-Follow instructions in `reproducibility/instructions.txt`
+Follow instructions in `reproducibility/instructions.md`
