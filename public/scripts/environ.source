@@ -1,0 +1,10 @@
+## Need to be updated
+export PYFLOT_ROOTDIR=${PWD}
+
+## No need to change
+mkdir -p ${PYFLOT_ROOTDIR}/public/lib/
+export PYFLOT_TUTORIALDIR=${PYFLOT_ROOTDIR}/tests/tutorial/
+alias pyflot-profiling=$PYFLOT_ROOTDIR/public/scripts/script.py
+alias pyflot-analyzing=$PYFLOT_ROOTDIR/public/scripts/MultiStepSiteSearch.py
+export LD_LIBRARY_PATH="${PYFLOT_ROOTDIR}/public/lib/:$LD_LIBRARY_PATH"
+export LIBRARY_PATH="${PYFLOT_ROOTDIR}/public/lib/:$LD_LIBRARY_PATH"
