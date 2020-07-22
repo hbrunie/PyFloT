@@ -48,6 +48,8 @@ class Profiling(Envvars):
             self._ENVVAR_PTUNERDUMPPROF, procenv[self._ENVVAR_PTUNERDUMPPROF]))
         #procenv["PRECISION_TUNER_DEBUG"] = ""
         command = []
+        #command.append("valgrind --leak-check=full " +self.__binary + " " + self.__param)
+        #command.append("gdb --args " +self.__binary + " " + self.__param)
         command.append(self.__binary + " " + self.__param)
         print("PROFILING Command: ",command)
         outputfile = self.__outputFile + "_profile.txt"
