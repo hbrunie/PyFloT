@@ -4,6 +4,3 @@
 [submodule "external-deps/GOTCHA"]
 	path = external-deps/GOTCHA
 	url = https://github.com/LLNL/GOTCHA.git
-[submodule "external-deps/cereal"]
-	path = external-deps/cereal
-	url = https://github.com/USCiLab/cereal.git
