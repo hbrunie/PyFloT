@@ -1,20 +1,33 @@
-Installing PyFloT:
+## Installing PyFloT (same instructions as in the README.md):
+
+```
 git clone git@github.com:hbrunie/PyFloT.git
 cd PyFloT
 git submodule update --init --recursive
-install python3.7+
-install g++8.3+ # On Cori it is important to module load PrgEnv-gnu
+```
 
-**change the path inside environ.source --> /absolute/path/to/PyFloT/ **
+* install python3.7+
+* install g++8.3+ # On Cori it is important to module load PrgEnv-gnu
+
+** change the path inside environ.source --> /absolute/path/to/PyFloT/ **
+
+```
 source ./environ.source
 make
+```
 
+## New instructions, complementary from README.md:
+
+```
 chmod u+x ${PYFLOT_ROOTDIR}/public/scripts/MultiStepSiteSearch.py
 chmod u+x ${PYFLOT_ROOTDIR}/public/scripts/script.py
+```
 
-To execute the analysis on PeleC PMF1D:
+### To execute the analysis on PeleC PMF1D:
 
-Install peleC in a directory outsite of pyflot, following instructions: https://github.com/hbrunie/PeleC
+* Install peleC in a directory outsite of pyflot, following instructions: https://github.com/hbrunie/PeleC
+
+```
 cd ${PYFLOT_ROOTDIR}/reproducibility
 export PMF_DIRECTORY=/path/to/PeleC/Exec/RegTests/PMF/
 cp GNUMakefile-pyflot ${PMF_DIRECTORY}/GNUmakefile
@@ -25,3 +38,4 @@ make -j 32
 export PMF_BINARY_BASENAME=./Pele1d.xxx,yyy.ex #xxx and yyy are respectively compiler, and architecture used: my case gnu and haswell
 pyflot-profiling -c ./default-pyflot-profiling.config
 pyflot-analyzing  -c ./default-pyflot-analyzing.config
+```
