@@ -5,6 +5,9 @@ from generateStrat import createStratFilesMultiSite
 from generateStrat import createStratFilesIndividuals
 from communities import build_graph
 from communities import community_algorithm
+from Trial import Trial
+
+import multiprocessing as mp
 
 verbose = 0
 def getVerbose():
@@ -19,55 +22,6 @@ def checkTest3Exp():
     else:
         checkCount +=1
         return False
-
-def checkPMF(f, checkText):
-    ## Check PMF result
-    res = checkText
-    with open(f, "r") as inf:
-        for l in inf.readlines():
-            if res in l:
-                return True
-    return False
-
-def runCheckScript(f, checkText):
-    #return checkTest3Exp()
-    return checkPMF(f, checkText)
-
-def runAppMockup(btCallSiteIdList, sloc=False, dim=1):
-    """ CallSiteId are BT or SLOC?
-    """
-    ## MOCKUP:TODO
-    if sloc:
-        for i in btCallSiteIdList:
-            if i in [3]:
-                return False
-    else:
-        for i in btCallSiteIdList:
-            if dim ==2:
-                if i in [64, 65, 66, 67, 68, 69, 70, 71, 76, 77, 78, 79]:
-                    return False
-            if dim == 1:
-                if i in [21,22,23]:
-                    return False
-    return True
-
-def runApp(cmd, stratDir, name, checkText, envStr, nbTrials):
-    outputFile = "output"
-    outputFileLocal = stratDir + outputFile + f"-{nbTrials}"
-    ## File name Should be same as in generateStrat.py
-    backtrace = f"{stratDir}/strat-{name}.txt"
-    os.environ["BACKTRACE_LIST"] = backtrace
-    if verbose>3:
-        print(f"BACKTRACE_LIST={backtrace} " + f"{envStr} PRECISION_TUNER_DUMPJSON="+f"./dumpResults-{name}.json")
-    os.environ["PRECISION_TUNER_DUMPJSON"] = f"./dumpResults-{name}.json"
-    if verbose>3:
-        print(f"{envStr} PRECISION_TUNER_DUMPJSON="+f"./dumpResults-{name}.json")
-        print(cmd)
-    os.system(cmd + f" 1>> {outputFileLocal}.out 2>> {outputFileLocal}.err")
-    valid = runCheckScript(outputFileLocal+".out", checkText)
-    if verbose>2:
-        print(f"BacktraceListFile ({backtrace}) Valid? {valid}")
-    return valid
 
 def updateEnv(resultsDir, profileFile, binary, verbose):
     procenv = {}
@@ -95,8 +49,14 @@ def updateEnv(resultsDir, profileFile, binary, verbose):
             print(f"{var}={value}")
     return envStr
 
+def worker(self, obj):
+    return obj.runApp()
+
 def clusterBFS(profile, searchSet, args, sloc, verbose):
-    profile.trialNewStep()
+    """ Compute Breadth First Search with clustering
+    """
+    Trial._profile = profile
+    Trial._verbose = verbose
     ssloc = "sloc"
     if not sloc:
         ssloc      = "backtrace"
@@ -198,17 +158,30 @@ def clusterBFS(profile, searchSet, args, sloc, verbose):
     return (spConvertedSet,searchSet)
 
 def BFS(profile, searchSet, args, sloc, verbose):
+    """ Compute the Breadth First Search without clustering.
+        2 steps:
+                (*) Individual evaluation, done in parallel,
+                each application execution is assumed to be done on one core.
+                (*) MultiSite evaluation, merging all individual with success,
+                sorting the list of k among n elt (for k from 2 to n) in decreasing
+                impact on performance.
+        Note:
+            - impact on performance is assumed to be equivalent to number of calls done in
+        reduced precision
+            - the list is generated on the fly, each k among n at a time. We assume
+            all solution or k+1 among n are better than those with k among n.
     """
-    """
+    Trial._profile = profile
+    Trial._verbose = verbose
     dumpdir        = args.dumpdir
     ssloc          = "sloc"
     if not sloc:
         ssloc      = "backtrace"
     stratDir       = args.dumpdir + f"/strats/{ssloc}/"
     resultsDir     = args.dumpdir + "/results/"
+    scoreFile = resultsDir + "score.txt"
     if verbose > 0:
         print(f"Running BFS {ssloc}")
-    profile.trialNewStep()
     readJsonProfileFile = dumpdir + profile._profileFile
     cmd = f"{args.binary} {args.params}"
     if verbose > 2:
@@ -220,27 +193,34 @@ def BFS(profile, searchSet, args, sloc, verbose):
         print("Level1 Individual: ToTest name list: ", [x[0] for x in toTestList])
     ## Get the successful individual static call sites
     validDic = {}
-    for (name, CallSiteList) in toTestList:
-        valid = runApp(cmd, stratDir, name, args.verif_text, envStr, profile._nbTrials)
-        if valid:
-            validDic[name] = CallSiteList
-            profile.trialReverse(sloc)
-            profile.trialSuccess(CallSiteList, sloc, True)
-            ## Revert success because we testing individual
-            profile.display()
+    pool = mp.Pool(min(32,len(toTestList))) ## haswell
+    poolargs = []
+    for (name, callSiteList) in toTestList:
+        poolargs.append(Trial(cmd, stratDir, name, args.verif_text, envStr, callSiteList))
+    trialsList = pool.map(worker,poolargs)
+    pool.close()
+    pool.join()
+    ## Displaying
+    validTrials = []
+    for trial in trialsList:
+        if trial._valid:
+            trial.success(sloc)
+            ## validTrials is sorted by impact on performance (because trials is)
+            validTrials.append(trial)
+            validDic[trial.getName()] = trial.getCallSiteList()
         else:
-            profile.trialFailure()
-            profile.display()
+            trial.failure(sloc)
+        trial.display(scoreFile)
     if verbose>2:
         print("Level1, Valid name list of individual-site static call sites: ", validDic)
     ## For all remaining Static Calls
     ## Sort all strategies per performance impact,
     ## start trying them from the most to the less impact.
-    if len(validDic.keys())<1:
+    if len(validTrials)<1:
         return (set(),searchSet)
-    if len(validDic.keys()) < 2:
+    if len(validTrials) < 2:
         ## take Best individual as solution
-        onlyCorrectIndividual = list(validDic.values())[0]
+        onlyCorrectIndividual = validTrials[0]
         spConvertedSet = set(onlyCorrectIndividual)
         searchSet = searchSet - spConvertedSet
         return (spConvertedSet,searchSet)
@@ -259,15 +239,15 @@ def BFS(profile, searchSet, args, sloc, verbose):
         if verbose>2:
             print("Level1 Multi-Site ToTest name list: ", [x[0] for x in toTestList])
         for (name, btCallSiteList) in toTestList:
-            valid = runApp(cmd, stratDir, name,  args.verif_text, envStr, profile._nbTrials)
-            if valid:
+            trial = runApp(cmd, stratDir, name,  args.verif_text, envStr, btCallSiteList)
+            if trial._valid:
                 spConvertedSet = set(btCallSiteList)
-                profile.trialSuccess(btCallSiteList, sloc)
+                trial.success(sloc)
                 ## Revert success because we testing individual
                 searchSet = searchSet - spConvertedSet
-                profile.display()
+                trial.display(scoreFile)
                 return (spConvertedSet,searchSet)
             else:
-                profile.trialFailure()
-                profile.display()
+                trial.failure(sloc)
+                trial.display(scoreFile)
     return (spConvertedSet,searchSet)
