@@ -32,7 +32,7 @@ After setting up the requirements, you can install PyFloT by
 
 ```
 make
-make test
 ```
+
 ### Reproducing our results
 Follow instructions in `reproducibility/instructions.md`
