@@ -1,4 +1,5 @@
 # Precision Tuning tool: PyFloT v0.1
+![](https://zenodo.org/badge/211203973.svg)
 
 ## Abstract
 The goal of this tool is to help finding a mixed precision solution
