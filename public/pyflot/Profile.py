@@ -214,10 +214,10 @@ class Profile:
         """
         print("Profiling application ...")
         print(args)
-        directory = args.dumpdir
-        binary = args.binary
-        outputfile= args.dumpdir + args.outputfile
-        profilefile = args.dumpdir + args.profilefile
+        dumpdir     = args.dumpdir + "/"
+        binary      = args.binary
+        outputfile  = dumpdir + args.outputfile
+        profilefile = dumpdir + args.profilefile
         params = args.params
         _ENVVAR_DUMPDIR            = "PRECISION_TUNER_OUTPUT_DIRECTORY"
         _ENVVAR_PTUNERMODE         = "PRECISION_TUNER_MODE"
@@ -227,13 +227,13 @@ class Profile:
         _ENVVAR_PTUNERDUMPPROF     = "PRECISION_TUNER_DUMPJSON"
         #_ENVVAR_PTUNERDUMPPROFCSV = "PRECISION_TUNER_DUMPCSV"
         _MODE_STRAT                = "APPLYING_STRAT"
-        procenv = os.environ.copy()
+        procenv                         = os.environ.copy()
         procenv[_ENVVAR_PTUNERDUMPPROF] = profilefile
-        procenv[_ENVVAR_OMPNUMTHREADS] = "1"
-        procenv[_ENVVAR_DUMPDIR] = directory
-        procenv[_ENVVAR_BINARY] = binary
+        procenv[_ENVVAR_OMPNUMTHREADS]  = "1"
+        procenv[_ENVVAR_DUMPDIR]        = dumpdir
+        procenv[_ENVVAR_BINARY]         = binary
         ## create profile dump directory if not already exist
-        os.system("mkdir -p {}".format(directory))
+        os.system("mkdir -p {}".format(dumpdir))
         print("env: {}={} {}={} {}={} {}={}".format(_ENVVAR_BINARY,procenv[_ENVVAR_BINARY],
             _ENVVAR_DUMPDIR, procenv[_ENVVAR_DUMPDIR],
             _ENVVAR_OMPNUMTHREADS, procenv[_ENVVAR_OMPNUMTHREADS],
