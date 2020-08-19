@@ -1,3 +1,4 @@
+#include <cmath>
 #include <ShadowValue.hpp>
 unsigned long ShadowValue::__globalCounter = 0;
 ShadowValue::ShadowValue(double dp, float sp, double argument, bool spBoolean) :
@@ -37,8 +38,8 @@ Value ShadowValue::getJsonValue(){
     v["singlePrecision"] = spBoolean;
     v["double"] = dp;
     v["single"] = sp;
-    v["absErr"] = abs(dp-sp);
-    v["relErr"] = abs(dp-sp)/dp;
+    v["absErr"] = fabs(dp-sp);
+    v["relErr"] = fabs(dp-sp)/dp;
     return v;
 }
 

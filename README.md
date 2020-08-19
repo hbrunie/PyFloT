@@ -25,6 +25,7 @@ This work will be presented at the International Conference for High Performance
 ### Requirements
 * Linux system
 * Makefile build system
+* CMake
 * GOTCHA and Jsoncpp (git submodule update --init --recursive)
 * Update the file `environ.source`
 * Execute command: source environ.source
