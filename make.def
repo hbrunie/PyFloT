@@ -6,9 +6,11 @@ PTHOME=${PYFLOT_ROOTDIR}
 ### should not be modified ###
 
 ##Generic flags
-JSONLIB=${PTHOME}/external-deps/jsoncpp/build/src/lib_json/  -ljsoncpp
-GOTCHALIB=${PTHOME}/external-deps/install/lib64/ -lgotcha -Wl,-rpath, ${PYFLOT_ROOTDIR}/external-deps/install/lib64/libgotcha.so
-LIB=-L ${JSONLIB} -L ${GOTCHALIB}
+JSONLIBDIR=${PTHOME}/external-deps/jsoncpp/build/src/lib_json/
+JSONLIB=${JSONLIBDIR}/libjsoncpp.a
+GOTCHALIBDIR=${PTHOME}/external-deps/install/lib64/
+GOTCHALIB=-L${GOTCHALIBDIR} -lgotcha -Wl,-rpath,${GOTCHALIBDIR}
+LIB=${JSONLIB} ${GOTCHALIB}
 CXXPTFLAGS=-O3 -std=c++11 -Wall -Wextra -g -rdynamic $(OPTIONS)
 
 ## Compile PrecisionTuning framework

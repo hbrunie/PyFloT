@@ -27,6 +27,8 @@ This work will be presented at the International Conference for High Performance
 * Makefile build system
 * CMake
 * GOTCHA and Jsoncpp (git submodule update --init --recursive)
+** Note: set(CMAKE_POSITION_INDEPENDENT_CODE ON) must be added to
+** Json CMakeLists.txt. We are moving to a header-only Json lib.
 * Update the file `environ.source`
 * Execute command: source environ.source
 ### Installation
