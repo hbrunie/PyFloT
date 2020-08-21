@@ -7,8 +7,8 @@ gemm:
 	$(CXX) -o $@  testDGEMM.o -g  $(DEBUG) -lopenblas
 
 gemm-pyflot:
-	$(CXX) -O0 -c testDGEMM.cpp -g $(DEBUG) $(PTINCDIR) -rdynamic
-	$(CXX) -o $@  testDGEMM.o -g $(PTLIB) $(DEBUG)  -rdynamic -lopenblas
+	$(CXX) -O0 -c testDGEMM.cpp -g $(DEBUG) $(PTINCDIR) -rdynamic -DUSE_PTUNER
+	$(CXX) -O0 -o $@  testDGEMM.o -g $(PTLIB) $(DEBUG)  -rdynamic -lopenblas
 
 clean:
 	rm -f *.o

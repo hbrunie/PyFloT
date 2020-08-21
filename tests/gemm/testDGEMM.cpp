@@ -1,26 +1,13 @@
 #include <cstdlib>
 #include <cmath>
-#ifdef USE_MKL
-#include <mkl.h>
-#else
-extern "C" {
-//#include"cblas.h"
-}
-#endif
 #include <iostream>
+#include <mkl.h>
+#ifdef USE_PTUNER
+#include <ptuner_gemm.hpp>
+#endif
 
-extern "C"{
-  extern void dgemm_(char const *transa, char const *transb, int *m, int *n, int *k,
-              double *alpha, double *A, int *lda, double *B, int *ldb,
-              double *beta, double *C, int *ldc);
-  extern void sgemm_(char const *transa, char const *transb, int *m, int *n, int *k,
-              float *alpha, float *A, int *lda, float *B, int *ldb, float *beta,
-              float *C, int *ldc);
-}
-//extern "C" void start_test(void);
 using namespace std;
 int main(){
-    //start_test();
     int m = 12;
     int n = 12;
     int k = 12;
@@ -39,11 +26,12 @@ int main(){
         B[i] = i;
     double alpha = 1.0;
     double beta = 0.0;
-    //cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans, m, n, k, alpha, A, k, B, n, beta, C, n);
-    dgemm_("CblasNoTrans","CblasNoTrans", &m, &n, &k, &alpha, A, &k, B, &n, &beta, C, &n);
+#ifndef USE_PTUNER
+    cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans, m, n, k, alpha, A, k, B, n, beta, C, n);
+#else
+    ptuner_dgemm("CblasNoTrans","CblasNoTrans", &m, &n, &k, &alpha, A, &k, B, &n, &beta, C, &n);
+#endif
     double res = 0.;//cblas_dnrm2(m*n,C,n);
-    for(int i=0; i<3;i++)
-        fprintf(stderr, "C[%d] = %f\n", i, C[i]);
     cout << "SUCCESS: "<< res << endl;
 #ifdef USE_MKL
     mkl_free(A);
