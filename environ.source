@@ -4,7 +4,7 @@ export PYFLOT_ROOTDIR=${PWD}
 ## No need to change
 mkdir -p ${PYFLOT_ROOTDIR}/public/lib/
 export PYFLOT_TUTORIALDIR=${PYFLOT_ROOTDIR}/tests/tutorial/
-alias pyflot-profiling=$PYFLOT_ROOTDIR/public/scripts/script.py
-alias pyflot-analyzing=$PYFLOT_ROOTDIR/public/scripts/MultiStepSiteSearch.py
+alias pyflot-profiling=$PYFLOT_ROOTDIR/public/pyflot/profiling.py
+alias pyflot-analyzing=$PYFLOT_ROOTDIR/public/pyflot/MultiStepSiteSearch.py
 export LD_LIBRARY_PATH="${PYFLOT_ROOTDIR}/public/lib/:$LD_LIBRARY_PATH"
 export LIBRARY_PATH="${PYFLOT_ROOTDIR}/public/lib/:$LD_LIBRARY_PATH"
