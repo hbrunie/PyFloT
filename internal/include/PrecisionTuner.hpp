@@ -76,7 +76,7 @@ class PrecisionTuner
     public:
         PrecisionTuner();
         ~PrecisionTuner();
-        void overloading_function(string s, float (*sp_func) (float), double (*func)(double),
-                struct dgemm_args_s dgemm_args, struct sgemm_args_s sgemm_args, string label);
+        void overloading_function(string s, struct dgemm_args_s dgemm_args,
+                struct sgemm_args_s sgemm_args, string label);
 };
 #endif // PrecisionTuner_H
