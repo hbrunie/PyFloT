@@ -15,5 +15,6 @@ clean:
 
 cleanall: clean
 	rm -f gemm gemm-pyflot
+	rm -rf .gemm-pyflot
 
 .PHONY: unittest
