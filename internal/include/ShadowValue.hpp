@@ -3,10 +3,13 @@
 #include <json/json.h>
 #include <fstream>
 
+#include "Debug.hpp"
+
 using namespace std;
 using namespace Json;
 class ShadowValue{
     private:
+        static Debug degug;
         double __doubleP;
         double __singleP;
         double __argument;

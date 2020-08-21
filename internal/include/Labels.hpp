@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <json/json.h>
 
+#include "Debug.hpp"
+
 using namespace Json;
 using namespace std;
 
@@ -15,6 +17,7 @@ class Labels{
         // Private Functions
         bool containsLabel(string label);
         int addLabel(string label);
+        Debug debug;
     public:
         Labels();
         void displayArrays();
