@@ -69,6 +69,10 @@ def parseProfiling():
     help="""Profile phase dumps the JSON into profilefile into outputdir,
     Applying strat phase read into to create strat files.""")
 
+    parser.add_argument("--debug",
+    help="Add DEBUG flag",
+    action='store_true')
+
     args = parser.parse_args(remaining_argv)
     assert args.binary, "binary absolute path is required"
     return args
