@@ -4,10 +4,12 @@
 
 #include "Debug.hpp"
 
-bool DebugFlag = false;
-std::vector<std::string> CurrentDebugType;
+Debug::Debug()
+{
+   debugtypeOption(getenv("DEBUG"));
+}
 
-void debugtypeOption(char *env) {
+void Debug::debugtypeOption(char *env) {
     if (!env)
         return;
 
@@ -19,7 +21,7 @@ void debugtypeOption(char *env) {
     }
 }
 
-bool isCurrentDebugType(const char *DebugType) {
+bool Debug::isCurrentDebugType(const char *DebugType) {
     if (CurrentDebugType.empty())
         return true;
 
@@ -32,7 +34,7 @@ bool isCurrentDebugType(const char *DebugType) {
     return false;
 }
 
-void setCurrentDebugType(const char *Type) {
+void Debug::setCurrentDebugType(const char *Type) {
     CurrentDebugType.clear();
     CurrentDebugType.push_back(Type);
 }
