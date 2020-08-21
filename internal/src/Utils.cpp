@@ -10,6 +10,7 @@
 //    return false;
 //}
 using namespace std;
+static Debug debug;
 
 ofstream writeFile(string envName, string defaultFile, string dumpDir,string defaultDir, int csvIndex);
 

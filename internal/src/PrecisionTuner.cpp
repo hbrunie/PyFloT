@@ -74,6 +74,10 @@ PrecisionTuner::PrecisionTuner(){
 }
 
 PrecisionTuner::~PrecisionTuner(){
+#ifndef NDEBUG
+    // Otherwise segfault in Debug.cpp because CurrentDebugType is no longer in memory.
+    Debug debug;
+#endif
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << __FUNCTION__ << __mode << endl;);
 #ifndef NODUMP
@@ -116,14 +120,6 @@ static bool once = true;
 void PrecisionTuner::overloading_function(string s, float (*sp_func) (float),
                                              double (*func)(double), struct dgemm_args_s args,
                                              struct sgemm_args_s args_s, string label){
-#ifndef NDEBUG
-    if (once)
-        debugtypeOption(getenv("DEBUG"));
-    once = false;
-#endif
-    UNUSED(sp_func);
-    UNUSED(func);
-
 #ifndef USE_TIMESTAMP
     double timeStamp = 0.0;
 #else

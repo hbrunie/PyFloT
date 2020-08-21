@@ -8,8 +8,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include <Labels.hpp>
-#include <ShadowValue.hpp>
+#include "Labels.hpp"
+#include "ShadowValue.hpp"
 
 using namespace std;
 using namespace Json;
@@ -61,6 +61,7 @@ class DynFuncCall
         static list<string> backtraceToLower;
         void displaySet();
         Value getJsonValue(char*);
+        Debug debug;
     public:
         DynFuncCall();
         // static: called in __buildProfiledDataFromJsonFile

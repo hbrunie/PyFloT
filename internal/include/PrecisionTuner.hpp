@@ -1,6 +1,7 @@
 #ifndef PrecisionTuner_H
 #define PrecisionTuner_H
 #include "Profile.hpp"
+#include "Debug.hpp"
 using namespace std;
 
 #define CHECK_NULL(X, Y) 				\
@@ -54,6 +55,7 @@ struct sgemm_args_s{
 class PrecisionTuner
 {
     private:
+        Debug debug;
         enum MODE __mode;
         void checkPrecisionTunerMode();
         /* Profiling */

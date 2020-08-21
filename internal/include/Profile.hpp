@@ -8,6 +8,7 @@ using namespace Json;
 
 class Profile{
     private:
+        Debug debug;
         bool __mode;
         // Function return addresses, sensitive to
         // LINUX Address space layout randomization (ASLR)
