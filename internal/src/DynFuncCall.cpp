@@ -10,8 +10,6 @@
 #include <execinfo.h>
 #include <json/json.h>
 
-#include <PT_Labels.hpp>
-
 #include "Backtrace.hpp"
 #include "Debug.hpp"
 #include "PrecisionTuner.hpp"
@@ -27,26 +25,6 @@ const string DynFuncCall::JSON_LABELS_KEY                    = "Labels";
 const string DynFuncCall::JSON_LOWERCOUNT_KEY                = "LowerCount";
 const string DynFuncCall::JSON_LOWERBOUND_KEY                = "LowerBound";
 const string DynFuncCall::JSON_UPPERBOUND_KEY                = "UpperBound";
-
-int setInRegion(string label){
-    Labels labels;
-    return labels.setInRegion(label);
-}
-
-int unSetInRegion(string label){
-    Labels labels;
-    return labels.unSetInRegion(label);
-}
-
-int setInRegion(const char * label){
-    Labels labels;
-    return labels.setInRegion(label);
-}
-
-int unSetInRegion(const char * label){
-    Labels labels;
-    return labels.unSetInRegion(label);
-}
 
 list<string> DynFuncCall::backtraceToLower = list<string>();
 

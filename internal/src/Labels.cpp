@@ -1,15 +1,39 @@
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
-#include <Labels.hpp>
 
+// Private include
 #include "Debug.hpp"
+#include "Labels.hpp"
+// Public include
+#include "PT_Labels.hpp"
+
 
 using namespace std;
 
 string Labels::labels_string[STRING_LABEL_ARRAY_SIZE];
 bool   Labels::labels_activated[STRING_LABEL_ARRAY_SIZE];
 unsigned int Labels::current_size;
+
+int setInRegion(string label){
+    Labels labels;
+    return labels.setInRegion(label);
+}
+
+int unSetInRegion(string label){
+    Labels labels;
+    return labels.unSetInRegion(label);
+}
+
+int setInRegion(const char * label){
+    Labels labels;
+    return labels.setInRegion(label);
+}
+
+int unSetInRegion(const char * label){
+    Labels labels;
+    return labels.unSetInRegion(label);
+}
 
 Labels::Labels(){
     DEBUGINFO("STARTING");
