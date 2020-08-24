@@ -1,0 +1,8 @@
+option (MYAPP_USE_PYFLOT "enable or disable PyFloT exp/xgemm interception" ON)
+
+if(MYAPP_USE_PYFLOT)
+  message("Using pyflot")
+  add_compile_options ("-L/global/homes/h/hbrunie/utils/tools/precisiontuning//public/lib/ -lprecisiontuning -I/global/homes/h/hbrunie/utils/tools/precisiontuning//public/include")
+  add_library(pyflotlib SHARED IMPORTED)
+  set_property(TARGET pyflotlib PROPERTY IMPORTED_LOCATION "/global/homes/h/hbrunie/utils/tools/precisiontuning//public/lib/libprecisiontuning.so")
+endif()
