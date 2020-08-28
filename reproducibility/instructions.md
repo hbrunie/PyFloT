@@ -13,7 +13,8 @@ git submodule update --init --recursive
 
 ```
 source ./environ.source
-make
+mkdir build ; cd build
+cmake .. ; make -j 10
 ```
 
 ## New instructions, complementary from README.md:
@@ -59,10 +60,10 @@ in place of `AMReX (93fb085d2834) finalized`.
 You should obtain this in the stdout:
 
 ```
-nbTrials ratioSlocSP ratioBtSP ratioDynSP dynCallsSP slocCallSiteSP btCallSiteSP totalDynCalls totalSlocCallSites totalBtCallSites
-0 0 0 0 0 0 0 0 0 0
 strategy SLOC
-Running BFS sloc
+Running BFS sloc in serial
+nbTrials ratioDynSP
+0 0
 1 73.64
 2 73.64
 3 73.64
