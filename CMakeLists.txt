@@ -14,7 +14,7 @@ add_compile_options ("-Wall" "-Wextra" "-Wpedantic" "-O3" "-g" "-rdynamic" "-fPI
 
 # set up possible commandline input variable defaults (override with -D)
 option (PYFLOT_BUILD_TESTS "Build tests for PyFloT" ON)
-option (BUILD_SHARED_LIBS "Build PyFloT as a shared LIbrary" ON)
+option (BUILD_SHARED_LIBS "Build PyFloT as a shared Library" ON)
 
 set(EXTERNAL_LIB_HEADERS external-deps/jsoncpp/include external-deps/GOTCHA/include)
 
