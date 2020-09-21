@@ -12,11 +12,16 @@ message (STATUS "CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 # add compiler flags we always want to use
 add_compile_options ("-Wall" "-Wextra" "-Wpedantic" "-O3" "-g" "-rdynamic" "-fPIC")
 
+include(external-deps/external.cmake)
+
 # set up possible commandline input variable defaults (override with -D)
-option (PYFLOT_BUILD_TESTS "Build tests for PyFloT" ON)
+option (PYFLOT_BUILD_TESTS "Build tests for PyFloT" OFF)
 option (BUILD_SHARED_LIBS "Build PyFloT as a shared Library" ON)
 
-set(EXTERNAL_LIB_HEADERS external-deps/jsoncpp/include external-deps/GOTCHA/include)
+set(JSON_INC_PATH external-deps/jsoncpp/include)
+set(GOTCHA_INC_PATH external-deps/GOTCHA/include)
+get_target_property(JSON_INC_PATH jsoncpp_lib INTERFACE_INCLUDE_DIRECTORIES)
+#include_directories(${JSON_INC_PATH})
 
 #include (${CMAKE_SOURCE_DIR}/external-deps/gotcha.cmake)
 #include (${CMAKE_SOURCE_DIR}/external-deps/jsoncpp.cmake)
@@ -30,7 +35,7 @@ set(EXTERNAL_LIB_HEADERS external-deps/jsoncpp/include external-deps/GOTCHA/incl
 # 1) define the component in the components list
 # 2) define any link dependencies if needed
 ###############################################################################
-add_library (pyflot internal/src/Backtrace.cpp
+add_library (pyflot SHARED internal/src/Backtrace.cpp
     internal/src/Debug.cpp
     internal/src/DynFuncCall.cpp
     internal/src/Labels.cpp
@@ -39,7 +44,8 @@ add_library (pyflot internal/src/Backtrace.cpp
     internal/src/ShadowValue.cpp
     internal/src/Utils.cpp
     internal/src/overloading.cpp)
-target_include_directories (pyflot PUBLIC public/include/ internal/include/ ${EXTERNAL_LIB_HEADERS})
+target_include_directories (pyflot PUBLIC public/include/ internal/include/ ${GOTCHA_INC_PATH} ${JSON_INC_PATH})
+target_link_libraries (pyflot jsoncpp_lib gotcha)
 
 ###############################################################################
 ## Testing PyFloT
