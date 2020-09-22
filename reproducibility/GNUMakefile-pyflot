@@ -45,8 +45,9 @@ PELEC_HOME    := ../../..
 include $(PELEC_HOME)/Exec/Make.PeleC
 DEFINES+=-DALWAYS_NEW_J
 
-CFLAGS   += -Wl,-rpath=${PYFLOT_ROOTDIR}public/lib/libprecisiontuning.so -rdynamic -L${PYFLOT_ROOTDIR}public/lib -lprecisiontuning -L${PYFLOT_ROOTDIR}external-deps/install/lib64/
-FFLAGS   += -Wl,-rpath=${PYFLOT_ROOTDIR}public/lib/libprecisiontuning.so -rdynamic -L${PYFLOT_ROOTDIR}public/lib -lprecisiontuning -L${PYFLOT_ROOTDIR}external-deps/install/lib64/
-F90FLAGS += -Wl,-rpath=${PYFLOT_ROOTDIR}public/lib/libprecisiontuning.so -rdynamic -L${PYFLOT_ROOTDIR}public/lib -lprecisiontuning -L${PYFLOT_ROOTDIR}external-deps/install/lib64/
-CFLAGS   += -Wl,-rpath=${PYFLOT_ROOTDIR}public/lib/libprecisiontuning.so -rdynamic -L${PYFLOT_ROOTDIR}public/lib -lprecisiontuning -L${PYFLOT_ROOTDIR}external-deps/install/lib64/
-CXXFLAGS += -Wl,-rpath=${PYFLOT_ROOTDIR}public/lib/libprecisiontuning.so -rdynamic -L${PYFLOT_ROOTDIR}public/lib -lprecisiontuning -L${PYFLOT_ROOTDIR}external-deps/install/lib64/
+PYFLOT_LIB_DIR=${PYFLOT_ROOTDIR}/build/
+CFLAGS   += -Wl,-rpath=${PYFLOT_LIB_DIR} -rdynamic -L${PYFLOT_LIB_DIR} -lpyflot
+FFLAGS   += -Wl,-rpath=${PYFLOT_LIB_DIR} -rdynamic -L${PYFLOT_LIB_DIR} -lpyflot
+F90FLAGS += -Wl,-rpath=${PYFLOT_LIB_DIR} -rdynamic -L${PYFLOT_LIB_DIR} -lpyflot
+CFLAGS   += -Wl,-rpath=${PYFLOT_LIB_DIR} -rdynamic -L${PYFLOT_LIB_DIR} -lpyflot
+CXXFLAGS += -Wl,-rpath=${PYFLOT_LIB_DIR} -rdynamic -L${PYFLOT_LIB_DIR} -lpyflot
