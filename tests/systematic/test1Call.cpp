@@ -1,6 +1,9 @@
 #include <cstdlib>
 #include <iostream>
+#include <cmath>
+#ifdef USE_LABEL
 #include "PT_math.h"
+#endif
 using namespace std;
 int main(){
 #ifdef USE_LABEL
