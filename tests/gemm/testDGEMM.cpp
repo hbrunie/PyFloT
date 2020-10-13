@@ -3,9 +3,6 @@
 #include <iostream>
 #include <iomanip>
 #include <mkl.h>
-#ifdef USE_MKL
-#include <mkl.h>
-#endif
 
 using namespace std;
 extern "C"{
@@ -55,7 +52,6 @@ int main(){
         double res = cblas_dnrm2(m*n,C,1);
         cerr << "dgemm norm2 res("<<res << ") recorded["<< testId<< "](" << recorded[testId]<< ") relErr(" << fabs(res-recorded[testId]) / recorded[testId] << ")"<< endl;
     }
-
 #ifdef USE_MKL
     mkl_free(A);
     mkl_free(B);

@@ -81,16 +81,6 @@ PrecisionTuner::~PrecisionTuner(){
     delete(__profile);
 }
 
-/* Definition of specific code region by end-user in analyzed program */
-bool __specificRegion = false;
-void PTunerEnterSpecificRegion(){
-    __specificRegion=true;
-}
-
-void unsetNO(){
-    __specificRegion = false;
-}
-
 /* Timeserie builder function(s) */
 steady_clock::time_point __startTS;
 void PrecisionTuner::initTSClock(){
@@ -139,19 +129,70 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
     UNUSED(label);
     vector<void*> btVec;
 #endif
-    //TODO: generic wrapper, not just exp (add argument with handler from gotcha?)
-    exp_ptr wrappee_exp = (exp_ptr) gotcha_get_wrappee(wrappee_exp_handle); // get my wrappee from Gotcha
-    dres = wrappee_exp(value);
+    //CBLAS_LAYOUT Layout = args.Layout;
+    //const CBLAS_TRANSPOSE transa = args.transa;
+    //const CBLAS_TRANSPOSE transb = args.transb;
+    const char *transa = args.transa;
+    const char *transb = args.transb;
+    int*m = args.m;
+    int*n = args.n;
+    int*k = args.k;
+    double *alpha = args.alpha;
+    double *A = args.A;
+    int *lda = args.lda;
+    double *B = args.B;
+    int *ldb = args.ldb;
+    double *beta = args.beta;
+    double *C = args.C;
+    int *ldc = args.ldc;
+    dgemm_(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);//return void
 
-    expf_ptr wrappee_expf = (expf_ptr) gotcha_get_wrappee(wrappee_expf_handle); // get my wrappee from Gotcha
-    fres = wrappee_expf(value);
+    int sizeA = (*m) * (*k);
+    int sizeB = (*k) * (*n);
+    int sizeC = (*m) * (*n);
+
+    float alphaf = (float)*alpha;
+    float betaf  = (float)*beta;
+    float *alphaf_p = &alphaf;
+    float *betaf_p  = &betaf;
+    float *Af     = (float*) malloc(sizeof(float) * sizeA);
+    float *Bf     = (float*) malloc(sizeof(float) * sizeB);
+    float *Cf     = (float*) malloc(sizeof(float) * sizeC);
+    double *Cf_dp     = (double*) malloc(sizeof(double) * sizeC);
+
+
+    for(int i = 0; i < sizeA; i++)
+        Af[i] = (float) A[i];
+    for(int i = 0; i < sizeB; i++)
+        Bf[i] = (float) B[i];
+    for(int i = 0; i < sizeC; i++)
+        Cf[i] = (float) 0.;
+
+    sgemm_(transa, transb, m, n, k, alphaf_p, Af, lda, Bf, ldb, betaf_p, Cf, ldc);//return void
+    for(int i = 0; i < sizeC; i++)
+        Cf_dp[i] = (double) Cf[i];
+
+    double dres =0.,fres=0.; // Norm of matrices
+    dres = cblas_dnrm2(sizeC, C, 1);
+    for(int i=0; i<sizeC ; i++)
+        cerr << C[i] << " ";
+    cerr << endl << "norm DP: " << dres << endl;
+    fres = cblas_dnrm2(sizeC, Cf_dp, 1);
+    cerr << endl << "norm SP: " << dres << endl;
+    for(int i=0; i<sizeC ; i++)
+        cerr << Cf_dp[i] << " ";
+    free(Af);
+    free(Bf);
+    free(Cf);
+    free(Cf_dp);
+
     DEBUG("debug", cerr << __FUNCTION__
-            <<": exp " << dres
-            <<" expf " << fres
+            <<": dgemm " << dres
+            <<" sgemm " << fres
             << " s(" <<s << ") "
             << "label (" << label << ")"
             <<endl;);
-    return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label, timeStamp);
+    PrecisionTuner::__overloading_function(btVec, s,fres,dres, 0.0, label, timeStamp);
 }
 
 #else

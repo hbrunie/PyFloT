@@ -15,25 +15,35 @@ string Labels::labels_string[STRING_LABEL_ARRAY_SIZE];
 bool   Labels::labels_activated[STRING_LABEL_ARRAY_SIZE];
 unsigned int Labels::current_size;
 
-int setInRegion(string label){
-    Labels labels;
-    return labels.setInRegion(label);
-}
-
-int unSetInRegion(string label){
-    Labels labels;
-    return labels.unSetInRegion(label);
-}
-
-int setInRegion(const char * label){
-    Labels labels;
-    return labels.setInRegion(label);
-}
-
-int unSetInRegion(const char * label){
-    Labels labels;
-    return labels.unSetInRegion(label);
-}
+/* Definition of specific code region by end-user in analyzed program */
+//bool __specificRegion = false;
+//void PTunerEnterSpecificRegion(){
+//    __specificRegion=true;
+//}
+//
+//void unsetNO(){
+//    __specificRegion = false;
+//}
+//
+//int setInRegion(string label){
+//    Labels labels;
+//    return labels.setInRegion(label);
+//}
+//
+//int unSetInRegion(string label){
+//    Labels labels;
+//    return labels.unSetInRegion(label);
+//}
+//
+//int setInRegion(const char * label){
+//    Labels labels;
+//    return labels.setInRegion(label);
+//}
+//
+//int unSetInRegion(const char * label){
+//    Labels labels;
+//    return labels.unSetInRegion(label);
+//}
 
 Labels::Labels(){
     DEBUGINFO("STARTING");
