@@ -17,6 +17,7 @@ using namespace chrono;
 
 #ifdef USE_GOTCHA
 #include <gotcha/gotcha.h>
+
 typedef double (*exp_ptr) (double);
 typedef float (*expf_ptr) (float);
 
@@ -75,7 +76,7 @@ PrecisionTuner::~PrecisionTuner(){
 #endif
     DEBUG("info",cerr << "STARTING " << __FUNCTION__ << endl;);
     DEBUG("infoplus",cerr << __FUNCTION__ << __mode << endl;);
-#ifndef NODUMP
+#ifdef DUMP
     __profile->dumpJsonPlusCSV();
 #endif
     delete(__profile);
@@ -176,9 +177,7 @@ double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), 
     dres = cblas_dnrm2(sizeC, C, 1);
     for(int i=0; i<sizeC ; i++)
         cerr << C[i] << " ";
-    cerr << endl << "norm DP: " << dres << endl;
     fres = cblas_dnrm2(sizeC, Cf_dp, 1);
-    cerr << endl << "norm SP: " << dres << endl;
     for(int i=0; i<sizeC ; i++)
         cerr << Cf_dp[i] << " ";
     free(Af);
@@ -211,9 +210,6 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
     UNUSED(label);
     vector<void*> btVec;
 #endif
-    //CBLAS_LAYOUT Layout = args.Layout;
-    //const CBLAS_TRANSPOSE transa = args.transa;
-    //const CBLAS_TRANSPOSE transb = args.transb;
     const char *transa = args.transa;
     const char *transb = args.transb;
     int*m = args.m;
@@ -230,6 +226,7 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
 
     for(int i=0;i<*m * *n;i++)
         C[i]=0.;
+    // Column MAJOR
     dgemm_(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);//return void
     double dres = cblas_dnrm2(*m * *n, C, 1);
     int sizeA = (*m) * (*k);
@@ -240,10 +237,11 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
     float betaf  = (float)*beta;
     float *alphaf_p = &alphaf;
     float *betaf_p  = &betaf;
-    float *Af     = (float*) malloc(sizeof(float) * sizeA);
-    float *Bf     = (float*) malloc(sizeof(float) * sizeB);
-    float *Cf     = (float*) malloc(sizeof(float) * sizeC);
-    double *Cf_dp     = (double*) malloc(sizeof(double) * sizeC);
+    //TODO: DEBUG
+    float *Af     = (float*)  aligned_alloc(64, sizeof(float) * sizeA);
+    float *Bf     = (float*)  aligned_alloc(64, sizeof(float) * sizeB);
+    float *Cf     = (float*)  aligned_alloc(64, sizeof(float) * (sizeC));
+    double *Cf_dp = (double*) aligned_alloc(64, sizeof(double) * sizeC);
 
 
     for(int i = 0; i < sizeA; i++)
@@ -253,13 +251,13 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
     for(int i = 0; i < sizeC; i++)
         Cf[i] =  0.;
 
+    // Column MAJOR
     sgemm_(transa, transb, m, n, k, alphaf_p, Af, lda, Bf, ldb, betaf_p, Cf, ldc);//return void
     for(int i = 0; i < sizeC; i++)
         Cf_dp[i] = (double) Cf[i];
 
     double fres = cblas_dnrm2(*m * *n, Cf_dp, 1);
     double relErr = fabs(fres-dres)/dres;
-    cerr << dres << " " << fres << " " << relErr << endl;
     for(int i = 0; i < sizeC; i++)
         C[i] = Cf[i];
     free(Af);
