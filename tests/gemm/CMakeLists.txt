@@ -1,0 +1,5 @@
+add_executable(test_gemm testDGEMM.cpp)
+target_link_libraries(test_gemm openblas)
+add_executable(test_gemm_pyflot testDGEMM.cpp)
+target_compile_definitions(test_gemm_pyflot PRIVATE -DUSE_PTUNER)
+target_link_libraries(test_gemm_pyflot pyflot)

@@ -15,7 +15,7 @@ add_compile_options ("-Wall" "-Wextra" "-Wpedantic" "-O3" "-g" "-rdynamic" "-fPI
 include(external-deps/external.cmake)
 
 # set up possible commandline input variable defaults (override with -D)
-option (PYFLOT_BUILD_TESTS "Build tests for PyFloT" OFF)
+option (PYFLOT_BUILD_TESTS "Build tests for PyFloT" ON)
 option (BUILD_SHARED_LIBS "Build PyFloT as a shared Library" ON)
 
 set(JSON_INC_PATH external-deps/jsoncpp/include)
@@ -45,7 +45,7 @@ add_library (pyflot SHARED internal/src/Backtrace.cpp
     internal/src/Utils.cpp
     internal/src/overloading.cpp)
 target_include_directories (pyflot PUBLIC public/include/ internal/include/ ${GOTCHA_INC_PATH} ${JSON_INC_PATH})
-target_link_libraries (pyflot jsoncpp_lib gotcha)
+target_link_libraries (pyflot jsoncpp_lib gotcha openblas)
 
 ###############################################################################
 ## Testing PyFloT
@@ -53,22 +53,7 @@ target_link_libraries (pyflot jsoncpp_lib gotcha)
 ###############################################################################
 if (PYFLOT_BUILD_TESTS)
     enable_testing ()
-
-    # Define ctest tests and their executables
-    #add_library (tests_general tests/tests_general.cpp)
-    #target_link_libraries (tests_general PUBLIC Catch PRIVATE pyflot)
-    #target_include_directories(tests_general PRIVATE ${CMAKE_BINARY_DIR})
-    add_executable (test1Call tests/systematic/test1Call.cpp)
-    target_include_directories (test1Call PRIVATE ${CMAKE_SOURCE_DIR}/public/include/)
-    #target_include_directories (${component}-tests PRIVATE ${CMAKE_BINARY_DIR})
-    target_link_libraries (test1Call PRIVATE pyflot)
-    target_link_libraries (test1Call PRIVATE ${CMAKE_SOURCE_DIR}/external-deps/jsoncpp/build/src/lib_json/libjsoncpp.a)
-    target_link_libraries (test1Call PRIVATE ${CMAKE_SOURCE_DIR}/external-deps/GOTCHA/build/src/libgotcha.so)
-
-
-    add_test (NAME test1Call
-        COMMAND test1Call
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+    add_subdirectory(tests)
 
 else ()
     message (WARNING "warning: tests will not be built.")
