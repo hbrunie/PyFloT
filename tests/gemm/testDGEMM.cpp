@@ -22,9 +22,9 @@ int main(){
     int m = 12;
     int n = 12;
     int k = 12;
-    int lda = k;
-    int ldb = n;
-    int ldc = n;
+    int lda = m;
+    int ldb = m;
+    int ldc = m;
     srand(42);
 #ifdef USE_MKL
     double * A = (double*) mkl_malloc(m*k*sizeof(double), 64);
