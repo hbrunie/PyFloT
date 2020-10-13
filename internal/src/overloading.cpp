@@ -30,6 +30,7 @@ static PrecisionTuner ptuner;
 
 /* *** Overloading functions *** */
 
+#ifdef USE_GOTCHA
 // TODO: use templated function, change the PT_math.h accordingly
 /* exponential function */
 double __overloaded_exp(double var) {
@@ -102,4 +103,21 @@ double __overloaded_pow(double var, double p) {
 double __overloaded_pow(double var, double p, string label) {
     return ptuner.overloading_function("Pow",powf,pow,var,p, label);
 }
+#else
+extern "C"{
+void ptuner_dgemm_(char const *transa, char const *transb, int *m, int *n, int* k,
+                        double* alpha, double *A, int *lda, double *B, int* ldb,
+                        double *beta, double *C, int* ldc);
+}
+void ptuner_dgemm_(char const *transa, char const *transb, int *m, int *n, int* k,
+                        double* alpha, double *A, int *lda, double *B, int* ldb,
+                        double *beta, double *C, int* ldc){
+    string label = "noLabel";
+    struct dgemm_args_s dgemm_args = {transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc};
+    struct sgemm_args_s sgemm_args;
+    cerr << __FUNCTION__ << endl;
+    ptuner.overloading_function("dgemm",dgemm_args, sgemm_args, label);
+}
+
+#endif
 #endif

@@ -15,6 +15,22 @@ using namespace chrono;
 #include "ShadowValue.hpp"
 #include "Utils.hpp"
 
+#ifdef USE_GOTCHA
+#include <gotcha/gotcha.h>
+typedef double (*exp_ptr) (double);
+typedef float (*expf_ptr) (float);
+
+double __overloaded_exp(double var);
+
+gotcha_wrappee_handle_t wrappee_exp_handle;
+gotcha_wrappee_handle_t wrappee_expf_handle;
+
+struct gotcha_binding_t wrap_actions [] = {
+    { "exp", (void*)__overloaded_exp, &wrappee_exp_handle },
+    { "expf", (void*)__overloaded_exp, &wrappee_expf_handle }
+};
+#endif
+
 typedef void (*dgemm_ptr) (char const *transa, char const *transb, int* m, int* n, int* k,
                         double* alpha, double *A, int* lda, double *B, int* ldb,
                         double* beta, double *C, int* ldc);
@@ -32,8 +48,6 @@ extern "C"{
               float *C, int *ldc);
 
 }
-
-using namespace std;
 
 const unsigned int PrecisionTuner::MAXSTACKSIZE   = 1024;
 const string PrecisionTuner::PRECISION_TUNER_MODE = "PRECISION_TUNER_MODE";
@@ -96,8 +110,52 @@ double PrecisionTuner::getTimeStamp(){
 #ifndef NDEBUG
 static bool once = true;
 #endif
+
+#ifdef USE_GOTCHA
+/* Intercept math function with 1 arguments math library function calls */
+double PrecisionTuner::overloading_function(string s, float (*sp_func) (float), double (*func)(double),
+        double value, string label){
+#ifndef NDEBUG
+    if (once)
+        debugtypeOption(getenv("DEBUG"));
+    once = false;
+#endif
+    double dres;
+    float fvalue, fres;
+    UNUSED(sp_func);
+    UNUSED(fvalue);
+    UNUSED(func);
+
+    fvalue = (float)value;
+#ifndef USE_TIMESTAMP
+    double timeStamp = 0.0;
+#else
+    double timeStamp = getTimeStamp();
+#endif
+
+#ifndef USE_LABEL
+    vector<void*> btVec = __getContextHashBacktrace();
+#else
+    UNUSED(label);
+    vector<void*> btVec;
+#endif
+    //TODO: generic wrapper, not just exp (add argument with handler from gotcha?)
+    exp_ptr wrappee_exp = (exp_ptr) gotcha_get_wrappee(wrappee_exp_handle); // get my wrappee from Gotcha
+    dres = wrappee_exp(value);
+
+    expf_ptr wrappee_expf = (expf_ptr) gotcha_get_wrappee(wrappee_expf_handle); // get my wrappee from Gotcha
+    fres = wrappee_expf(value);
+    DEBUG("debug", cerr << __FUNCTION__
+            <<": exp " << dres
+            <<" expf " << fres
+            << " s(" <<s << ") "
+            << "label (" << label << ")"
+            <<endl;);
+    return PrecisionTuner::__overloading_function(btVec, s,fres,dres, value, label, timeStamp);
+}
+
+#else
 /* Intercept math function with 1 arguments */
-//TODO: overloading double precision only for now
 void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
                                              struct sgemm_args_s args_s, string label){
 #ifndef USE_TIMESTAMP
@@ -128,8 +186,11 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
     double *beta = args.beta;
     double *C = args.C;
     int *ldc = args.ldc;
-    dgemm_(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);//return void
 
+    for(int i=0;i<*m * *n;i++)
+        C[i]=0.;
+    dgemm_(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);//return void
+    double dres = cblas_dnrm2(*m * *n, C, 1);
     int sizeA = (*m) * (*k);
     int sizeB = (*k) * (*n);
     int sizeC = (*m) * (*n);
@@ -147,23 +208,19 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
     for(int i = 0; i < sizeA; i++)
         Af[i] = (float) A[i];
     for(int i = 0; i < sizeB; i++)
-        Bf[i] = (float) B[i];
+        Bf[i] =  (float)B[i];
     for(int i = 0; i < sizeC; i++)
-        Cf[i] = (float) 0.;
+        Cf[i] =  0.;
 
     sgemm_(transa, transb, m, n, k, alphaf_p, Af, lda, Bf, ldb, betaf_p, Cf, ldc);//return void
     for(int i = 0; i < sizeC; i++)
         Cf_dp[i] = (double) Cf[i];
 
-    double dres =0.,fres=0.; // Norm of matrices
-    dres = cblas_dnrm2(sizeC, C, 1);
-    for(int i=0; i<sizeC ; i++)
-        cerr << C[i] << " ";
-    cerr << endl << "norm DP: " << dres << endl;
-    fres = cblas_dnrm2(sizeC, Cf_dp, 1);
-    cerr << endl << "norm SP: " << dres << endl;
-    for(int i=0; i<sizeC ; i++)
-        cerr << Cf_dp[i] << " ";
+    double fres = cblas_dnrm2(*m * *n, Cf_dp, 1);
+    double relErr = fabs(fres-dres)/dres;
+    cerr << dres << " " << fres << " " << relErr << endl;
+    for(int i = 0; i < sizeC; i++)
+        C[i] = Cf[i];
     free(Af);
     free(Bf);
     free(Cf);
@@ -177,6 +234,7 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
             <<endl;);
     PrecisionTuner::__overloading_function(btVec, s,fres,dres, 0.0, label, timeStamp);
 }
+#endif
 
 /*** PRIVATE FUNCTIONS ***/
 
