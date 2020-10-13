@@ -198,6 +198,7 @@ void DynFuncCall::updateBtSymbols(struct statHashKey_t &shk){
     for(int i=3; i<size; i++){
         __btSymbolsVec.push_back(string(symbols[i]));
     }
+    free(symbols);
 }
 
 vector<string> DynFuncCall::getAddr2lineBacktraceVec(string targetExe){
