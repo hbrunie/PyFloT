@@ -2,7 +2,12 @@
 #include <cmath>
 #include <iostream>
 #include <iomanip>
+#ifdef USE_INTEL_COMPILER
 #include <mkl.h>
+#else
+//Use Cray compiler on Cori
+#include <cblas.h>
+#endif
 
 using namespace std;
 extern "C"{
