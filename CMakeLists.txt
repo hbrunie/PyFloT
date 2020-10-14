@@ -46,6 +46,7 @@ add_library (pyflot SHARED internal/src/Backtrace.cpp
     internal/src/overloading.cpp)
 target_include_directories (pyflot PUBLIC public/include/ internal/include/ ${GOTCHA_INC_PATH} ${JSON_INC_PATH})
 target_link_libraries (pyflot jsoncpp_lib gotcha)
+target_compile_definitions(pyflot PRIVATE -DDUMP)
 
 ###############################################################################
 ## Testing PyFloT
