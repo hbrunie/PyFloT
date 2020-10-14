@@ -1,11 +1,11 @@
 add_executable(test_gemm testDGEMM.cpp)
-target_link_libraries(test_gemm openblas)
+target_link_libraries(test_gemm)
 add_executable(test_gemm_pyflot testDGEMM.cpp)
 target_compile_definitions(test_gemm_pyflot PRIVATE -DUSE_PTUNER)
 target_link_libraries(test_gemm_pyflot pyflot)
 
 add_executable(test_gemm-rectangular testDGEMM-rectangular.cpp)
-target_link_libraries(test_gemm-rectangular openblas)
+target_link_libraries(test_gemm-rectangular)
 add_executable(test_gemm-rectangular_pyflot testDGEMM-rectangular.cpp)
 target_compile_definitions(test_gemm-rectangular_pyflot PRIVATE -DUSE_PTUNER)
 target_link_libraries(test_gemm-rectangular_pyflot pyflot)
