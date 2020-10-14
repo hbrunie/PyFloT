@@ -5,7 +5,12 @@
 #include <iomanip>
 #include <iostream>
 #include <cmath>
+#ifdef USE_INTEL_COMPILER
 #include <mkl.h>
+#else
+//Use Cray compiler on Cori
+#include <cblas.h>
+#endif
 
 using namespace std;
 using namespace chrono;
@@ -240,7 +245,7 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
     //TODO: DEBUG
     float *Af     = (float*)  aligned_alloc(64, sizeof(float) * sizeA);
     float *Bf     = (float*)  aligned_alloc(64, sizeof(float) * sizeB);
-    float *Cf     = (float*)  aligned_alloc(64, sizeof(float) * (sizeC));
+    float *Cf     = (float*)  aligned_alloc(64, sizeof(float) * sizeC);
     double *Cf_dp = (double*) aligned_alloc(64, sizeof(double) * sizeC);
 
 
@@ -252,7 +257,18 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
         Cf[i] =  0.;
 
     // Column MAJOR
-    sgemm_(transa, transb, m, n, k, alphaf_p, Af, lda, Bf, ldb, betaf_p, Cf, ldc);//return void
+    int sgemm_lda = *m;
+    int sgemm_ldb = *k;
+    int sgemm_ldc = *m;
+    if((*transa) == 't'
+            || (*transa) ==  CblasTrans
+            || (*transa) == CblasConjTrans)
+            sgemm_lda = *k;
+    if((*transb) == 't'
+            || (*transb) ==  CblasTrans
+            || (*transb) ==CblasConjTrans)
+            sgemm_ldb = *n;
+    sgemm_(transa, transb, m, n, k, alphaf_p, Af, &sgemm_lda, Bf, &sgemm_ldb, betaf_p, Cf, &sgemm_ldc);//return void
     for(int i = 0; i < sizeC; i++)
         Cf_dp[i] = (double) Cf[i];
 
