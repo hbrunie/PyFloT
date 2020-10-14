@@ -242,12 +242,10 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
     float betaf  = (float)*beta;
     float *alphaf_p = &alphaf;
     float *betaf_p  = &betaf;
-    //TODO: DEBUG
     float *Af     = (float*)  aligned_alloc(64, sizeof(float) * sizeA);
     float *Bf     = (float*)  aligned_alloc(64, sizeof(float) * sizeB);
     float *Cf     = (float*)  aligned_alloc(64, sizeof(float) * sizeC);
     double *Cf_dp = (double*) aligned_alloc(64, sizeof(double) * sizeC);
-
 
     for(int i = 0; i < sizeA; i++)
         Af[i] = (float) A[i];
@@ -260,6 +258,7 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
     int sgemm_lda = *m;
     int sgemm_ldb = *k;
     int sgemm_ldc = *m;
+
     if((*transa) == 't'
             || (*transa) ==  CblasTrans
             || (*transa) == CblasConjTrans)
@@ -268,26 +267,24 @@ void PrecisionTuner::overloading_function(string s, struct dgemm_args_s args,
             || (*transb) ==  CblasTrans
             || (*transb) ==CblasConjTrans)
             sgemm_ldb = *n;
+
     sgemm_(transa, transb, m, n, k, alphaf_p, Af, &sgemm_lda, Bf, &sgemm_ldb, betaf_p, Cf, &sgemm_ldc);//return void
     for(int i = 0; i < sizeC; i++)
         Cf_dp[i] = (double) Cf[i];
 
     double fres = cblas_dnrm2(*m * *n, Cf_dp, 1);
     double relErr = fabs(fres-dres)/dres;
-    for(int i = 0; i < sizeC; i++)
-        C[i] = Cf[i];
+
+    bool singlePrec = PrecisionTuner::__overloading_function(btVec, s,fres,dres, 0., label, timeStamp);
+    if(singlePrec){
+        for(int i = 0; i < sizeC; i++)
+            C[i] = Cf[i];
+    }
+
     free(Af);
     free(Bf);
     free(Cf);
     free(Cf_dp);
-
-    DEBUG("debug", cerr << __FUNCTION__
-            <<": dgemm " << dres
-            <<" sgemm " << fres
-            << " s(" <<s << ") "
-            << "label (" << label << ")"
-            <<endl;);
-    PrecisionTuner::__overloading_function(btVec, s,fres,dres, 0.0, label, timeStamp);
 }
 #endif
 
@@ -338,10 +335,5 @@ double PrecisionTuner::__overloading_function(vector<void*> &btVec, string s,
             }
             break;
     }
-    res = singlePrecision ? (double) fres : dres;
-    DEBUG("fperror", cerr << "SINGLE precision? " << singlePrecision << endl; );
-    DEBUG("fperrorplus", cerr << std::setprecision(16) ; double relErr = fabs(fres - dres) / fabs(dres); if(singlePrecision)  cerr << s << " dres=" << dres << " fres=" << fres << " AbsError: " << fabs(fres - dres)<<" RelError: " << relErr << " value=" << value <<endl; else cerr << s << " dres=" << dres<< " value=" << value << endl;);
-    DEBUG("fperror", cerr << std::setprecision(16) ; double relErr = fabs(fres - dres) / fabs(dres); if(singlePrecision)  cerr << s << " RelError: " << relErr  <<endl; else cerr << s << " in double precision." << endl;);
-    DEBUG("info",cerr << "ENDING " << __FUNCTION__ << endl;);
-    return res;
+    return singlePrecision;
 }

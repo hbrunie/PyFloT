@@ -1,5 +1,11 @@
 #include <cmath>
 #include <ShadowValue.hpp>
+// struct MatrixSummary{
+//     double dnorm2;
+//     float  snorm2;
+//     double dmean;
+//     double variance;
+// };
 unsigned long ShadowValue::__globalCounter = 0;
 ShadowValue::ShadowValue(double dp, float sp, double argument, bool spBoolean) :
     __doubleP(dp), __singleP((double)sp), __argument(argument),__spBoolean(spBoolean){
@@ -10,6 +16,15 @@ ShadowValue::ShadowValue(double dp, float sp, double argument, bool spBoolean) :
 ShadowValue::ShadowValue(double dp, float sp, double argument, bool spBoolean, double timeStamp) :
     ShadowValue(dp, sp, argument, spBoolean){
     __timeStamp = timeStamp;
+}
+
+ShadowValue::ShadowValue(bool spBoolean, double timeStamp) :
+    ShadowValue(0., 0., 0., spBoolean, timeStamp){
+}
+
+ShadowValue::ShadowValue(MatrixSummary ms, bool spBoolean, double timeStamp) :
+    ShadowValue(spBoolean, timeStamp){
+    __ms = ms;
 }
 
 string ShadowValue::getCSVformat(){
