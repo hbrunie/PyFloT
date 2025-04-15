@@ -11,6 +11,8 @@
 
 See `./public/scripts/script.py`
 
+## Executing on laptop
+
 ## Executing on CORI supercompute
 ```bash
 cp make.Cori.def make.def

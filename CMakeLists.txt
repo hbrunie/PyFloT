@@ -15,7 +15,7 @@ add_compile_options ("-Wall" "-Wextra" "-Wpedantic" "-O3" "-g" "-rdynamic" "-fPI
 include(external-deps/external.cmake)
 
 # set up possible commandline input variable defaults (override with -D)
-option (PYFLOT_BUILD_TESTS "Build tests for PyFloT" OFF)
+option (PYFLOT_ENABLE_TESTS "Build tests for PyFloT" OFF)
 option (BUILD_SHARED_LIBS "Build PyFloT as a shared Library" ON)
 
 set(JSON_INC_PATH external-deps/jsoncpp/include)
@@ -51,7 +51,7 @@ target_link_libraries (pyflot jsoncpp_lib gotcha)
 ## Testing PyFloT
 #
 ###############################################################################
-if (PYFLOT_BUILD_TESTS)
+if (PYFLOT_ENABLE_TESTS)
     enable_testing ()
 
     # Define ctest tests and their executables
@@ -61,9 +61,9 @@ if (PYFLOT_BUILD_TESTS)
     add_executable (test1Call tests/systematic/test1Call.cpp)
     target_include_directories (test1Call PRIVATE ${CMAKE_SOURCE_DIR}/public/include/)
     #target_include_directories (${component}-tests PRIVATE ${CMAKE_BINARY_DIR})
+    #target_link_libraries (test1Call PRIVATE ${CMAKE_SOURCE_DIR}/external-deps/jsoncpp/build/src/lib_json/libjsoncpp.a)
+    #target_link_libraries (test1Call PRIVATE ${CMAKE_SOURCE_DIR}/external-deps/GOTCHA/build/src/libgotcha.so)
     target_link_libraries (test1Call PRIVATE pyflot)
-    target_link_libraries (test1Call PRIVATE ${CMAKE_SOURCE_DIR}/external-deps/jsoncpp/build/src/lib_json/libjsoncpp.a)
-    target_link_libraries (test1Call PRIVATE ${CMAKE_SOURCE_DIR}/external-deps/GOTCHA/build/src/libgotcha.so)
 
 
     add_test (NAME test1Call

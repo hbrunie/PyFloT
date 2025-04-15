@@ -3,3 +3,4 @@ external-deps/install/*
 tests/systematic/tmp/*
 tests/trivial/tmp/*
 venv
+build
