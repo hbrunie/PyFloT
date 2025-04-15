@@ -1,4 +1,6 @@
 cmake_minimum_required (VERSION 3.13)
+cmake_policy(SET CMP0048 NEW)
+
 project (pyflot
     VERSION 0.0.1
     LANGUAGES CXX
@@ -13,6 +15,7 @@ message (STATUS "CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 add_compile_options ("-Wall" "-Wextra" "-Wpedantic" "-O3" "-g" "-rdynamic" "-fPIC")
 
 include(external-deps/external.cmake)
+include(${CMAKE_SOURCE_DIR}/tests/trivial/examples.cmake)
 
 # set up possible commandline input variable defaults (override with -D)
 option (PYFLOT_ENABLE_TESTS "Build tests for PyFloT" OFF)
@@ -46,6 +49,8 @@ add_library (pyflot SHARED internal/src/Backtrace.cpp
     internal/src/overloading.cpp)
 target_include_directories (pyflot PUBLIC public/include/ internal/include/ ${GOTCHA_INC_PATH} ${JSON_INC_PATH})
 target_link_libraries (pyflot jsoncpp_lib gotcha)
+
+compile_examples(pyflot)
 
 ###############################################################################
 ## Testing PyFloT

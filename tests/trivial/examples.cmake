@@ -1,0 +1,17 @@
+
+#add_compile_options ("-L/global/homes/h/hbrunie/utils/tools/precisiontuning//public/lib/ -lprecisiontuning -I/global/homes/h/hbrunie/utils/tools/precisiontuning//public/include")
+#add_library(pyflot SHARED IMPORTED)
+#set_property(TARGET pyflotlib PROPERTY IMPORTED_LOCATION "/global/homes/h/hbrunie/utils/tools/precisiontuning//public/lib/libprecisiontuning.so")
+
+macro (compile_examples pyflotlib)
+    message(STATUS "Compile with pyflot: " ${pyflotlib})
+    add_executable (testExp tests/trivial/testExp.cpp)
+    target_link_libraries(testExp "-L ${CMAKE_CURRENT_BINARY_DIR}")
+    target_link_libraries(testExp ${pyflotlib})
+    target_include_directories (testExp PUBLIC ${CMAKE_SOURCE_DIR}/public/include/)
+    #add_executable (testConstructor testExp.cpp)
+    #add_executable (test3Exp test3Exp.cpp)
+    #add_executable (test5Exp test5Exp.cpp)
+    #add_executable (testMathFunctions testMathFunctions.cpp)
+    #add_executable (testHeader testHeader.cpp)
+endmacro()

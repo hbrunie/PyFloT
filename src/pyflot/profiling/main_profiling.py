@@ -2,7 +2,7 @@
 import sys
 
 from parse import parseProfiling
-from Profiling import Profiling
+from src.pyflot.profiling.Profiling import Profiling
 
 args = parseProfiling()
 dontExecApp4Profile = args.onlyGenStrat or args.onlyApplyingStrat

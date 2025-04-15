@@ -1,5 +1,5 @@
 [Defaults]
-binary:/global/cscratch1/sd/hbrunie/tools/precisiontuning/tests/trivial/test3Exp
-ptunerdir:/global/cscratch1/sd/hbrunie/tools/precisiontuning/tests/trivial/.pyflot/
+binary:/home/brunieh/github/PyFloT/tests/trivial/test3Exp
+ptunerdir:/home/brunieh/github/PyFloT/tests/trivial/.pyflot/
 profilefile:profile.json
 onlyProfile:True

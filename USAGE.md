@@ -13,8 +13,9 @@ See `./public/scripts/script.py`
 
 ## Executing on laptop
 
-## Executing on CORI supercompute
 ```bash
-cp make.Cori.def make.def
-make
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pyflot-analyzing -h
 ```

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import numpy as np
 from parse import parseAnalyzing
-import pdb
 
-from Profile import Profile
+from src.pyflot.profiling.Profile import Profile
 from staticApproach import slocBFS
 from slocCluster import slocClusterBFS
 from dynamicApproach import backtraceBFS
 from backtraceCluster import backtraceClusterBFS
+
 ## Different strat
 strat0 = "BT"
 strat1 = "BT-C"

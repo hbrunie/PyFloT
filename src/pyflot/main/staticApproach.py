@@ -3,7 +3,7 @@ import pdb
 from parse import parseAnalyzing
 
 from Common import BFS
-from Profile import Profile
+from src.pyflot.profiling.Profile import Profile
 
 def slocBFS(profile, searchSet, args, verbose=1):
     ## Composed constants

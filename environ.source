@@ -1,5 +1,5 @@
 ## Need to be updated
-export PYFLOT_ROOTDIR=/home/brunieh/PyFloT/
+export PYFLOT_ROOTDIR=/home/brunieh/github/PyFloT/
 
 ## No need to change
 mkdir -p ${PYFLOT_ROOTDIR}/public/lib/
