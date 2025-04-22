@@ -13,25 +13,9 @@ from pyflot.configuration.pyflot_config import PyflotConfig
 def main():
     config = PyflotConfig()
     ## Different strat
-    strat0 = "BT"
-    strat1 = "BT-C"
-    strat2 = "BT-Cf"
-    strat3 = "BT-Cf->BT"
-    strat4 = "BT-C->BT"
-    strat5 = "SLOC"
-    strat6 = "SLOC-C"
-    strat7 = "SLOC-C->SLOC"
-    strat8 = "SLOC-C->SLOC->BT"
-    strat9 = "SLOC-C->SLOC->BT-Cf"
-    strat10 = "SLOC-C->SLOC->BT-Cf->BT"
-    strat11 = "SLOC-C->SLOC->BT-C"
-    strat12 = "SLOC-C->SLOC->BT-C->BT"
-    strat13 = "SLOC->BT"
-    strategies = np.array(
-        [strat0, strat1, strat2, strat3, strat4, strat5, strat6, strat7, strat8, strat9, strat10, strat11, strat12, strat13]
-    )
     ## Parsing arguments
-    verbose = 1
+    verbose = config.verbosity
+    strategy config.strategy
     args = parseAnalyzing(verbose)
     ##SLOC BT -C -Cf ->
     strategy = args.strategy
