@@ -34,9 +34,29 @@ class ConfigHandler:
         # Path to executable of Poseidon
         self.pyflot_binary= binary_abspath
 
-    def build_connector_from_json_file(
-        self, file_path:str, arg_parser: argparse.ArgumentParser#, prog_args
-    ) -> None:
+    def update_from_args(
+        self,
+        args,
+        view_config,
+        dump_config_to_file,
+    ):
+        use_config_file: bool = "--config" in " ".join(args)
+        arg_parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+        if use_config_file:
+            args, config_file = self._extract_remaining_args_and_config_files(args)
+            self.update_all_configs_from_json_and_args(config_file, arg_parser, args)
+        else:
+            self.update_all_configs_from_args(args, arg_parser)
+            self.update_all_configs_from_args(args, arg_parser)
+
+        if view_config:
+            print(self.view_options())
+
+        if dump_config_to_file != "":
+            print(f"Dumping configuration to file: {dump_config_to_file}")
+            self.to_json_file(dump_config_to_file)
+
+    def update_all_configs_from_json_and_args(self, file_path: str, arg_parser: argparse.ArgumentParser, prog_args) -> None:
         """
         From a given config file (JSON)
         * update all the configs from the JSON file extracted dict
@@ -45,7 +65,7 @@ class ConfigHandler:
 
         options_dict = self._get_options_dict(file_path)
         self._setup_config_from_argparser_and_dict(options_dict, arg_parser)
-        #self.update_all_configs(prog_args, arg_parser)
+        self.update_all_configs_from_args(prog_args, arg_parser)
 
     def get_connector_name(self, args: list[str]):
         """FIXME: make it robust
@@ -146,7 +166,7 @@ class ConfigHandler:
         print("\n".join(strs))
         sys.exit(0)
 
-    def update_all_configs(self, prog_args: list[str], arg_parser: argparse.ArgumentParser) -> None:
+    def update_all_configs_from_args(self, prog_args: list[str], arg_parser: argparse.ArgumentParser) -> None:
         """Update all configurations other than the Connector_Config using program arguments.
         NOTE: this must be done before the Connector is instantiated because it will
         creates DataFlowGraph based on the data_flow_graph_config updated here.
@@ -254,3 +274,41 @@ class ConfigHandler:
         """
         with open(file_path, "r") as f:
             self.update_from_json(f.read(), error_if_required_option_missing)
+
+    def _extract_remaining_args_and_config_files(self, args: list[str]) -> tuple[list[str], str]:
+        """TODO: refactor this, cleanup the list splitting awfulness
+        Returns the args updated, and the list of config_files
+        """
+        for i, arg in enumerate(args):
+            if not arg.startswith("--config"):
+                continue
+            # Setup a temporary, limited argparser for the --config file.json [other_file.json] part
+            tmp_arg_parser = argparse.ArgumentParser()
+            tmp_arg_parser.add_argument(
+                "--config", type=str, nargs="+", action="append", help="JSON configuration file to load"
+            )
+            tmp_arg_parser.add_argument("-v", "--verbose", help="View each configuration file")
+
+            # Split the cmd line arguments between the config part and the other options
+            config_args: list[str] = [arg]
+            for j, other_arg in enumerate(args[i + 1 :]):
+                if other_arg.startswith("-"):
+                    break
+                config_args.append(other_arg)
+
+            # Drop the config arguments
+            non_config_args = args[:i]
+            if len(args) > i + len(config_args) - 1:
+                non_config_args += args[i + len(config_args) :]
+
+            args = non_config_args
+
+            # Parse the config part and update all Poseidon configurations using the JSON config file
+            options = tmp_arg_parser.parse_args(config_args)
+            config_arg_values = options.config
+            config_files = []
+            for sublist in config_arg_values:
+                config_files.extend(sublist)
+            assert len(config_files) == 1
+            return args, config_files[0]
+        assert False, "Must not get here"
