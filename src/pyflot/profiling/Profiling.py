@@ -26,8 +26,7 @@ class Profiling(Envvars):
         return None
 
     def __repr__(self):
-        s = "Profile: binary({}) dumpJsonProfileFile({})".format(
-                self.__binary, self.__dumpJsonProfile)
+        s = "Profile: binary({}) dumpJsonProfileFile({})".format(Profiling.__binary, Profiling.__dumpJsonProfileFile)
         return s
 
     def execute(self, command, outputfile, procenv):
@@ -46,7 +45,7 @@ class Profiling(Envvars):
             self._ENVVAR_DUMPDIR, procenv[self._ENVVAR_DUMPDIR],
             self._ENVVAR_OMPNUMTHREADS, procenv[self._ENVVAR_OMPNUMTHREADS],
             self._ENVVAR_PTUNERDUMPPROF, procenv[self._ENVVAR_PTUNERDUMPPROF]))
-        #procenv["PRECISION_TUNER_DEBUG"] = ""
+        # procenv["PRECISION_TUNER_DEBUG"] = ""
         command = []
         command.append(self.__binary + " " + self.__param)
         print("PROFILING Command: ",command)

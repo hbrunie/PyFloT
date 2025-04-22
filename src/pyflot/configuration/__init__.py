@@ -1,4 +1,3 @@
-from poseidon.configuration.config import Poseidon_Config
-from poseidon.configuration.poseidon_config_handler import PoseidonConfigHandler
+from pyflot.configuration.config_handler import ConfigHandler
 
-__all__ = ["PoseidonConfigHandler", "Poseidon_Config"]
+__all__ = ["ConfigHandler"]

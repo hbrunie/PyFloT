@@ -103,7 +103,8 @@ class PyflotConfigProfile(ConfigBase):
     params: str = field(default="", metadata={})
     ptunerdir: str = field(default="./", metadata={})
     stratfile: list[str] = field(
-        default=[], metadata={"help": "List of json files containing either generated strategies and/or strategies to apply."}
+        default_factory=list,
+        metadata={"help": "List of json files containing either generated strategies and/or strategies to apply."},
     )
     outputfile: str = field(
         default="stdoutAndstderr",

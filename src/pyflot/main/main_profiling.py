@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import sys
 
-from parse import parseProfiling
-from src.pyflot.profiling.Profiling import Profiling
+from pyflot.profiling.Profiling import Profiling
+from pyflot.configuration.config_handler import ConfigHandler
 
-args = parseProfiling()
+config = ConfigHandler()
+config.parse_argument()
 dontExecApp4Profile = args.onlyGenStrat or args.onlyApplyingStrat
 profile = Profiling(args, dontExecApp4Profile)
 if args.onlyProfile:
