@@ -2,7 +2,7 @@ import os
 
 from pyflot.profiling.Strategy import Strategy
 from pyflot.profiling.Envvars import Envvars
-from pyflot.configuration.config_handler import ConfigHandler
+from main.config_handler import ConfigHandler
 
 class Profiling(Envvars):
     __binary = "None"
