@@ -2,13 +2,14 @@ import os
 
 from pyflot.profiling.Strategy import Strategy
 from pyflot.profiling.Envvars import Envvars
+from pyflot.configuration.config_handler import ConfigHandler
 
 class Profiling(Envvars):
     __binary = "None"
     __dumpJsonProfileFile = "None"
     __directory = "None"
 
-    def __init__(self, args, doNotExec):
+    def __init__(self, config_handler: ConfigHandler):
         super(Profiling, self).__init__()
         self.__directory           = args.ptunerdir
         self.__binary              = args.binary

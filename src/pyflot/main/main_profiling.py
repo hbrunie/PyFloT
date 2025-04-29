@@ -3,12 +3,11 @@ import sys
 
 from pyflot.profiling.Profiling import Profiling
 from pyflot.configuration.config_handler import ConfigHandler
-exit(1)
+
 config = ConfigHandler()
-config.parse_argument()
-dontExecApp4Profile = args.onlyGenStrat or args.onlyApplyingStrat
-profile = Profiling(args, dontExecApp4Profile)
-if args.onlyProfile:
+config.update_from_args(" ".join(sys.argv[1:]))
+profile = Profiling(config)
+if config.only_profile:
     exit(0)
 stopSearch = False
 ## Calls Strategy constructor

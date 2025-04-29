@@ -10,7 +10,7 @@ from pyflot.profile.dynamicApproach import backtraceBFS
 from pyflot.profile.backtraceCluster import backtraceClusterBFS
 from pyflot.profile.Common import BFS
 
-from pyflot.configuration.pyflot_config import PyflotConfig
+from configuration.config_analysis import PyflotConfig
 
 class STRATEGIES(Enum):
     STRAT0 = "BT"
