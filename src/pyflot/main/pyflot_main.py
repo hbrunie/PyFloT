@@ -31,7 +31,8 @@ class PyflotMain:
         :param args: _description_
         """
         self._update_from_args(args)
-        self.run()
+        self.help(args)
+        # self.run()
 
     def dump_warnings(self, all_warnings: list[WarningMessage]):
         """Dump all warnings that were emitted during the run.

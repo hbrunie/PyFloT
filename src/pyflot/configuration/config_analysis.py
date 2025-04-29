@@ -3,7 +3,7 @@ from pyflot.configuration.config_base import ConfigBase
 
 
 @dataclass
-class PyflotConfigAnalysis(ConfigBase):
+class ConfigAnalysis(ConfigBase):
     ## CHOICES
     strat0 = "BT"
     strat1 = "BT-C"

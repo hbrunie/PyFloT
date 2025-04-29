@@ -53,7 +53,8 @@ class Profiling(Envvars):
         outputfile = self.__outputFile + "_profile.txt"
         out = self.execute(command,outputfile,procenv)
 
-    def developStrategy(self, stratfiles):
+    def _developStrategy(self):
+        stratfiles = self.strategy_files
         stop = False
         count = 0
         while (not stop):
@@ -64,3 +65,21 @@ class Profiling(Envvars):
             yield strat
             stop = strat.isLast()
             count += 1
+
+    def develop_strategy(self):
+        stopSearch = False
+        ## Calls Strategy constructor
+        stratGen = self._developStrategy()
+        while not stopSearch:
+            try:
+                ## Calls Strategy constructor
+                strat = next(stratGen)
+            except StopIteration:
+                if self.only_gen_strat:
+                    print("No more strategy to generate.")
+                else:
+                    print("No more strategy to test.")
+                return None
+            if not self.only_gen_strat:
+                stopSearch = strat.applyStrategy(self.verif_text)
+        return None

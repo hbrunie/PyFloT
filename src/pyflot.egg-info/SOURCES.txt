@@ -1,5 +1,6 @@
 README
 setup.py
+./pyflot/run_pyflot.py
 pyflot.egg-info/PKG-INFO
 pyflot.egg-info/SOURCES.txt
 pyflot.egg-info/dependency_links.txt

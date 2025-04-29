@@ -5,7 +5,7 @@ import json
 import re
 import termcolor
 from typing import Optional
-from configuration.config_analysis import PyflotConfigAnalysis, PyflotConfigMergeCsvIntoTrace, PyflotConfigProfile
+from configuration import ConfigProfile, ConfigAnalysis
 
 from typing import TYPE_CHECKING
 
@@ -18,15 +18,15 @@ class ConfigHandler:
 
     def __init__(
         self,
-        analysis_config: Optional[PyflotConfigAnalysis] = None,
-        profile_config: Optional[PyflotConfigProfile] = None,
-        csv_config: Optional[PyflotConfigMergeCsvIntoTrace] = None,
+        config_analysis: Optional[ConfigAnalysis] = None,
+        config_profile: Optional[ConfigProfile] = None,
+        # csv_config: Optional[PyflotConfigMergeCsvIntoTrace] = None,
         only_profile: bool = True,
     ) -> None:
-        self.analysis_config = analysis_config or PyflotConfigAnalysis()
-        self.profile_config = profile_config or PyflotConfigProfile()
-        self.csv_config = csv_config or PyflotConfigMergeCsvIntoTrace()
-        self._all_configurations: list[ConfigBase] = [self.profile_config,self.analysis_config, self.csv_config]
+        self.analysis_config = config_analysis or ConfigAnalysis()
+        self.profile_config = config_profile or ConfigProfile()
+        # self.csv_config = csv_config or PyflotConfigMergeCsvIntoTrace()
+        self._all_configurations: list[ConfigBase] = [self.profile_config, self.analysis_config]  # , self.csv_config]
         self.only_profile = only_profile
 
         # Autodetect path to Poseidon based on this file name

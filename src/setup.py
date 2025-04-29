@@ -11,8 +11,6 @@ setup(
     # install_requires=['networkx'],
     package_dir={"": "."},
     entry_points={
-        "console_scripts": [
-            "pyflot= pyflot.main.main_profiling",
-        ],
+        "console_scripts": ["pyflot= pyflot.run_pyflot"],
     },
 )
