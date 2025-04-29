@@ -3,8 +3,7 @@ from typing import TYPE_CHECKING
 
 import termcolor
 
-from pyflot.configuration import ConfigHandler
-
+from pyflot.main.config_handler import ConfigHandler
 
 if TYPE_CHECKING:
     from warnings import WarningMessage
