@@ -3,7 +3,7 @@ import sys
 
 from pyflot.profiling.Profiling import Profiling
 from pyflot.configuration.config_handler import ConfigHandler
-
+exit(1)
 config = ConfigHandler()
 config.parse_argument()
 dontExecApp4Profile = args.onlyGenStrat or args.onlyApplyingStrat

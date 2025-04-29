@@ -1,7 +1,7 @@
 import os
 
-from Strategy import Strategy
-from Envvars import Envvars
+from pyflot.profiling.Strategy import Strategy
+from pyflot.profiling.Envvars import Envvars
 
 class Profiling(Envvars):
     __binary = "None"

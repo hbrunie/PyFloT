@@ -4,10 +4,12 @@ from enum import Enum
 from parse import parseAnalyzing
 
 from src.pyflot.profiling.Profile import Profile
-from staticApproach import slocBFS
-from slocCluster import slocClusterBFS
-from dynamicApproach import backtraceBFS
-from backtraceCluster import backtraceClusterBFS
+from pyflot.profile.staticApproach import slocBFS
+from pyflot.profile.slocCluster import slocClusterBFS
+from pyflot.profile.dynamicApproach import backtraceBFS
+from pyflot.profile.backtraceCluster import backtraceClusterBFS
+from pyflot.profile.Common import BFS
+
 from pyflot.configuration.pyflot_config import PyflotConfig
 
 class STRATEGIES(Enum):
@@ -28,47 +30,31 @@ class STRATEGIES(Enum):
 
 
 class MultiStepSiteSearch:
+    _available_strategies = [
+        "BT",
+        "BT-C",
+        "BT-Cf",
+        ("BT-Cf", "BT"),
+        ("BT-C", "BT"),
+        "SLOC",
+        "SLOC-C",
+        ("SLOC-C", "SLOC"),
+        ("SLOC-C", "SLOC", "BT"),
+        ("SLOC-C", "SLOC", "BT-Cf"),
+        ("SLOC-C", "SLOC", "BT-Cf", "BT"),
+        ("SLOC-C", "SLOC", "BT-C"),
+        ("SLOC-C", "SLOC", "BT-C", "BT"),
+        "SLOC,BT",
+    ]
 
     def __init__(self, strategy: STRATEGIES):
         ##SLOC BT -C -Cf ->
         assert strategy is STRATEGIES
+        self.verbose = False
 
         ## Fill initial type configuration list indexed by backtrace based call site ID
         profile = Profile()
-        initSet = profile._doublePrecisionSlocSet
-        slocsuccess = []
-        btsuccess = []
-        ## S:success F:failure
-        successes_set = set()
-        failures_set = set()
-        print(
-            "nbTrials ratioSlocSP ratioBtSP ratioDynSP dynCallsSP slocCallSiteSP btCallSiteSP totalDynCalls totalSlocCallSites"
-            " totalBtCallSites"
-        )
-        print("0 0 0 0 0 0 0 0 0 0")
-        print("strategy", strategy)
-        if "SLOC-C" in strategy.value:
-            (successes_set, failures_set) = slocClusterBFS(profile, initSet, args, verbose=verbose)
-            slocsuccess += successes_set
-        if strategy in strategies[np.r_[0:6, 13]]:  ##NO SLOC-C
-            failures_set = initSet
-        if strategy in strategies[np.r_[5, 7:14]]:  ##SLOC
-            (successes_set, failures_set) = slocBFS(profile, failures_set, args, verbose)
-            slocsuccess.extend(successes_set)
-        if strategy in strategies[0:5]:  ##NO SLOC-C NOR SLOC
-            failures_set = initSet
-        if strategy in strategies[np.r_[0:5, 8:14]]:  ##BT or BT-C or BT-Cf
-            failures_set = set(profile.convertSloc2BtId(failures_set))
-            args.filtering = False
-            if strategy in strategies[np.r_[2:4, 9:11]]:  ##BT-Cf
-                args.filtering = True
-            if strategy in strategies[np.r_[1:5, 9:13]]:  ##BT-C or BT-Cf
-                (successes_set, failures_set) = backtraceClusterBFS(profile, failures_set, args, verbose=verbose)
-                btsuccess.extend(successes_set)
-            if strategy in strategies[np.r_[0, 3:5, 8, 10, 12, 13]]:  ##BT
-                (successes_set, failures_set) = backtraceBFS(profile, failures_set, args, verbose=verbose)
-                btsuccess.extend(successes_set)
-
+        slocsuccess, btsuccess, failures_set = self.get_strategy(strategy, profile, self.verbose)
         print("Can be converted to single precision: ")
         print("SLOC")
         print(sorted(slocsuccess))
@@ -77,28 +63,38 @@ class MultiStepSiteSearch:
         print("Must remain in double precision: (BT)")
         print(sorted(failures_set))
 
-    def get_strategy(self, strategy: str):
-        if strategy not in STRATEGIES:
-            print("Error Strategy unknown.")
-            exit(-1)
-        if strategy in strategies[6:13]:  ##SLOC-C
+    def _slocBFS(profile: Profile, searchSet: set, verbose=1):
+        ## Composed constants
+        return BFS(profile, searchSet, args, True, verbose)
+
+    def get_strategy(self, strategy: str, profile: Profile, verbose):
+        strat_tuple = tuple(strategy.split("->"))
+        initSet = profile._doublePrecisionSlocSet
+        slocsuccess = []
+        btsuccess = []
+        ## S:success F:failure
+        successes_set = set()
+        failures_set = set()
+        assert strat_tuple in MultiStepSiteSearch._available_strategies
+        if "SLOC-C" in strat_tuple:
             (successes_set, failures_set) = slocClusterBFS(profile, initSet, args, verbose=verbose)
             slocsuccess += successes_set
-        if strategy in strategies[np.r_[0:6, 13]]:  ##NO SLOC-C
+        else:
             failures_set = initSet
-        if strategy in strategies[np.r_[5, 7:14]]:  ##SLOC
-            (successes_set, failures_set) = slocBFS(profile, failures_set, args, verbose)
-            slocsuccess.extend(successes_set)
-        if strategy in strategies[0:5]:  ##NO SLOC-C NOR SLOC
-            failures_set = initSet
-        if strategy in strategies[np.r_[0:5, 8:14]]:  ##BT or BT-C or BT-Cf
+            if "SLOC" in strategy:
+                (successes_set, failures_set) = slocBFS(profile, failures_set, args, verbose)
+                slocsuccess.extend(successes_set)
+            else:
+                failures_set = initSet
+        if "BT" in strat_tuple or "BT-C" in strat_tuple or "BT-Cf" in strat_tuple:
             failures_set = set(profile.convertSloc2BtId(failures_set))
             args.filtering = False
-            if strategy in strategies[np.r_[2:4, 9:11]]:  ##BT-Cf
+            if "BT-Cf" in strat_tuple:
                 args.filtering = True
-            if strategy in strategies[np.r_[1:5, 9:13]]:  ##BT-C or BT-Cf
+            if "BT-C" in strat_tuple or "BT-Cf" in strat_tuple:
                 (successes_set, failures_set) = backtraceClusterBFS(profile, failures_set, args, verbose=verbose)
                 btsuccess.extend(successes_set)
-            if strategy in strategies[np.r_[0, 3:5, 8, 10, 12, 13]]:  ##BT
+            if "BT" in strat_tuple:
                 (successes_set, failures_set) = backtraceBFS(profile, failures_set, args, verbose=verbose)
                 btsuccess.extend(successes_set)
+        return slocsuccess, btsuccess, failures_set

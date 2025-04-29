@@ -1,0 +1,3 @@
+[console_scripts]
+pyflot = pyflot.main.main_profiling
+
